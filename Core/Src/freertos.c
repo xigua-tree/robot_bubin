@@ -25,7 +25,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "serial_cmd.h"
+#include "bt_proto.h"
 #include "speed_ctrl.h"
 /* USER CODE END Includes */
 
@@ -46,9 +46,9 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-osThreadId_t serialCmdTaskHandle;
-const osThreadAttr_t serialCmdTask_attributes = {
-  .name = "SerialCmdTask",
+osThreadId_t btHandlerTaskHandle;
+const osThreadAttr_t btHandlerTask_attributes = {
+  .name = "BtHandlerTask",
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
@@ -119,7 +119,7 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
-  serialCmdTaskHandle = osThreadNew(SerialCmdTask, NULL, &serialCmdTask_attributes);
+  btHandlerTaskHandle = osThreadNew(BtHandlerTask, NULL, &btHandlerTask_attributes);
   speedCtrlTaskHandle = osThreadNew(SpeedCtrlTask, NULL, &speedCtrlTask_attributes);
   /* USER CODE END RTOS_THREADS */
 
