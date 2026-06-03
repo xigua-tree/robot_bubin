@@ -15,6 +15,12 @@
 #define CMD_GET_ENCODER   0x02
 #define CMD_ESTOP         0x03
 #define CMD_GET_ENC_ALL   0x04
+/* Speed control (0x10~0x1F per spec reservation) */
+#define CMD_SET_MODE      0x10
+#define CMD_SET_RPM       0x11
+#define CMD_SET_PID       0x12
+#define CMD_GET_RPM       0x13
+#define CMD_GET_RPM_ALL   0x14
 #define CMD_ERROR         0xFF
 
 /* Error codes */
@@ -32,6 +38,17 @@ int proto_pack_estop_ack(uint8_t *buf);
 int proto_pack_get_enc_all_req(uint8_t *buf);
 int proto_pack_get_enc_all_resp(uint8_t *buf, const int32_t enc_vals[4]);
 int proto_pack_error(uint8_t *buf, uint8_t errcode);
+
+/* Speed control pack functions */
+int proto_pack_set_mode(uint8_t *buf, uint8_t motor_id, uint8_t mode);
+int proto_pack_mode_ack(uint8_t *buf);
+int proto_pack_set_rpm(uint8_t *buf, uint8_t motor_id, int16_t rpm);
+int proto_pack_rpm_ack(uint8_t *buf);
+int proto_pack_set_pid(uint8_t *buf, uint8_t motor_id, int16_t kp, int16_t ki, int16_t kd);
+int proto_pack_pid_ack(uint8_t *buf);
+int proto_pack_get_rpm_req(uint8_t *buf, uint8_t motor_id);
+int proto_pack_get_rpm_resp(uint8_t *buf, int16_t rpm);
+int proto_pack_get_rpm_all_resp(uint8_t *buf, const int16_t rpm_vals[4]);
 
 /* Getters: extract fields from a validated frame (frame points to CMD at offset 2) */
 uint8_t proto_get_cmd(const uint8_t *frame);

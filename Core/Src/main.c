@@ -27,6 +27,7 @@
 /* USER CODE BEGIN Includes */
 #include "motor.h"
 #include "ringbuf.h"
+#include "speed_ctrl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -101,6 +102,7 @@ int main(void)
    * Our ISR calls no RTOS APIs, so this is safe. */
   HAL_NVIC_SetPriority(USART3_IRQn, 4, 0);
   Motor_InitAll();
+  SpeedCtrl_Init();
   RingBuf_Init();
   /* Enable RXNE interrupt directly (bypass HAL for robustness) */
   USART3->CR1 |= USART_CR1_RXNEIE;

@@ -114,6 +114,90 @@ const uint8_t *proto_get_data(const uint8_t *frame)
     return &frame[2];
 }
 
+/* ============ Speed control pack functions ============ */
+
+int proto_pack_set_mode(uint8_t *buf, uint8_t motor_id, uint8_t mode)
+{
+    write_header(buf, CMD_SET_MODE, 2);
+    buf[4] = motor_id;
+    buf[5] = mode;
+    write_tail(buf, 2);
+    return 7;
+}
+
+int proto_pack_mode_ack(uint8_t *buf)
+{
+    write_header(buf, CMD_SET_MODE, 0);
+    write_tail(buf, 0);
+    return 5;
+}
+
+int proto_pack_set_rpm(uint8_t *buf, uint8_t motor_id, int16_t rpm)
+{
+    write_header(buf, CMD_SET_RPM, 3);
+    buf[4] = motor_id;
+    buf[5] = (uint8_t)(rpm & 0xFF);
+    buf[6] = (uint8_t)((rpm >> 8) & 0xFF);
+    write_tail(buf, 3);
+    return 8;
+}
+
+int proto_pack_rpm_ack(uint8_t *buf)
+{
+    write_header(buf, CMD_SET_RPM, 0);
+    write_tail(buf, 0);
+    return 5;
+}
+
+int proto_pack_set_pid(uint8_t *buf, uint8_t motor_id, int16_t kp, int16_t ki, int16_t kd)
+{
+    write_header(buf, CMD_SET_PID, 7);
+    buf[4] = motor_id;
+    buf[5] = (uint8_t)(kp & 0xFF);
+    buf[6] = (uint8_t)((kp >> 8) & 0xFF);
+    buf[7] = (uint8_t)(ki & 0xFF);
+    buf[8] = (uint8_t)((ki >> 8) & 0xFF);
+    buf[9] = (uint8_t)(kd & 0xFF);
+    buf[10] = (uint8_t)((kd >> 8) & 0xFF);
+    write_tail(buf, 7);
+    return 12;
+}
+
+int proto_pack_pid_ack(uint8_t *buf)
+{
+    write_header(buf, CMD_SET_PID, 0);
+    write_tail(buf, 0);
+    return 5;
+}
+
+int proto_pack_get_rpm_req(uint8_t *buf, uint8_t motor_id)
+{
+    write_header(buf, CMD_GET_RPM, 1);
+    buf[4] = motor_id;
+    write_tail(buf, 1);
+    return 6;
+}
+
+int proto_pack_get_rpm_resp(uint8_t *buf, int16_t rpm)
+{
+    write_header(buf, CMD_GET_RPM, 2);
+    buf[4] = (uint8_t)(rpm & 0xFF);
+    buf[5] = (uint8_t)((rpm >> 8) & 0xFF);
+    write_tail(buf, 2);
+    return 7;
+}
+
+int proto_pack_get_rpm_all_resp(uint8_t *buf, const int16_t rpm_vals[4])
+{
+    write_header(buf, CMD_GET_RPM_ALL, 8);
+    for (int i = 0; i < 4; i++) {
+        buf[4 + i * 2]     = (uint8_t)(rpm_vals[i] & 0xFF);
+        buf[4 + i * 2 + 1] = (uint8_t)((rpm_vals[i] >> 8) & 0xFF);
+    }
+    write_tail(buf, 8);
+    return 13;
+}
+
 /* ============ Validation ============ */
 
 int proto_validate_frame(const uint8_t *buf, int buf_len)

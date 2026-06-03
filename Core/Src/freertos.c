@@ -26,6 +26,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "serial_cmd.h"
+#include "speed_ctrl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,6 +51,12 @@ const osThreadAttr_t serialCmdTask_attributes = {
   .name = "SerialCmdTask",
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
+};
+osThreadId_t speedCtrlTaskHandle;
+const osThreadAttr_t speedCtrlTask_attributes = {
+  .name = "SpeedCtrlTask",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
@@ -113,6 +120,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   serialCmdTaskHandle = osThreadNew(SerialCmdTask, NULL, &serialCmdTask_attributes);
+  speedCtrlTaskHandle = osThreadNew(SpeedCtrlTask, NULL, &speedCtrlTask_attributes);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */

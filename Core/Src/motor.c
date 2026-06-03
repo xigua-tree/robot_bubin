@@ -65,6 +65,12 @@ void Motor_InitAll(void)
     HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
     HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
 
+    /* Start encoder counters (Init only configures, Start begins counting) */
+    HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Start(&htim3, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Start(&htim4, TIM_CHANNEL_ALL);
+
     /* All motors stopped */
     Motor_StopAll();
 }
@@ -76,6 +82,10 @@ void Motor_DeInitAll(void)
     HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_2);
     HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_3);
     HAL_TIM_PWM_Stop(&htim8, TIM_CHANNEL_4);
+    HAL_TIM_Encoder_Stop(&htim1, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Stop(&htim2, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Stop(&htim3, TIM_CHANNEL_ALL);
+    HAL_TIM_Encoder_Stop(&htim4, TIM_CHANNEL_ALL);
 }
 
 int Motor_SetDuty(Motor_ID_t id, int8_t duty)

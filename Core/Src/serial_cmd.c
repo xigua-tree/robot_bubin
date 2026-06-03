@@ -2,6 +2,7 @@
 #include "ringbuf.h"
 #include "motor.h"
 #include "protocol.h"
+#include "speed_ctrl.h"
 #include "usart.h"
 #include "cmsis_os.h"
 
@@ -98,6 +99,98 @@ static void HandleRequest(const uint8_t *frame)
             enc_vals[2] = Motor_GetEncoder(MOTOR_3);
             enc_vals[3] = Motor_GetEncoder(MOTOR_4);
             resp_len = proto_pack_get_enc_all_resp(resp_buf, enc_vals);
+        }
+        break;
+
+    /* ===== Speed control commands ===== */
+
+    case CMD_SET_MODE:
+        if (len != 2) {
+            resp_len = proto_pack_error(resp_buf, ERR_LEN_MISMATCH);
+            break;
+        }
+        {
+            uint8_t motor_id = data[0];
+            uint8_t mode     = data[1];
+            if (motor_id >= 4 || mode > 1) {
+                resp_len = proto_pack_error(resp_buf, ERR_INVALID_ID);
+                break;
+            }
+            SpeedCtrl_SetMode((Motor_ID_t)motor_id, mode);
+            resp_len = proto_pack_mode_ack(resp_buf);
+        }
+        break;
+
+    case CMD_SET_RPM:
+        if (len != 3) {
+            resp_len = proto_pack_error(resp_buf, ERR_LEN_MISMATCH);
+            break;
+        }
+        {
+            uint8_t motor_id = data[0];
+            int16_t rpm      = (int16_t)(data[1] | ((int16_t)data[2] << 8));
+            if (motor_id >= 4) {
+                resp_len = proto_pack_error(resp_buf, ERR_INVALID_ID);
+                break;
+            }
+            /* rpm is ×10: 1234 → 123.4 RPM */
+            SpeedCtrl_SetTargetRPM((Motor_ID_t)motor_id, (float)rpm * 0.1f);
+            resp_len = proto_pack_rpm_ack(resp_buf);
+        }
+        break;
+
+    case CMD_SET_PID:
+        if (len != 7) {
+            resp_len = proto_pack_error(resp_buf, ERR_LEN_MISMATCH);
+            break;
+        }
+        {
+            uint8_t motor_id = data[0];
+            int16_t kp_raw   = (int16_t)(data[1] | ((int16_t)data[2] << 8));
+            int16_t ki_raw   = (int16_t)(data[3] | ((int16_t)data[4] << 8));
+            int16_t kd_raw   = (int16_t)(data[5] | ((int16_t)data[6] << 8));
+            if (motor_id >= 4) {
+                resp_len = proto_pack_error(resp_buf, ERR_INVALID_ID);
+                break;
+            }
+            /* Coefficients are ×100: 150 → Kp=1.5 */
+            float kp = (float)kp_raw * 0.01f;
+            float ki = (float)ki_raw * 0.01f;
+            float kd = (float)kd_raw * 0.01f;
+            SpeedCtrl_SetPID((Motor_ID_t)motor_id, kp, ki, kd);
+            resp_len = proto_pack_pid_ack(resp_buf);
+        }
+        break;
+
+    case CMD_GET_RPM:
+        if (len != 1) {
+            resp_len = proto_pack_error(resp_buf, ERR_LEN_MISMATCH);
+            break;
+        }
+        {
+            uint8_t motor_id = data[0];
+            if (motor_id >= 4) {
+                resp_len = proto_pack_error(resp_buf, ERR_INVALID_ID);
+                break;
+            }
+            float rpm_f = SpeedCtrl_GetCurrentRPM((Motor_ID_t)motor_id);
+            int16_t rpm = (int16_t)(rpm_f * 10.0f);  /* ×10 for int16 */
+            resp_len = proto_pack_get_rpm_resp(resp_buf, rpm);
+        }
+        break;
+
+    case CMD_GET_RPM_ALL:
+        if (len != 0) {
+            resp_len = proto_pack_error(resp_buf, ERR_LEN_MISMATCH);
+            break;
+        }
+        {
+            int16_t rpm_vals[4];
+            for (int i = 0; i < 4; i++) {
+                float rpm_f = SpeedCtrl_GetCurrentRPM((Motor_ID_t)i);
+                rpm_vals[i] = (int16_t)(rpm_f * 10.0f);
+            }
+            resp_len = proto_pack_get_rpm_all_resp(resp_buf, rpm_vals);
         }
         break;
 
