@@ -8,5 +8,6 @@
 void RingBuf_Init(void);
 void RingBuf_PutChar(uint8_t c);
 int  RingBuf_GetLine(char *buf, uint32_t timeout_ms);
+int  RingBuf_GetByte(uint8_t *c, uint32_t timeout_ms);
 
 #endif /* __RINGBUF_H__ */

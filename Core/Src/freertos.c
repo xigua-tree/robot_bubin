@@ -152,8 +152,12 @@ void my_led_test(void *argument)
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5); 
-    osDelay(500);
+    /* Wait for frame received notification from SerialCmdTask */
+    osThreadFlagsWait(0x01, osFlagsWaitAny, osWaitForever);
+    /* Blink LED: ON briefly then OFF */
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_SET);
+    osDelay(100);
+    HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_RESET);
   }
   /* USER CODE END my_led_test */
 }

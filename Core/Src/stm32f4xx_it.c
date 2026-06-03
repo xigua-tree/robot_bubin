@@ -22,6 +22,7 @@
 #include "stm32f4xx_it.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "ringbuf.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -167,7 +168,17 @@ void DebugMon_Handler(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-
+  /* === RAW RX: bypass HAL, use direct register access === */
+  if (USART3->SR & USART_SR_RXNE) {
+    uint8_t c = (uint8_t)(USART3->DR & 0xFF);   /* read clears RXNE */
+    RingBuf_PutChar(c);
+    return;   /* bypass HAL_UART_IRQHandler — we handled it */
+  }
+  /* Clear overrun if present */
+  if (USART3->SR & USART_SR_ORE) {
+    (void)USART3->DR;
+    (void)USART3->SR;
+  }
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
   /* USER CODE BEGIN USART3_IRQn 1 */

@@ -47,7 +47,6 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-static volatile uint8_t rx_byte;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -98,9 +97,14 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
+  /* USART3 IRQ priority raised above FreeRTOS BASEPRI mask (5→4).
+   * Our ISR calls no RTOS APIs, so this is safe. */
+  HAL_NVIC_SetPriority(USART3_IRQn, 4, 0);
   Motor_InitAll();
   RingBuf_Init();
-  HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_byte, 1);
+  /* Enable RXNE interrupt directly (bypass HAL for robustness) */
+  USART3->CR1 |= USART_CR1_RXNEIE;
+  HAL_UART_Transmit(&huart3, (uint8_t *)"OK\r\n", 4, 100);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -173,8 +177,9 @@ void SystemClock_Config(void)
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
     if (huart->Instance == USART3) {
-        RingBuf_PutChar(rx_byte);
-        HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_byte, 1);
+        /* RAW ISR handles RX; this callback only reached on HAL error path.
+         * Re-enable RXNEIE (may have been disabled by HAL error handling) */
+        USART3->CR1 |= USART_CR1_RXNEIE;
     }
 }
 /* USER CODE END 4 */
