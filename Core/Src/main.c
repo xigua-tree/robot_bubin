@@ -25,7 +25,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "motor.h"
+#include "ringbuf.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -46,7 +47,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-
+static volatile uint8_t rx_byte;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -97,7 +98,9 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
-
+  Motor_InitAll();
+  RingBuf_Init();
+  HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_byte, 1);
   /* USER CODE END 2 */
 
   /* Init scheduler */
@@ -167,6 +170,13 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if (huart->Instance == USART3) {
+        RingBuf_PutChar(rx_byte);
+        HAL_UART_Receive_IT(&huart3, (uint8_t *)&rx_byte, 1);
+    }
+}
 /* USER CODE END 4 */
 
 /**
