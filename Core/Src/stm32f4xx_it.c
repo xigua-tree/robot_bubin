@@ -23,6 +23,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "ringbuf.h"
+#include "speed_ctrl.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -192,7 +193,16 @@ void USART3_IRQHandler(void)
 void TIM8_UP_TIM13_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 0 */
+  if (__HAL_TIM_GET_FLAG(&htim8, TIM_FLAG_UPDATE) != RESET) {
+      __HAL_TIM_CLEAR_FLAG(&htim8, TIM_FLAG_UPDATE);
 
+      static uint8_t tick_cnt = 0;
+      if (++tick_cnt >= 10) {
+          tick_cnt = 0;
+          SpeedCtrl_NotifyFromISR();
+      }
+      return;   /* handled — skip HAL */
+  }
   /* USER CODE END TIM8_UP_TIM13_IRQn 0 */
   HAL_TIM_IRQHandler(&htim8);
   /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 1 */

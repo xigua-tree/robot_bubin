@@ -6,20 +6,23 @@
 typedef struct {
     float   kp, ki, kd;       /* PID coefficients */
     float   setpoint;          /* target value */
-    float   output;            /* controller output */
+    float   output;            /* accumulated output u(k-1) */
     float   out_min, out_max;  /* output clamping range */
-    float   integral_max;      /* integral TERM limit (Ki×Σe clamped to ±this) */
-    /* Internal state */
-    float   integral;          /* accumulated integral (Σe) */
-    float   e_prev;            /* previous error for D term */
-    uint8_t first_run;         /* skip derivative on first sample */
+    /* Internal state — incremental form needs two historical errors */
+    float   e_prev1;           /* e(k-1) */
+    float   e_prev2;           /* e(k-2) */
+    uint8_t first_run;         /* seed error history on first sample */
 } PID_t;
 
 void PID_Init(PID_t *pid, float kp, float ki, float kd, float out_min, float out_max);
 
 /**
- * u(k) = Kp×e(k) + Ki×Σe(i) + Kd×[e(k)-e(k-1)]
- * With output clamping + integral anti-windup.
+ * Incremental PID:
+ *   Δu(k) = Kp·[e(k)-e(k-1)] + Ki·e(k) + Kd·[e(k)-2e(k-1)+e(k-2)]
+ *   u(k)  = u(k-1) + Δu(k)
+ *
+ * Output is clamped to [out_min, out_max]. Integral anti-windup is
+ * inherent — there is no accumulator, so you never need to unwind it.
  */
 float PID_Update(PID_t *pid, float measurement);
 

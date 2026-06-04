@@ -65,6 +65,12 @@ void Motor_InitAll(void)
     HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_3);
     HAL_TIM_PWM_Start(&htim8, TIM_CHANNEL_4);
 
+    /* Enable TIM8 update interrupt (UIE).
+     * HAL_TIM_PWM_Start only starts the counter; it does NOT set UIE.
+     * Without UIE the timer won't request interrupts, so SpeedCtrlTask
+     * would block forever on ulTaskNotifyTake. */
+    __HAL_TIM_ENABLE_IT(&htim8, TIM_IT_UPDATE);
+
     /* Start encoder counters (Init only configures, Start begins counting) */
     HAL_TIM_Encoder_Start(&htim1, TIM_CHANNEL_ALL);
     HAL_TIM_Encoder_Start(&htim2, TIM_CHANNEL_ALL);
