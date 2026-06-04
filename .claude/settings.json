@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pio run *)",
+      "Bash(where pio *)",
+      "Bash(pip show *)",
+      "Bash(\"C:/Users/10369/.platformio/penv/Scripts/pio.exe\" run *)"
+    ]
+  }
+}

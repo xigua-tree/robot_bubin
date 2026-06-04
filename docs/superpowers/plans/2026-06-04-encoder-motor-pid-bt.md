@@ -254,6 +254,7 @@ void Motor_Brake(Motor_t *m);
 ```c
 #include "motor.h"
 #include "tim.h"
+#include <math.h>
 
 /* 电机1: PE14,PE15 + TIM8_CH1(PC6) */
 /* 电机2: PE0,PE1   + TIM8_CH3(PC8) */
@@ -394,6 +395,7 @@ void PID_Reset(PID_t *pid);
 ```c
 #include "pid.h"
 #include <string.h>
+#include <math.h>
 
 void PID_Init(PID_t *pid, float Kp, float Ki, float Kd, float out_max)
 {
