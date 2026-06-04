@@ -1,6 +1,6 @@
 #include "motor.h"
 #include "tim.h"
-#include <math.h>
+#include <stdlib.h>
 
 /* 电机1: PE14,PE15 + TIM8_CH1(PC6) */
 /* 电机2: PE0,PE1   + TIM8_CH3(PC8) */
@@ -54,24 +54,26 @@ void Motor_InitAll(void)
     }
 }
 
-void Motor_SetDuty(Motor_t *m, float duty)
+void Motor_SetDuty(Motor_t *m, int32_t duty)
 {
-    /* 限幅 */
-    if (duty > 1.0f)  duty = 1.0f;
-    if (duty < -1.0f) duty = -1.0f;
+    /* 限幅到 PWM 最大值 */
+    if (duty > MOTOR_PWM_MAX)  duty = MOTOR_PWM_MAX;
+    if (duty < -MOTOR_PWM_MAX) duty = -MOTOR_PWM_MAX;
 
-    uint16_t pulse = (uint16_t)(fabsf(duty) * MOTOR_PWM_MAX);
+    uint16_t pulse;
 
-    if (duty > 0.001f) {
+    if (duty > 0) {
         /* 正转: IN1=H, IN2=L */
         HAL_GPIO_WritePin(m->in1_port, m->in1_pin, GPIO_PIN_SET);
         HAL_GPIO_WritePin(m->in2_port, m->in2_pin, GPIO_PIN_RESET);
-    } else if (duty < -0.001f) {
+        pulse = (uint16_t)duty;
+    } else if (duty < 0) {
         /* 反转: IN1=L, IN2=H */
         HAL_GPIO_WritePin(m->in1_port, m->in1_pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(m->in2_port, m->in2_pin, GPIO_PIN_SET);
+        pulse = (uint16_t)(-duty);
     } else {
-        /* 停止: IN1=L, IN2=L（TB6612 short brake） */
+        /* 停止: IN1=L, IN2=L */
         HAL_GPIO_WritePin(m->in1_port, m->in1_pin, GPIO_PIN_RESET);
         HAL_GPIO_WritePin(m->in2_port, m->in2_pin, GPIO_PIN_RESET);
         pulse = 0;
@@ -82,7 +84,7 @@ void Motor_SetDuty(Motor_t *m, float duty)
 
 void Motor_Stop(Motor_t *m)
 {
-    Motor_SetDuty(m, 0.0f);
+    Motor_SetDuty(m, 0);
 }
 
 void Motor_Brake(Motor_t *m)

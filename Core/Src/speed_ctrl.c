@@ -2,7 +2,7 @@
 #include "tim.h"
 
 /* 编码器 + PID + 电机 实例 */
-static Encoder_t s_encoders[SPEED_CTRL_MOTOR_COUNT];
+Encoder_t g_encoders[SPEED_CTRL_MOTOR_COUNT];
 static PID_t     s_pids[SPEED_CTRL_MOTOR_COUNT];
 
 /* 控制标志位：TIM8 ISR 每10次中断置1 */
@@ -13,51 +13,59 @@ volatile uint8_t g_speed_ctrl_flag = 0;
 void SpeedCtrl_Init(void)
 {
     /* 初始化编码器 */
-    Encoder_Init(&s_encoders[0], &htim1);
-    Encoder_Init(&s_encoders[1], &htim2);
-    Encoder_Init(&s_encoders[2], &htim3);
-    Encoder_Init(&s_encoders[3], &htim4);
+    Encoder_Init(&g_encoders[0], &htim1);
+    Encoder_Init(&g_encoders[1], &htim2);
+    Encoder_Init(&g_encoders[2], &htim3);
+    Encoder_Init(&g_encoders[3], &htim4);
 
     /* 初始化 PID */
     for (int i = 0; i < SPEED_CTRL_MOTOR_COUNT; i++) {
-        PID_Init(&s_pids[i], DEFAULT_KP, DEFAULT_KI, DEFAULT_KD, 1.0f);
+        PID_Init(&s_pids[i], DEFAULT_KP, DEFAULT_KI, DEFAULT_KD, (float)MOTOR_PWM_MAX);
         PID_SetTarget(&s_pids[i], 0.0f);
     }
 }
 
-void SpeedCtrl_1kHz_Tick(void)
+/* 只读取编码器并计算速度，不动电机（供开环测试用） */
+void SpeedCtrl_UpdateEncoders(void)
 {
-    for (int i = 0; i < SPEED_CTRL_MOTOR_COUNT; i++) {
-        /* 1. 更新编码器计数和速度 */
-        Encoder_Update(&s_encoders[i]);
+    static int32_t last_count[SPEED_CTRL_MOTOR_COUNT];
+    static float   s_filtered[SPEED_CTRL_MOTOR_COUNT];  /* 滤波后的 RPM */
+    /* 滤波系数：越小越平滑但响应越慢，0.15~0.3 适合速度环 */
+    #define RPM_FILTER_ALPHA 0.3f
 
-        /* 2. 计算速度 (RPM) */
-        /* speed = delta_count / CPR / dt * 60 */
-        /* 此处假设 Encoder_Update 被 1kHz 调用 */
-        int32_t count = Encoder_GetCount(&s_encoders[i]);
-        /* 速度计算由 Encoder_Update 内部累积，此处用差分法 */
-        static int32_t last_count[SPEED_CTRL_MOTOR_COUNT];
+    for (int i = 0; i < SPEED_CTRL_MOTOR_COUNT; i++) {
+        /* 读取硬件编码器，更新累积值 */
+        Encoder_Update(&g_encoders[i]);
+
+        /* 差分计算瞬时转速 RPM */
+        int32_t count = Encoder_GetCount(&g_encoders[i]);
         int32_t delta = count - last_count[i];
         last_count[i] = count;
 
-        /* RPM = (delta / CPR) / dt * 60 */
-        /* dt = 0.001s, CPR = ENCODER_PPR * 4 */
-        float rpm = (float)delta / (float)(ENCODER_PPR * 4) / SPEED_CTRL_DT * 60.0f;
+        float rpm_raw = (float)delta / (float)(ENCODER_PPR * 4) / SPEED_CTRL_DT * 60.0f;
 
-        /* 保存速度到 encoder 结构体 */
-        s_encoders[i].speed_rpm = rpm;
+        /* 一阶低通滤波：filtered = filtered*(1-α) + raw*α */
+        s_filtered[i] = s_filtered[i] * (1.0f - RPM_FILTER_ALPHA) + rpm_raw * RPM_FILTER_ALPHA;
+        g_encoders[i].speed_rpm = s_filtered[i];
+    }
+}
 
-        /* 3. PID 控制 */
-        float output = PID_Update(&s_pids[i], rpm);
+/* 编码器读取 + PID 控制 + PWM 输出（完整的闭环控制） */
+void SpeedCtrl_1kHz_Tick(void)
+{
+    SpeedCtrl_UpdateEncoders();
 
-        /* 4. 更新 PWM */
-        Motor_SetDuty(&g_motors[i], output);
+    for (int i = 0; i < SPEED_CTRL_MOTOR_COUNT; i++) {
+        float output = PID_Update(&s_pids[i], g_encoders[i].speed_rpm);
+        Motor_SetDuty(&g_motors[i], (int32_t)output);
     }
 }
 
 void SpeedCtrl_SetTarget(uint8_t id, float rpm)
 {
     if (id < SPEED_CTRL_MOTOR_COUNT) {
+        if (rpm >  340.0f) rpm =  340.0f;
+        if (rpm < -340.0f) rpm = -340.0f;
         PID_SetTarget(&s_pids[id], rpm);
     }
 }
@@ -72,7 +80,15 @@ void SpeedCtrl_SetPID(uint8_t id, float Kp, float Ki, float Kd)
 float SpeedCtrl_GetSpeed(uint8_t id)
 {
     if (id < SPEED_CTRL_MOTOR_COUNT) {
-        return Encoder_GetSpeed(&s_encoders[id]);
+        return Encoder_GetSpeed(&g_encoders[id]);
+    }
+    return 0.0f;
+}
+
+float SpeedCtrl_GetError(uint8_t id)
+{
+    if (id < SPEED_CTRL_MOTOR_COUNT) {
+        return s_pids[id].target - g_encoders[id].speed_rpm;
     }
     return 0.0f;
 }

@@ -5,7 +5,7 @@
 #include "main.h"
 
 /* 编码器线数（电机旋转一圈的脉冲数，4倍频前） */
-#define ENCODER_PPR 11
+#define ENCODER_PPR 325
 
 typedef struct {
     TIM_HandleTypeDef *htim;

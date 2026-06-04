@@ -44,7 +44,9 @@
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
 static RingBuf_t s_uart_rx_rb;
-static volatile uint8_t s_tim8_divider;  /* TIM8 10分频计数器 */
+static volatile uint16_t s_tim8_divider;  /* TIM8 分频计数器 */
+static volatile uint8_t  s_tim8_encoder_counter;
+int tim8_counter = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -237,12 +239,20 @@ void TIM8_UP_TIM13_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 0 */
   if (__HAL_TIM_GET_FLAG(&htim8, TIM_FLAG_UPDATE) != RESET) {
-      __HAL_TIM_CLEAR_FLAG(&htim8, TIM_FLAG_UPDATE);
-      /* 10kHz → 1kHz 分频 */
+      __HAL_TIM_CLEAR_FLAG(&htim8, TIM_FLAG_UPDATE);  
       s_tim8_divider++;
-      if (s_tim8_divider >= 10) {
+      s_tim8_encoder_counter++;
+      if (s_tim8_divider >= 500) {
+          tim8_counter++;
           s_tim8_divider = 0;
           g_speed_ctrl_flag = 1;
+          /* ---- 速度控制（由 TIM8 ISR 标志驱动） ---- */
+        if (g_speed_ctrl_flag) {
+            // Motor_SetDuty(&g_motors[0],8000);
+            // SpeedCtrl_UpdateEncoders();
+            SpeedCtrl_1kHz_Tick();
+            g_speed_ctrl_flag = 0;
+        }
       }
       return;  /* 已处理，不进入 HAL_TIM_IRQHandler */
   }

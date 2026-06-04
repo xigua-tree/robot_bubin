@@ -27,7 +27,7 @@ extern Motor_t g_motors[4];
 
 void Motor_InitAll(void);
 /* duty: -1.0f ~ +1.0f，正=正转，负=反转 */
-void Motor_SetDuty(Motor_t *m, float duty);
+void Motor_SetDuty(Motor_t *m, int32_t duty);
 void Motor_Stop(Motor_t *m);
 void Motor_Brake(Motor_t *m);
 

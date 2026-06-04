@@ -21,6 +21,17 @@ float PID_Update(PID_t *pid, float measured)
     pid->error[1] = pid->error[0];   /* e(k-1) = e(k)   */
     pid->error[0] = error;           /* e(k)   = error   */
 
+    /* 死区：误差 < 10 RPM 时冻结积分 */
+    if (fabsf(error) < 3.0f) {
+        pid->integral = 0.0f;
+        /* 目标=0 且速度≈0 → 强制停转；目标≠0 → 保持当前输出 */
+        if (fabsf(pid->target) < 10.0f) {
+            pid->output = 0.0f;
+            return 0.0f;
+        }
+        return pid->output;
+    }
+
     /* 积分分离：误差较大时不累加积分，防止饱和 */
     if (fabsf(error) < pid->out_max * 0.5f) {
         pid->integral += error;
@@ -55,7 +66,6 @@ void PID_SetTunings(PID_t *pid, float Kp, float Ki, float Kd)
     pid->Kp = Kp;
     pid->Ki = Ki;
     pid->Kd = Kd;
-    PID_Reset(pid);
 }
 
 void PID_Reset(PID_t *pid)

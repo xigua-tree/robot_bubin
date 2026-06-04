@@ -57,16 +57,18 @@ uint8_t BT_Pack_Tx(const BT_TxPacket_t *pkt, uint8_t *buf)
 {
     buf[0] = BT_FRAME_HEAD;
 
-    /* 速度 (4 bytes, little-endian) */
-    memcpy(&buf[1], &pkt->speed, 4);
+    /* count(int32) + speed(float) + error(float) */
+    memcpy(&buf[1],  &pkt->count, 4);
+    memcpy(&buf[5],  &pkt->speed, 4);
+    memcpy(&buf[9],  &pkt->error, 4);
 
-    /* 校验和（数据部分4字节之和的低8位） */
+    /* 校验和（12字节数据之和的低8位） */
     uint8_t checksum = 0;
-    for (uint8_t i = 0; i < 4; i++) {
+    for (uint8_t i = 0; i < BT_TX_DATA_LEN; i++) {
         checksum += buf[1 + i];
     }
-    buf[5] = checksum;
+    buf[BT_TX_DATA_LEN + 1] = checksum;
 
-    buf[6] = BT_FRAME_TAIL;
+    buf[BT_TX_DATA_LEN + 2] = BT_FRAME_TAIL;
     return BT_TX_PACKET_LEN;
 }

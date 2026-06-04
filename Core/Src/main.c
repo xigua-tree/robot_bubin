@@ -60,6 +60,7 @@ static uint32_t s_led_off_tick;  /* LED 闪烁计时 */
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 extern RingBuf_t *Get_UART_RxRingBuf(void);
+extern int tim8_counter;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -147,11 +148,7 @@ int main(void)
         }
     }
 
-    /* ---- 速度控制（由 TIM8 ISR 标志驱动） ---- */
-    if (g_speed_ctrl_flag) {
-        SpeedCtrl_1kHz_Tick();
-        g_speed_ctrl_flag = 0;
-    }
+
 
     /* ---- 周期上报速度（约 100ms 一次） ---- */
     {
@@ -159,7 +156,9 @@ int main(void)
         if (HAL_GetTick() - last_tx_tick >= 100) {
             last_tx_tick = HAL_GetTick();
             /* 发送电机1的速度 */
-            s_tx_pkt.speed = SpeedCtrl_GetSpeed(0);
+            s_tx_pkt.count = tim8_counter;
+            s_tx_pkt.speed = g_encoders[0].speed_rpm;
+            s_tx_pkt.error = SpeedCtrl_GetError(0);
             s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
             HAL_UART_Transmit(&huart3, s_tx_buf, s_tx_len, 100);
         }
