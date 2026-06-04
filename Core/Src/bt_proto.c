@@ -1,126 +1,72 @@
 #include "bt_proto.h"
-#include "ringbuf.h"
-#include "speed_ctrl.h"
-#include "usart.h"
-#include "cmsis_os.h"
 #include <string.h>
 
-extern osThreadId_t led_testHandle;  /* from freertos.c */
+/* 状态机静态变量 */
+static BT_ParseState_t s_state = BT_STATE_HEAD;
+static uint8_t  s_data_buf[BT_RX_DATA_LEN];
+static uint8_t  s_data_idx;
+static uint8_t  s_checksum;
 
-/* ============ UART TX (direct register, same as before) ============ */
-
-static void UART_Send(const uint8_t *data, int len)
+bool BT_Parse_Byte(uint8_t byte, BT_RxPacket_t *result)
 {
-    for (int i = 0; i < len; i++) {
-        while (!(huart3.Instance->SR & (1U << 7))) { osDelay(1); }
-        huart3.Instance->DR = data[i];
-    }
-}
+    switch (s_state) {
+    case BT_STATE_HEAD:
+        if (byte == BT_FRAME_HEAD) {
+            s_data_idx = 0;
+            s_checksum = 0;
+            s_state = BT_STATE_DATA;
+        }
+        break;
 
-/* ============ Checksum ============ */
+    case BT_STATE_DATA:
+        s_data_buf[s_data_idx++] = byte;
+        if (s_data_idx >= BT_RX_DATA_LEN) {
+            s_state = BT_STATE_CHECKSUM;
+        }
+        break;
 
-static uint8_t checksum(const uint8_t *data, int len)
-{
-    uint8_t sum = 0;
-    for (int i = 0; i < len; i++) sum += data[i];
-    return sum;
-}
-
-/* ============ Build outgoing frame ============ */
-
-static void bt_send_speed(void)
-{
-    float speed = SpeedCtrl_GetCurrentRPM(MOTOR_1);
-    uint8_t buf[BT_TX_LEN];
-    buf[0] = BT_HEAD;
-    memcpy(&buf[1], &speed, 4);             /* native LE */
-    buf[5] = checksum(&buf[1], 4);
-    buf[6] = BT_TAIL;
-    UART_Send(buf, BT_TX_LEN);
-}
-
-/* ============ Incoming frame dispatch ============ */
-
-static void bt_dispatch(const uint8_t *data)
-{
-    float speed, kp, ki, kd;
-    memcpy(&speed, &data[0], 4);
-    memcpy(&kp,    &data[4], 4);
-    memcpy(&ki,    &data[8], 4);
-    memcpy(&kd,    &data[12], 4);
-
-    for (int i = 0; i < 4; i++) {
-        SpeedCtrl_SetPID((Motor_ID_t)i, kp, ki, kd);
-        SpeedCtrl_SetTargetRPM((Motor_ID_t)i, speed);
-    }
-}
-
-/* ============ Receive state machine ============ */
-
-typedef enum {
-    STATE_WAIT_HEAD = 0,
-    STATE_GET_DATA,
-    STATE_GET_CS,
-    STATE_GET_TAIL
-} BtRxState;
-
-/* ============ FreeRTOS task ============ */
-
-void BtHandlerTask(void *argument)
-{
-    (void)argument;
-
-    uint8_t    rx_buf[BT_RX_LEN];
-    int        rx_idx    = 0;
-    int        data_cnt  = 0;
-    BtRxState  state     = STATE_WAIT_HEAD;
-    TickType_t last_tx   = 0;
-
-    for (;;) {
-        uint8_t c;
-        if (RingBuf_GetByte(&c, 50)) {
-            switch (state) {
-
-            case STATE_WAIT_HEAD:
-                if (c == BT_HEAD) {
-                    rx_buf[0] = c;
-                    rx_idx    = 1;
-                    data_cnt  = 0;
-                    state     = STATE_GET_DATA;
-                }
-                break;
-
-            case STATE_GET_DATA:
-                rx_buf[rx_idx++] = c;
-                if (++data_cnt >= 16) state = STATE_GET_CS;
-                break;
-
-            case STATE_GET_CS:
-                rx_buf[rx_idx++] = c;    /* store CS byte */
-                state = STATE_GET_TAIL;
-                break;
-
-            case STATE_GET_TAIL:
-                rx_buf[rx_idx] = c;
-                if (c == BT_TAIL) {
-                    uint8_t expected = checksum(&rx_buf[1], 16);
-                    if (expected == rx_buf[17]) {
-                        bt_dispatch(&rx_buf[1]);
-                        osThreadFlagsSet(led_testHandle, 0x01);
-                    }
-                }
-                state = STATE_WAIT_HEAD;
-                break;
-            }
+    case BT_STATE_CHECKSUM:
+        /* 计算数据校验和 */
+        for (uint8_t i = 0; i < BT_RX_DATA_LEN; i++) {
+            s_checksum += s_data_buf[i];
+        }
+        if (byte == s_checksum) {
+            s_state = BT_STATE_TAIL;
         } else {
-            state = STATE_WAIT_HEAD;   /* timeout: reset parser */
+            s_state = BT_STATE_HEAD;  /* 校验失败，丢弃 */
         }
+        break;
 
-        /* Always send speed every 50ms, even without incoming data */
-        TickType_t now = osKernelGetTickCount();
-        if ((now - last_tx) >= 100) {
-            bt_send_speed();
-            last_tx = now;
+    case BT_STATE_TAIL:
+        if (byte == BT_FRAME_TAIL) {
+            /* 完整帧接收成功，解析数据 */
+            memcpy(&result->target_speed, &s_data_buf[0],  4);
+            memcpy(&result->Kp,           &s_data_buf[4],  4);
+            memcpy(&result->Ki,           &s_data_buf[8],  4);
+            memcpy(&result->Kd,           &s_data_buf[12], 4);
+            s_state = BT_STATE_HEAD;
+            return true;
         }
+        s_state = BT_STATE_HEAD;  /* 包尾不匹配，丢弃 */
+        break;
     }
+    return false;
+}
+
+uint8_t BT_Pack_Tx(const BT_TxPacket_t *pkt, uint8_t *buf)
+{
+    buf[0] = BT_FRAME_HEAD;
+
+    /* 速度 (4 bytes, little-endian) */
+    memcpy(&buf[1], &pkt->speed, 4);
+
+    /* 校验和（数据部分4字节之和的低8位） */
+    uint8_t checksum = 0;
+    for (uint8_t i = 0; i < 4; i++) {
+        checksum += buf[1 + i];
+    }
+    buf[5] = checksum;
+
+    buf[6] = BT_FRAME_TAIL;
+    return BT_TX_PACKET_LEN;
 }

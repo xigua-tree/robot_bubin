@@ -1,108 +1,78 @@
 #include "speed_ctrl.h"
-#include "cmsis_os.h"
-#include "FreeRTOS.h"
-#include "task.h"
+#include "tim.h"
 
-/* Task handle (set by SpeedCtrlTask itself).
- * Used by SpeedCtrl_NotifyFromISR() to wake it via Task Notification. */
-static TaskHandle_t xSpeedCtrlTaskHandle = NULL;
+/* 编码器 + PID + 电机 实例 */
+static Encoder_t s_encoders[SPEED_CTRL_MOTOR_COUNT];
+static PID_t     s_pids[SPEED_CTRL_MOTOR_COUNT];
 
-void SpeedCtrl_NotifyFromISR(void)
-{
-    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+/* 控制标志位：TIM8 ISR 每10次中断置1 */
+volatile uint8_t g_speed_ctrl_flag = 0;
 
-    if (xSpeedCtrlTaskHandle != NULL) {
-        vTaskNotifyGiveFromISR(xSpeedCtrlTaskHandle, &xHigherPriorityTaskWoken);
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
-    }
-}
-
-SpeedCtrl_t g_speed_ctrl[4];
+/* TIM 句柄来自 tim.h */
 
 void SpeedCtrl_Init(void)
 {
-    for (int i = 0; i < 4; i++) {
-        g_speed_ctrl[i].motor_id     = (Motor_ID_t)i;
-        g_speed_ctrl[i].cpr          = DEFAULT_CPR;
-        g_speed_ctrl[i].target_rpm   = 0.0f;
-        g_speed_ctrl[i].current_rpm  = 0.0f;
-        g_speed_ctrl[i].filtered_rpm = 0.0f;
+    /* 初始化编码器 */
+    Encoder_Init(&s_encoders[0], &htim1);
+    Encoder_Init(&s_encoders[1], &htim2);
+    Encoder_Init(&s_encoders[2], &htim3);
+    Encoder_Init(&s_encoders[3], &htim4);
 
-        /* All gains start at 0 — tune via Bluetooth.
-         * Send Kp/Ki/Kd in the protocol frame and the host will
-         * call PID_SetTunings() with your values. */
-        PID_Init(&g_speed_ctrl[i].pid,
-                 0.0f,    /* Kp — set via Bluetooth */
-                 0.0f,    /* Ki — set via Bluetooth */
-                 0.0f,    /* Kd — set via Bluetooth */
-                 -100.0f, /* out_min */
-                  100.0f);/* out_max */
+    /* 初始化 PID */
+    for (int i = 0; i < SPEED_CTRL_MOTOR_COUNT; i++) {
+        PID_Init(&s_pids[i], DEFAULT_KP, DEFAULT_KI, DEFAULT_KD, 1.0f);
+        PID_SetTarget(&s_pids[i], 0.0f);
     }
 }
 
-void SpeedCtrl_SetTargetRPM(Motor_ID_t id, float rpm)
+void SpeedCtrl_1kHz_Tick(void)
 {
-    if (id >= 4) return;
-    SpeedCtrl_t *sc = &g_speed_ctrl[id];
-    sc->target_rpm = rpm;
-    PID_SetSetpoint(&sc->pid, rpm);
-    /* Setpoint 0: let Ki accumulate braking naturally (PID must have Ki > 0) */
-}
+    for (int i = 0; i < SPEED_CTRL_MOTOR_COUNT; i++) {
+        /* 1. 更新编码器计数和速度 */
+        Encoder_Update(&s_encoders[i]);
 
-void SpeedCtrl_SetPID(Motor_ID_t id, float kp, float ki, float kd)
-{
-    if (id >= 4) return;
-    PID_SetTunings(&g_speed_ctrl[id].pid, kp, ki, kd);
-}
+        /* 2. 计算速度 (RPM) */
+        /* speed = delta_count / CPR / dt * 60 */
+        /* 此处假设 Encoder_Update 被 1kHz 调用 */
+        int32_t count = Encoder_GetCount(&s_encoders[i]);
+        /* 速度计算由 Encoder_Update 内部累积，此处用差分法 */
+        static int32_t last_count[SPEED_CTRL_MOTOR_COUNT];
+        int32_t delta = count - last_count[i];
+        last_count[i] = count;
 
-float SpeedCtrl_GetCurrentRPM(Motor_ID_t id)
-{
-    if (id >= 4) return 0.0f;
-    return g_speed_ctrl[id].current_rpm;
-}
+        /* RPM = (delta / CPR) / dt * 60 */
+        /* dt = 0.001s, CPR = ENCODER_PPR * 4 */
+        float rpm = (float)delta / (float)(ENCODER_PPR * 4) / SPEED_CTRL_DT * 60.0f;
 
-/* ============ FreeRTOS 1kHz Speed Control Task ============ */
+        /* 保存速度到 encoder 结构体 */
+        s_encoders[i].speed_rpm = rpm;
 
-void SpeedCtrlTask(void *argument)
-{
-    (void)argument;
+        /* 3. PID 控制 */
+        float output = PID_Update(&s_pids[i], rpm);
 
-    /* Register handle so ISR can wake us */
-    xSpeedCtrlTaskHandle = xTaskGetCurrentTaskHandle();
-
-    int32_t last_enc[4];
-    for (int i = 0; i < 4; i++) {
-        last_enc[i] = Motor_GetEncoder((Motor_ID_t)i);
-        g_speed_ctrl[i].last_encoder = last_enc[i];
+        /* 4. 更新 PWM */
+        Motor_SetDuty(&g_motors[i], output);
     }
+}
 
-    for (;;) {
-        /* Block until TIM8 update ISR (1 ms) wakes us.
-         * ulTaskNotifyTake clears the notification on exit (pdTRUE),
-         * guaranteeing we don't accumulate stale wake-ups.       */
-        ulTaskNotifyTake(pdTRUE, portMAX_DELAY);
-
-        for (int i = 0; i < 4; i++) {
-            SpeedCtrl_t *sc = &g_speed_ctrl[i];
-            if (sc->cpr == 0) continue;
-
-            /* Speed measurement */
-            int32_t enc_now = Motor_GetEncoder((Motor_ID_t)i);
-            int16_t delta   = (int16_t)((uint16_t)enc_now - (uint16_t)last_enc[i]);
-            last_enc[i] = enc_now;
-
-            float rpm = (float)delta * 60000.0f / (float)sc->cpr;
-            sc->current_rpm = rpm;
-
-            /* Low-pass filter: smooth encoder quantisation and residual noise.
-             * EMA with α=0.9 → time constant ≈ 10 ms @ 1 kHz. */
-            #define EMA_ALPHA  0.9f
-            sc->filtered_rpm = sc->filtered_rpm * EMA_ALPHA
-                             + rpm * (1.0f - EMA_ALPHA);
-
-            /* PID update — always runs, for all 4 motors */
-            float duty = PID_Update(&sc->pid, sc->filtered_rpm);
-            Motor_SetDuty((Motor_ID_t)i, (int8_t)duty);
-        }
+void SpeedCtrl_SetTarget(uint8_t id, float rpm)
+{
+    if (id < SPEED_CTRL_MOTOR_COUNT) {
+        PID_SetTarget(&s_pids[id], rpm);
     }
+}
+
+void SpeedCtrl_SetPID(uint8_t id, float Kp, float Ki, float Kd)
+{
+    if (id < SPEED_CTRL_MOTOR_COUNT) {
+        PID_SetTunings(&s_pids[id], Kp, Ki, Kd);
+    }
+}
+
+float SpeedCtrl_GetSpeed(uint8_t id)
+{
+    if (id < SPEED_CTRL_MOTOR_COUNT) {
+        return Encoder_GetSpeed(&s_encoders[id]);
+    }
+    return 0.0f;
 }

@@ -1,27 +1,34 @@
-#ifndef __MOTOR_H__
-#define __MOTOR_H__
+#ifndef __MOTOR_H
+#define __MOTOR_H
 
+#include <stdint.h>
 #include "main.h"
 
-typedef enum {
-    MOTOR_1 = 0,
-    MOTOR_2 = 1,
-    MOTOR_3 = 2,
-    MOTOR_4 = 3,
-    MOTOR_MAX = 4
-} Motor_ID_t;
+/* TB6612 方向/刹车宏 */
+#define MOTOR_CW   1
+#define MOTOR_CCW -1
+#define MOTOR_STOP 0
 
-/* Initialization */
+/* 最大 PWM 占空比（ARR = 16799） */
+#define MOTOR_PWM_MAX 16799
+
+typedef struct {
+    /* 方向引脚 */
+    GPIO_TypeDef *in1_port;
+    uint16_t      in1_pin;
+    GPIO_TypeDef *in2_port;
+    uint16_t      in2_pin;
+    /* PWM（TIM8 各通道） */
+    TIM_HandleTypeDef *htim;
+    uint32_t           channel;
+} Motor_t;
+
+extern Motor_t g_motors[4];
+
 void Motor_InitAll(void);
-void Motor_DeInitAll(void);
+/* duty: -1.0f ~ +1.0f，正=正转，负=反转 */
+void Motor_SetDuty(Motor_t *m, float duty);
+void Motor_Stop(Motor_t *m);
+void Motor_Brake(Motor_t *m);
 
-/* Core control: duty range [-100, 100], returns 0=OK, -1=bad ID */
-int  Motor_SetDuty(Motor_ID_t id, int8_t duty);
-void Motor_Stop(Motor_ID_t id);
-void Motor_StopAll(void);
-
-/* Encoder */
-int32_t Motor_GetEncoder(Motor_ID_t id);
-void    Motor_ResetEncoder(Motor_ID_t id);
-
-#endif /* __MOTOR_H__ */
+#endif

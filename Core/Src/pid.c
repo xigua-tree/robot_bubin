@@ -1,79 +1,68 @@
 #include "pid.h"
+#include <string.h>
+#include <math.h>
 
-static float clamp(float val, float lo, float hi)
+void PID_Init(PID_t *pid, float Kp, float Ki, float Kd, float out_max)
 {
-    if (val < lo) return lo;
-    if (val > hi) return hi;
-    return val;
+    memset(pid, 0, sizeof(PID_t));
+    pid->Kp = Kp;
+    pid->Ki = Ki;
+    pid->Kd = Kd;
+    pid->out_max = out_max;
+    pid->out_min = -out_max;
+    pid->integral_max = out_max * 0.3f;  /* 积分限幅为输出的30% */
 }
 
-void PID_Init(PID_t *pid, float kp, float ki, float kd, float out_min, float out_max)
+float PID_Update(PID_t *pid, float measured)
 {
-    pid->kp       = kp;
-    pid->ki       = ki;
-    pid->kd       = kd;
-    pid->setpoint = 0.0f;
-    pid->output   = 0.0f;
-    pid->out_min  = out_min;
-    pid->out_max  = out_max;
-    pid->e_prev1  = 0.0f;
-    pid->e_prev2  = 0.0f;
-    pid->first_run = 1;
-}
+    /* 计算误差 */
+    float error = pid->target - measured;
+    pid->error[2] = pid->error[1];   /* e(k-2) = e(k-1) */
+    pid->error[1] = pid->error[0];   /* e(k-1) = e(k)   */
+    pid->error[0] = error;           /* e(k)   = error   */
 
-float PID_Update(PID_t *pid, float measurement)
-{
-    float e = pid->setpoint - measurement;
-
-    /* On first run, seed the error history with current error.
-     * This makes Δu = Ki·e(k) for the very first step (P and D terms
-     * cancel to zero), giving a smooth start without a spike.       */
-    if (pid->first_run) {
-        pid->e_prev1 = e;
-        pid->e_prev2 = e;
-        pid->first_run = 0;
+    /* 积分分离：误差较大时不累加积分，防止饱和 */
+    if (fabsf(error) < pid->out_max * 0.5f) {
+        pid->integral += error;
+        if (pid->integral > pid->integral_max)  pid->integral = pid->integral_max;
+        if (pid->integral < -pid->integral_max) pid->integral = -pid->integral_max;
+    } else {
+        pid->integral = 0.0f;
     }
 
-    /* ── Incremental PID calculation ─────────────────────────────
-     * Δu(k) = Kp·[e(k)-e(k-1)] + Ki·e(k) + Kd·[e(k)-2e(k-1)+e(k-2)]
-     * u(k)  = u(k-1) + Δu(k)                                     */
-    float delta_u = pid->kp * (e - pid->e_prev1)
-                  + pid->ki * e
-                  + pid->kd * (e - 2.0f * pid->e_prev1 + pid->e_prev2);
+    /* 增量式 PID */
+    /* Δu = Kp*(e(k)-e(k-1)) + Ki*e(k) + Kd*(e(k)-2e(k-1)+e(k-2)) */
+    float delta = pid->Kp * (pid->error[0] - pid->error[1])
+                + pid->Ki * pid->error[0]
+                + pid->Kd * (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);
 
-    /* Shift error history for next iteration */
-    pid->e_prev2 = pid->e_prev1;
-    pid->e_prev1 = e;
+    pid->output += delta;
 
-    /* Accumulate and clamp the final output */
-    pid->output += delta_u;
-    pid->output = clamp(pid->output, pid->out_min, pid->out_max);
+    /* 输出限幅 */
+    if (pid->output > pid->out_max)  pid->output = pid->out_max;
+    if (pid->output < pid->out_min)  pid->output = pid->out_min;
 
     return pid->output;
 }
 
+void PID_SetTarget(PID_t *pid, float target)
+{
+    pid->target = target;
+}
+
+void PID_SetTunings(PID_t *pid, float Kp, float Ki, float Kd)
+{
+    pid->Kp = Kp;
+    pid->Ki = Ki;
+    pid->Kd = Kd;
+    PID_Reset(pid);
+}
+
 void PID_Reset(PID_t *pid)
 {
-    pid->e_prev1  = 0.0f;
-    pid->e_prev2  = 0.0f;
-    pid->first_run = 1;
-    pid->output   = 0.0f;
-}
-
-void PID_SetTunings(PID_t *pid, float kp, float ki, float kd)
-{
-    /* Only reset PID state if the gains actually changed.
-     * Avoids jerky output jumps when the host sends the same
-     * parameters repeatedly (e.g. every speed-command frame). */
-    if (pid->kp != kp || pid->ki != ki || pid->kd != kd) {
-        PID_Reset(pid);
-    }
-    pid->kp = kp;
-    pid->ki = ki;
-    pid->kd = kd;
-}
-
-void PID_SetSetpoint(PID_t *pid, float setpoint)
-{
-    pid->setpoint = setpoint;
+    pid->error[0] = 0.0f;
+    pid->error[1] = 0.0f;
+    pid->error[2] = 0.0f;
+    pid->integral = 0.0f;
+    pid->output = 0.0f;
 }

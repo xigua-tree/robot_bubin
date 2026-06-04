@@ -1,77 +1,41 @@
 #include "ringbuf.h"
-#include "cmsis_os.h"
 
-#define RB_SIZE   RINGBUF_SIZE
-#define RB_MASK   (RB_SIZE - 1)   /* SIZE must be power of 2 */
-
-static volatile uint8_t  rb_buffer[RB_SIZE];
-static volatile uint32_t rb_head = 0;   /* ISR writes (producer index) */
-static volatile uint32_t rb_tail = 0;   /* Task writes, ISR reads */
-
-void RingBuf_Init(void)
+void RingBuf_Init(RingBuf_t *rb)
 {
-    rb_head = 0;
-    rb_tail = 0;
+    rb->head = 0;
+    rb->tail = 0;
 }
 
-void RingBuf_PutChar(uint8_t c)
+bool RingBuf_Put(RingBuf_t *rb, uint8_t byte)
 {
-    uint32_t next_head = (rb_head + 1) & RB_MASK;
-
-    if (next_head != rb_tail) {
-        /* Not full: write and advance head */
-        rb_buffer[rb_head] = c;
-        rb_head = next_head;
+    uint16_t next = (rb->head + 1) % RINGBUF_SIZE;
+    if (next == rb->tail) {
+        return false;  /* full */
     }
-    /* else: full — silently drop byte (head unchanged) */
+    rb->buf[rb->head] = byte;
+    rb->head = next;
+    return true;
 }
 
-int RingBuf_GetLine(char *buf, uint32_t timeout_ms)
+bool RingBuf_Get(RingBuf_t *rb, uint8_t *byte)
 {
-    uint32_t start = osKernelGetTickCount();
-    int      idx   = 0;
-
-    while (1) {
-        while (rb_head != rb_tail && idx < 31) {
-            char c = (char)rb_buffer[rb_tail];
-            rb_tail = (rb_tail + 1) & RB_MASK;
-
-            if (c == '\r') {
-                /* Consume following '\n' if present */
-                if (rb_head != rb_tail && rb_buffer[rb_tail] == '\n') {
-                    rb_tail = (rb_tail + 1) & RB_MASK;
-                }
-                buf[idx] = '\0';
-                return 1;
-            }
-            if (c == '\n') {
-                buf[idx] = '\0';
-                return 1;
-            }
-            buf[idx++] = c;
-        }
-
-        if ((osKernelGetTickCount() - start) >= timeout_ms) {
-            buf[idx] = '\0';
-            return (idx > 0) ? 1 : 0;
-        }
-
-        osDelay(5);
+    if (rb->tail == rb->head) {
+        return false;  /* empty */
     }
+    *byte = rb->buf[rb->tail];
+    rb->tail = (rb->tail + 1) % RINGBUF_SIZE;
+    return true;
 }
 
-int RingBuf_GetByte(uint8_t *c, uint32_t timeout_ms)
+uint16_t RingBuf_Available(RingBuf_t *rb)
 {
-    uint32_t start = osKernelGetTickCount();
-
-    while (rb_head == rb_tail) {
-        /* Empty */
-        if ((osKernelGetTickCount() - start) >= timeout_ms) {
-            return 0;
-        }
-        osDelay(1);
+    if (rb->head >= rb->tail) {
+        return rb->head - rb->tail;
     }
-    *c = rb_buffer[rb_tail];
-    rb_tail = (rb_tail + 1) & RB_MASK;
-    return 1;
+    return RINGBUF_SIZE - rb->tail + rb->head;
+}
+
+void RingBuf_Flush(RingBuf_t *rb)
+{
+    rb->tail = rb->head;
 }

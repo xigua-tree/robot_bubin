@@ -18,16 +18,16 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "cmsis_os.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "motor.h"
 #include "ringbuf.h"
+#include "bt_proto.h"
 #include "speed_ctrl.h"
+#include "motor.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,7 +37,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-
+#define LED_PIN  GPIO_PIN_5
+#define LED_PORT GPIOD
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -48,13 +49,17 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
+static BT_RxPacket_t s_rx_pkt;
+static BT_TxPacket_t s_tx_pkt;
+static uint8_t s_tx_buf[BT_TX_PACKET_LEN];
+static uint8_t s_tx_len;
+static uint32_t s_led_off_tick;  /* LED 闪烁计时 */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-
+extern RingBuf_t *Get_UART_RxRingBuf(void);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -98,25 +103,19 @@ int main(void)
   MX_TIM4_Init();
   MX_TIM8_Init();
   /* USER CODE BEGIN 2 */
-  /* USART3 IRQ priority raised above FreeRTOS BASEPRI mask (5→4).
-   * Our ISR calls no RTOS APIs, so this is safe. */
-  HAL_NVIC_SetPriority(USART3_IRQn, 4, 0);
   Motor_InitAll();
   SpeedCtrl_Init();
-  RingBuf_Init();
-  /* Enable RXNE interrupt directly (bypass HAL for robustness) */
+
+  /* 启用 TIM8 更新中断（PWM 已在 Motor_InitAll 中启动） */
+  __HAL_TIM_ENABLE_IT(&htim8, TIM_IT_UPDATE);
+
+  /* 使能 USART3 RXNE 中断 */
   USART3->CR1 |= USART_CR1_RXNEIE;
-  HAL_UART_Transmit(&huart3, (uint8_t *)"OK\r\n", 4, 100);
+
+  /* LED 初始状态 */
+  HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET);
+  s_led_off_tick = 0;
   /* USER CODE END 2 */
-
-  /* Init scheduler */
-  osKernelInitialize();  /* Call init function for freertos objects (in cmsis_os2.c) */
-  MX_FREERTOS_Init();
-
-  /* Start scheduler */
-  osKernelStart();
-
-  /* We should never get here as control is now taken by the scheduler */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -125,6 +124,46 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+    /* ---- LED 闪烁管理 ---- */
+    if (s_led_off_tick > 0 && HAL_GetTick() >= s_led_off_tick) {
+        HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET);
+        s_led_off_tick = 0;
+    }
+
+    /* ---- 协议解析 ---- */
+    RingBuf_t *rb = Get_UART_RxRingBuf();
+    uint8_t byte;
+    if (RingBuf_Get(rb, &byte)) {
+        if (BT_Parse_Byte(byte, &s_rx_pkt)) {
+            /* 有效帧收到 → LED 亮 200ms */
+            HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET);
+            s_led_off_tick = HAL_GetTick() + 200;
+
+            /* 应用 PID 参数和速度指令（对4个电机统一设置） */
+            for (int i = 0; i < 4; i++) {
+                SpeedCtrl_SetPID(i, s_rx_pkt.Kp, s_rx_pkt.Ki, s_rx_pkt.Kd);
+                SpeedCtrl_SetTarget(i, s_rx_pkt.target_speed);
+            }
+        }
+    }
+
+    /* ---- 速度控制（由 TIM8 ISR 标志驱动） ---- */
+    if (g_speed_ctrl_flag) {
+        SpeedCtrl_1kHz_Tick();
+        g_speed_ctrl_flag = 0;
+    }
+
+    /* ---- 周期上报速度（约 100ms 一次） ---- */
+    {
+        static uint32_t last_tx_tick = 0;
+        if (HAL_GetTick() - last_tx_tick >= 100) {
+            last_tx_tick = HAL_GetTick();
+            /* 发送电机1的速度 */
+            s_tx_pkt.speed = SpeedCtrl_GetSpeed(0);
+            s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
+            HAL_UART_Transmit(&huart3, s_tx_buf, s_tx_len, 100);
+        }
+    }
   }
   /* USER CODE END 3 */
 }
@@ -176,14 +215,6 @@ void SystemClock_Config(void)
 
 /* USER CODE BEGIN 4 */
 
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-    if (huart->Instance == USART3) {
-        /* RAW ISR handles RX; this callback only reached on HAL error path.
-         * Re-enable RXNEIE (may have been disabled by HAL error handling) */
-        USART3->CR1 |= USART_CR1_RXNEIE;
-    }
-}
 /* USER CODE END 4 */
 
 /**

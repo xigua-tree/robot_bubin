@@ -43,7 +43,8 @@
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN PV */
-
+static RingBuf_t s_uart_rx_rb;
+static volatile uint8_t s_tim8_divider;  /* TIM8 10分频计数器 */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -53,7 +54,10 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+RingBuf_t *Get_UART_RxRingBuf(void)
+{
+    return &s_uart_rx_rb;
+}
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -144,6 +148,19 @@ void UsageFault_Handler(void)
 }
 
 /**
+  * @brief This function handles System service call via SWI instruction.
+  */
+void SVC_Handler(void)
+{
+  /* USER CODE BEGIN SVCall_IRQn 0 */
+
+  /* USER CODE END SVCall_IRQn 0 */
+  /* USER CODE BEGIN SVCall_IRQn 1 */
+
+  /* USER CODE END SVCall_IRQn 1 */
+}
+
+/**
   * @brief This function handles Debug monitor.
   */
 void DebugMon_Handler(void)
@@ -154,6 +171,32 @@ void DebugMon_Handler(void)
   /* USER CODE BEGIN DebugMonitor_IRQn 1 */
 
   /* USER CODE END DebugMonitor_IRQn 1 */
+}
+
+/**
+  * @brief This function handles Pendable request for system service.
+  */
+void PendSV_Handler(void)
+{
+  /* USER CODE BEGIN PendSV_IRQn 0 */
+
+  /* USER CODE END PendSV_IRQn 0 */
+  /* USER CODE BEGIN PendSV_IRQn 1 */
+
+  /* USER CODE END PendSV_IRQn 1 */
+}
+
+/**
+  * @brief This function handles System tick timer.
+  */
+void SysTick_Handler(void)
+{
+  /* USER CODE BEGIN SysTick_IRQn 0 */
+
+  /* USER CODE END SysTick_IRQn 0 */
+  /* USER CODE BEGIN SysTick_IRQn 1 */
+
+  /* USER CODE END SysTick_IRQn 1 */
 }
 
 /******************************************************************************/
@@ -169,16 +212,16 @@ void DebugMon_Handler(void)
 void USART3_IRQHandler(void)
 {
   /* USER CODE BEGIN USART3_IRQn 0 */
-  /* === RAW RX: bypass HAL, use direct register access === */
+  /* 直接读取 RXNE 标志，绕过 HAL（保证低延迟） */
   if (USART3->SR & USART_SR_RXNE) {
-    uint8_t c = (uint8_t)(USART3->DR & 0xFF);   /* read clears RXNE */
-    RingBuf_PutChar(c);
-    return;   /* bypass HAL_UART_IRQHandler — we handled it */
+      uint8_t c = (uint8_t)(USART3->DR & 0xFF);
+      RingBuf_Put(&s_uart_rx_rb, c);
+      return;  /* 已处理，不进入 HAL_UART_IRQHandler */
   }
-  /* Clear overrun if present */
+  /* 清除溢出标志 */
   if (USART3->SR & USART_SR_ORE) {
-    (void)USART3->DR;
-    (void)USART3->SR;
+      (void)USART3->DR;
+      (void)USART3->SR;
   }
   /* USER CODE END USART3_IRQn 0 */
   HAL_UART_IRQHandler(&huart3);
@@ -195,13 +238,13 @@ void TIM8_UP_TIM13_IRQHandler(void)
   /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 0 */
   if (__HAL_TIM_GET_FLAG(&htim8, TIM_FLAG_UPDATE) != RESET) {
       __HAL_TIM_CLEAR_FLAG(&htim8, TIM_FLAG_UPDATE);
-
-      static uint8_t tick_cnt = 0;
-      if (++tick_cnt >= 10) {
-          tick_cnt = 0;
-          SpeedCtrl_NotifyFromISR();
+      /* 10kHz → 1kHz 分频 */
+      s_tim8_divider++;
+      if (s_tim8_divider >= 10) {
+          s_tim8_divider = 0;
+          g_speed_ctrl_flag = 1;
       }
-      return;   /* handled — skip HAL */
+      return;  /* 已处理，不进入 HAL_TIM_IRQHandler */
   }
   /* USER CODE END TIM8_UP_TIM13_IRQn 0 */
   HAL_TIM_IRQHandler(&htim8);
