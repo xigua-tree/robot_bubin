@@ -22,7 +22,7 @@ float PID_Update(PID_t *pid, float measured)
     pid->error[0] = error;           /* e(k)   = error   */
 
     /* 死区：误差 < 10 RPM 时冻结积分 */
-    if (fabsf(error) < 3.0f) {
+    if (fabsf(error) < 6.0f) {
         pid->integral = 0.0f;
         /* 目标=0 且速度≈0 → 强制停转；目标≠0 → 保持当前输出 */
         if (fabsf(pid->target) < 10.0f) {

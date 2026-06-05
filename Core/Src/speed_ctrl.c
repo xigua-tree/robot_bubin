@@ -64,8 +64,6 @@ void SpeedCtrl_1kHz_Tick(void)
 void SpeedCtrl_SetTarget(uint8_t id, float rpm)
 {
     if (id < SPEED_CTRL_MOTOR_COUNT) {
-        if (rpm >  340.0f) rpm =  340.0f;
-        if (rpm < -340.0f) rpm = -340.0f;
         PID_SetTarget(&s_pids[id], rpm);
     }
 }
