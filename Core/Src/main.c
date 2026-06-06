@@ -63,7 +63,7 @@ uint32_t s_led_off_tick;  /* LED 闪烁计时 */
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 extern RingBuf_t *Get_UART_RxRingBuf(void);
-extern int tim8_counter;
+extern volatile int tim8_counter;
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -112,7 +112,7 @@ int main(void)
   Motor_InitAll();
   SpeedCtrl_Init();
   oled_init();
-
+  
   /* 启用 TIM8 更新中断（PWM 已在 Motor_InitAll 中启动） */
   __HAL_TIM_ENABLE_IT(&htim8, TIM_IT_UPDATE);
 
@@ -122,6 +122,7 @@ int main(void)
   /* LED 初始状态 */
   HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET);
   s_led_off_tick = 0;
+  NRF_check();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -131,28 +132,12 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    /* ---- LED 闪烁管理 ---- */
 
-    blue_setparam_task();
+    // blue_setparam_task();
+  
+    nrf_receive_task();
+    oled_task();
 
-    if(oled_task_flag == 1){
-      oled_task();
-      oled_task_flag = 0;
-    }
-    
-    /* ---- 周期上报速度（约 100ms 一次） ---- */
-    {
-        static uint32_t last_tx_tick = 0;
-        if (HAL_GetTick() - last_tx_tick >= 100) {
-            last_tx_tick = HAL_GetTick();
-            /* 发送电机1的速度 */
-            s_tx_pkt.count = tim8_counter;
-            s_tx_pkt.speed = g_encoders[0].speed_rpm;
-            s_tx_pkt.error = SpeedCtrl_GetError(0);
-            s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
-            HAL_UART_Transmit(&huart3, s_tx_buf, s_tx_len, 100);
-        }
-    }
   }
   /* USER CODE END 3 */
 }

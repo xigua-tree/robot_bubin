@@ -102,5 +102,19 @@ void B_nrf24l01_switch_rx_from_A(void);
 void B_nrf24l01_switch_tx_to_C(void);
 void NRF_check(void);
 uint8_t B_receive_from_host(uint8_t *pbuf);  /* B模块：接收主机A发来的数据包（非阻塞轮询） */
+uint8_t nrf_receive_task(void);             /* B模块：NRF数据接收解析任务（主循环调用） */
+void floatToTwoSint8(float num, uint8_t *high_byte, uint8_t *low_byte);
+float twoSint8ToFloat(uint8_t high_byte, uint8_t low_byte);
+
+/* 全局变量 — 供 main.c 等模块读取解析结果 */
+extern uint8_t nrf_rx_buf[32];
+extern uint8_t key_mode;
+extern uint8_t encoderl_value;
+extern uint8_t encoderr_value;
+extern float rocker_lx;
+extern float rocker_ly;
+extern float rocker_rx;
+extern float rocker_ry;
+
 
 #endif

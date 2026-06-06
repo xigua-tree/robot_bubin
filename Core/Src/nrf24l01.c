@@ -23,6 +23,8 @@ const uint8_t RX_ADDRESS[RX_ADR_WIDTH] = {0x34, 0x43, 0x10, 0x10, 0x01};    /* �
 static uint8_t nrf24l01_read_buf(uint8_t reg, uint8_t *pbuf, uint8_t len);
 static uint8_t nrf24l01_write_buf(uint8_t reg, uint8_t *pbuf, uint8_t len);
 
+uint8_t nrf_rx_buf[32];
+
 /* ---- 移植层：SPI 底层操作 (用 HAL 实现) ---- */
 
 /**
@@ -369,8 +371,6 @@ void NRF_check(void)
     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_SET);
 }
 
-
-
 /**
  * @brief  B模块：接收主机A发来的数据包（非阻塞轮询, 适合主循环调用）
  * @note   调用前需确保已切换到接收A模式(B_nrf24l01_switch_rx_from_A)
@@ -402,3 +402,58 @@ uint8_t B_receive_from_host(uint8_t *pbuf)
     return 1;           /* 无新数据 */
 }
 
+/**
+ * @brief  浮点数转两个uint8_t (精度0.01, 范围-327.68~327.67)
+ */
+void floatToTwoSint8(float num, uint8_t *high_byte, uint8_t *low_byte)
+{
+    if (num > 327.67f) num = 327.67f;
+    if (num < -327.68f) num = -327.68f;
+
+    int16_t scaled = (int16_t)(round(num * 100.0f));
+
+    *high_byte = (scaled >> 8) & 0xFF;
+    *low_byte = scaled & 0xFF;
+}
+
+/**
+ * @brief  两个uint8_t还原为浮点数
+ */
+float twoSint8ToFloat(uint8_t high_byte, uint8_t low_byte)
+{
+    int16_t scaled = (int16_t)((high_byte << 8) | low_byte);
+    return (float)scaled / 100.0f;
+}
+
+uint8_t key_mode = 0;
+uint8_t encoderl_value = 0, encoderr_value = 0;
+float rocker_lx, rocker_ly, rocker_rx, rocker_ry;
+
+/**
+ * @brief  B模块：NRF 数据接收任务（主循环轮询调用）
+ * @note   一包数据内完成帧头校验 + 数据解析
+ * @retval 0: 收到有效数据包并解析完成
+ *         1: 当前无新数据或帧校验失败
+ */
+uint8_t nrf_receive_task(void)
+{
+    if (B_receive_from_host(nrf_rx_buf) != 0) {
+        return 1;   /* 无新数据 */
+    }
+
+    /* 帧头尾校验：0x55 开头, 0xFF 结尾(第20字节) */
+    if (nrf_rx_buf[0] != 0x55 || nrf_rx_buf[19] != 0xFF) {
+        return 1;   /* 帧校验失败 */
+    }
+
+    /* 解析数据 */
+    key_mode       = nrf_rx_buf[1];
+    encoderl_value = nrf_rx_buf[2];
+    encoderr_value = nrf_rx_buf[3];
+    rocker_lx      = twoSint8ToFloat(nrf_rx_buf[4],  nrf_rx_buf[5]);
+    rocker_ly      = twoSint8ToFloat(nrf_rx_buf[6],  nrf_rx_buf[7]);
+    rocker_rx      = twoSint8ToFloat(nrf_rx_buf[8],  nrf_rx_buf[9]);
+    rocker_ry      = twoSint8ToFloat(nrf_rx_buf[10], nrf_rx_buf[11]);
+
+    return 0;   /* 解析成功 */
+}

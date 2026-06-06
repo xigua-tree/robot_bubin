@@ -46,9 +46,10 @@
 static RingBuf_t s_uart_rx_rb;
 static volatile uint16_t s_tim8_divider;  /* TIM8 分频计数器 */
 static volatile uint8_t  s_tim8_encoder_counter;
-int tim8_counter = 0;
-uint16_t oled_Counter = 0;
-uint8_t oled_task_flag = 0;
+volatile int tim8_counter = 0;
+
+volatile uint16_t nrf_Counter = 0;
+volatile uint8_t nrf_task_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -244,12 +245,13 @@ void TIM8_UP_TIM13_IRQHandler(void)
       __HAL_TIM_CLEAR_FLAG(&htim8, TIM_FLAG_UPDATE);  
       s_tim8_divider++;
       s_tim8_encoder_counter++;
-      oled_Counter++;
+      nrf_Counter++;
 
-      if(oled_Counter >= 1000){
-        oled_task_flag = 1;
-        oled_Counter = 0;
+      if(nrf_Counter >= 500){
+        nrf_task_flag = 1;
+        nrf_Counter = 0;
       }
+
       if (s_tim8_divider >= 500) {
           tim8_counter++;
           s_tim8_divider = 0;

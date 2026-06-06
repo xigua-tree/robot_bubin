@@ -60,8 +60,8 @@ void TIM8_UP_TIM13_IRQHandler(void);
 void TIM7_IRQHandler(void);
 /* USER CODE BEGIN EFP */
 
-extern uint8_t oled_task_flag;
-extern int tim8_counter;
+extern volatile int tim8_counter;
+extern volatile uint8_t nrf_task_flag;
 /* USER CODE END EFP */
 
 #ifdef __cplusplus

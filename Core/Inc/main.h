@@ -44,6 +44,8 @@ extern "C" {
 #include "motor.h"
 #include "oled.h"
 #include "stm32f4xx_it.h"
+#include "nrf24l01.h"
+
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

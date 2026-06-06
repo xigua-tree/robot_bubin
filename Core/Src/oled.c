@@ -133,4 +133,8 @@ void oled_task()
     oled_show_string(0,0,"Ready!",12);
     snprintf(buf, sizeof(buf), "counts:%d",tim8_counter);
     oled_show_string(48,0,buf,12);
+
+    snprintf(buf, sizeof(buf), "lx:%d     lr:%d",encoderl_value,encoderr_value);
+    oled_show_string(0,2,buf,12);
+    
 }
