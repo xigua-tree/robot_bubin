@@ -1,0 +1,487 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccBCknFH.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"pid.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/pid.c"
+  20              		.section	.text.PID_Init,"ax",%progbits
+  21              		.align	1
+  22              		.global	PID_Init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	PID_Init:
+  28              	.LVL0:
+  29              	.LFB0:
+   1:Core/Src/pid.c **** #include "pid.h"
+   2:Core/Src/pid.c **** #include <string.h>
+   3:Core/Src/pid.c **** #include <math.h>
+   4:Core/Src/pid.c **** 
+   5:Core/Src/pid.c **** void PID_Init(PID_t *pid, float Kp, float Ki, float Kd, float out_max)
+   6:Core/Src/pid.c **** {
+  30              		.loc 1 6 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 6 1 is_stmt 0 view .LVU1
+  35 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 24
+  38              		.cfi_offset 3, -24
+  39              		.cfi_offset 4, -20
+  40              		.cfi_offset 5, -16
+  41              		.cfi_offset 6, -12
+  42              		.cfi_offset 7, -8
+  43              		.cfi_offset 14, -4
+  44 0002 2DED028B 		vpush.64	{d8}
+  45              	.LCFI1:
+  46              		.cfi_def_cfa_offset 32
+  47              		.cfi_offset 80, -32
+  48              		.cfi_offset 81, -28
+  49 0006 0446     		mov	r4, r0
+  50 0008 10EE107A 		vmov	r7, s0
+  51 000c 10EE906A 		vmov	r6, s1
+  52 0010 11EE105A 		vmov	r5, s2
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccBCknFH.s 			page 2
+
+
+  53 0014 B0EE618A 		vmov.f32	s16, s3
+   7:Core/Src/pid.c ****     memset(pid, 0, sizeof(PID_t));
+  54              		.loc 1 7 5 is_stmt 1 view .LVU2
+  55 0018 3022     		movs	r2, #48
+  56 001a 0021     		movs	r1, #0
+  57 001c FFF7FEFF 		bl	memset
+  58              	.LVL1:
+   8:Core/Src/pid.c ****     pid->Kp = Kp;
+  59              		.loc 1 8 5 view .LVU3
+  60              		.loc 1 8 13 is_stmt 0 view .LVU4
+  61 0020 2760     		str	r7, [r4]	@ float
+   9:Core/Src/pid.c ****     pid->Ki = Ki;
+  62              		.loc 1 9 5 is_stmt 1 view .LVU5
+  63              		.loc 1 9 13 is_stmt 0 view .LVU6
+  64 0022 6660     		str	r6, [r4, #4]	@ float
+  10:Core/Src/pid.c ****     pid->Kd = Kd;
+  65              		.loc 1 10 5 is_stmt 1 view .LVU7
+  66              		.loc 1 10 13 is_stmt 0 view .LVU8
+  67 0024 A560     		str	r5, [r4, #8]	@ float
+  11:Core/Src/pid.c ****     pid->out_max = out_max;
+  68              		.loc 1 11 5 is_stmt 1 view .LVU9
+  69              		.loc 1 11 18 is_stmt 0 view .LVU10
+  70 0026 84ED088A 		vstr.32	s16, [r4, #32]
+  12:Core/Src/pid.c ****     pid->out_min = -out_max;
+  71              		.loc 1 12 5 is_stmt 1 view .LVU11
+  72              		.loc 1 12 20 is_stmt 0 view .LVU12
+  73 002a F1EE487A 		vneg.f32	s15, s16
+  74              		.loc 1 12 18 view .LVU13
+  75 002e C4ED097A 		vstr.32	s15, [r4, #36]
+  13:Core/Src/pid.c ****     pid->integral_max = out_max * 0.3f;  /* 积分限幅为输出的30% */
+  76              		.loc 1 13 5 is_stmt 1 view .LVU14
+  77              		.loc 1 13 33 is_stmt 0 view .LVU15
+  78 0032 DFED047A 		vldr.32	s15, .L3
+  79 0036 28EE278A 		vmul.f32	s16, s16, s15
+  80              	.LVL2:
+  81              		.loc 1 13 23 view .LVU16
+  82 003a 84ED0B8A 		vstr.32	s16, [r4, #44]
+  14:Core/Src/pid.c **** }
+  83              		.loc 1 14 1 view .LVU17
+  84 003e BDEC028B 		vldm	sp!, {d8}
+  85              	.LCFI2:
+  86              		.cfi_restore 80
+  87              		.cfi_restore 81
+  88              		.cfi_def_cfa_offset 24
+  89 0042 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+  90              	.LVL3:
+  91              	.L4:
+  92              		.loc 1 14 1 view .LVU18
+  93              		.align	2
+  94              	.L3:
+  95 0044 9A99993E 		.word	1050253722
+  96              		.cfi_endproc
+  97              	.LFE0:
+  99              		.section	.text.PID_Update,"ax",%progbits
+ 100              		.align	1
+ 101              		.global	PID_Update
+ 102              		.syntax unified
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccBCknFH.s 			page 3
+
+
+ 103              		.thumb
+ 104              		.thumb_func
+ 106              	PID_Update:
+ 107              	.LVL4:
+ 108              	.LFB1:
+  15:Core/Src/pid.c **** 
+  16:Core/Src/pid.c **** float PID_Update(PID_t *pid, float measured)
+  17:Core/Src/pid.c **** {
+ 109              		.loc 1 17 1 is_stmt 1 view -0
+ 110              		.cfi_startproc
+ 111              		@ args = 0, pretend = 0, frame = 0
+ 112              		@ frame_needed = 0, uses_anonymous_args = 0
+ 113              		@ link register save eliminated.
+  18:Core/Src/pid.c ****     /* 计算误差 */
+  19:Core/Src/pid.c ****     float error = pid->target - measured;
+ 114              		.loc 1 19 5 view .LVU20
+ 115              		.loc 1 19 22 is_stmt 0 view .LVU21
+ 116 0000 90ED037A 		vldr.32	s14, [r0, #12]
+ 117              		.loc 1 19 11 view .LVU22
+ 118 0004 37EE400A 		vsub.f32	s0, s14, s0
+ 119              	.LVL5:
+  20:Core/Src/pid.c ****     pid->error[2] = pid->error[1];   /* e(k-2) = e(k-1) */
+ 120              		.loc 1 20 5 is_stmt 1 view .LVU23
+ 121              		.loc 1 20 31 is_stmt 0 view .LVU24
+ 122 0008 D0ED056A 		vldr.32	s13, [r0, #20]
+ 123              		.loc 1 20 19 view .LVU25
+ 124 000c C0ED066A 		vstr.32	s13, [r0, #24]
+  21:Core/Src/pid.c ****     pid->error[1] = pid->error[0];   /* e(k-1) = e(k)   */
+ 125              		.loc 1 21 5 is_stmt 1 view .LVU26
+ 126              		.loc 1 21 31 is_stmt 0 view .LVU27
+ 127 0010 D0ED047A 		vldr.32	s15, [r0, #16]
+ 128              		.loc 1 21 19 view .LVU28
+ 129 0014 C0ED057A 		vstr.32	s15, [r0, #20]
+  22:Core/Src/pid.c ****     pid->error[0] = error;           /* e(k)   = error   */
+ 130              		.loc 1 22 5 is_stmt 1 view .LVU29
+ 131              		.loc 1 22 19 is_stmt 0 view .LVU30
+ 132 0018 80ED040A 		vstr.32	s0, [r0, #16]
+  23:Core/Src/pid.c **** 
+  24:Core/Src/pid.c ****     /* 死区：误差 < 10 RPM 时冻结积分 */
+  25:Core/Src/pid.c ****     if (fabsf(error) < 6.0f) {
+ 133              		.loc 1 25 5 is_stmt 1 view .LVU31
+ 134              		.loc 1 25 9 is_stmt 0 view .LVU32
+ 135 001c B0EEC06A 		vabs.f32	s12, s0
+ 136              		.loc 1 25 8 view .LVU33
+ 137 0020 F1EE085A 		vmov.f32	s11, #6.0e+0
+ 138 0024 B4EEE56A 		vcmpe.f32	s12, s11
+ 139 0028 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 140 002c 11D5     		bpl	.L28
+  26:Core/Src/pid.c ****         pid->integral = 0.0f;
+ 141              		.loc 1 26 9 is_stmt 1 view .LVU34
+ 142              		.loc 1 26 23 is_stmt 0 view .LVU35
+ 143 002e 0023     		movs	r3, #0
+ 144 0030 8362     		str	r3, [r0, #40]	@ float
+  27:Core/Src/pid.c ****         /* 目标=0 且速度≈0 → 强制停转；目标≠0 → 保持当前输出 */
+  28:Core/Src/pid.c ****         if (fabsf(pid->target) < 10.0f) {
+ 145              		.loc 1 28 9 is_stmt 1 view .LVU36
+ 146              		.loc 1 28 13 is_stmt 0 view .LVU37
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccBCknFH.s 			page 4
+
+
+ 147 0032 B0EEC77A 		vabs.f32	s14, s14
+ 148              		.loc 1 28 12 view .LVU38
+ 149 0036 F2EE047A 		vmov.f32	s15, #1.0e+1
+ 150 003a B4EEE77A 		vcmpe.f32	s14, s15
+ 151 003e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 152 0042 03D5     		bpl	.L29
+  29:Core/Src/pid.c ****             pid->output = 0.0f;
+ 153              		.loc 1 29 13 is_stmt 1 view .LVU39
+ 154              		.loc 1 29 25 is_stmt 0 view .LVU40
+ 155 0044 00EE103A 		vmov	s0, r3
+ 156              	.LVL6:
+ 157              		.loc 1 29 25 view .LVU41
+ 158 0048 C361     		str	r3, [r0, #28]	@ float
+  30:Core/Src/pid.c ****             return 0.0f;
+ 159              		.loc 1 30 13 is_stmt 1 view .LVU42
+ 160              		.loc 1 30 20 is_stmt 0 view .LVU43
+ 161 004a 7047     		bx	lr
+ 162              	.LVL7:
+ 163              	.L29:
+  31:Core/Src/pid.c ****         }
+  32:Core/Src/pid.c ****         return pid->output;
+ 164              		.loc 1 32 9 is_stmt 1 view .LVU44
+ 165              		.loc 1 32 19 is_stmt 0 view .LVU45
+ 166 004c 90ED070A 		vldr.32	s0, [r0, #28]
+ 167              	.LVL8:
+ 168              		.loc 1 32 19 view .LVU46
+ 169 0050 7047     		bx	lr
+ 170              	.LVL9:
+ 171              	.L28:
+  33:Core/Src/pid.c ****     }
+  34:Core/Src/pid.c **** 
+  35:Core/Src/pid.c ****     /* 积分分离：误差较大时不累加积分，防止饱和 */
+  36:Core/Src/pid.c ****     if (fabsf(error) < pid->out_max * 0.5f) {
+ 172              		.loc 1 36 5 is_stmt 1 view .LVU47
+ 173              		.loc 1 36 27 is_stmt 0 view .LVU48
+ 174 0052 D0ED085A 		vldr.32	s11, [r0, #32]
+ 175              		.loc 1 36 37 view .LVU49
+ 176 0056 B6EE007A 		vmov.f32	s14, #5.0e-1
+ 177 005a 25EE877A 		vmul.f32	s14, s11, s14
+ 178              		.loc 1 36 8 view .LVU50
+ 179 005e B4EEC76A 		vcmpe.f32	s12, s14
+ 180 0062 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 181 0066 1AD5     		bpl	.L30
+  37:Core/Src/pid.c ****         pid->integral += error;
+ 182              		.loc 1 37 9 is_stmt 1 view .LVU51
+ 183              		.loc 1 37 12 is_stmt 0 view .LVU52
+ 184 0068 90ED0A6A 		vldr.32	s12, [r0, #40]
+ 185              		.loc 1 37 23 view .LVU53
+ 186 006c 36EE006A 		vadd.f32	s12, s12, s0
+ 187 0070 80ED0A6A 		vstr.32	s12, [r0, #40]
+  38:Core/Src/pid.c ****         if (pid->integral > pid->integral_max)  pid->integral = pid->integral_max;
+ 188              		.loc 1 38 9 is_stmt 1 view .LVU54
+ 189              		.loc 1 38 32 is_stmt 0 view .LVU55
+ 190 0074 90ED0B7A 		vldr.32	s14, [r0, #44]
+ 191              		.loc 1 38 12 view .LVU56
+ 192 0078 B4EEC76A 		vcmpe.f32	s12, s14
+ 193 007c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccBCknFH.s 			page 5
+
+
+ 194 0080 01DD     		ble	.L13
+ 195              		.loc 1 38 49 is_stmt 1 discriminator 1 view .LVU57
+ 196              		.loc 1 38 63 is_stmt 0 discriminator 1 view .LVU58
+ 197 0082 80ED0A7A 		vstr.32	s14, [r0, #40]
+ 198              	.L13:
+  39:Core/Src/pid.c ****         if (pid->integral < -pid->integral_max) pid->integral = -pid->integral_max;
+ 199              		.loc 1 39 9 is_stmt 1 view .LVU59
+ 200              		.loc 1 39 16 is_stmt 0 view .LVU60
+ 201 0086 90ED0A6A 		vldr.32	s12, [r0, #40]
+ 202              		.loc 1 39 29 view .LVU61
+ 203 008a B1EE477A 		vneg.f32	s14, s14
+ 204              		.loc 1 39 12 view .LVU62
+ 205 008e B4EEC76A 		vcmpe.f32	s12, s14
+ 206 0092 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 207 0096 04D5     		bpl	.L15
+ 208              		.loc 1 39 49 is_stmt 1 discriminator 1 view .LVU63
+ 209              		.loc 1 39 63 is_stmt 0 discriminator 1 view .LVU64
+ 210 0098 80ED0A7A 		vstr.32	s14, [r0, #40]
+ 211 009c 01E0     		b	.L15
+ 212              	.L30:
+  40:Core/Src/pid.c ****     } else {
+  41:Core/Src/pid.c ****         pid->integral = 0.0f;
+ 213              		.loc 1 41 9 is_stmt 1 view .LVU65
+ 214              		.loc 1 41 23 is_stmt 0 view .LVU66
+ 215 009e 0023     		movs	r3, #0
+ 216 00a0 8362     		str	r3, [r0, #40]	@ float
+ 217              	.L15:
+  42:Core/Src/pid.c ****     }
+  43:Core/Src/pid.c **** 
+  44:Core/Src/pid.c ****     /* 增量式 PID */
+  45:Core/Src/pid.c ****     /* Δu = Kp*(e(k)-e(k-1)) + Ki*e(k) + Kd*(e(k)-2e(k-1)+e(k-2)) */
+  46:Core/Src/pid.c ****     float delta = pid->Kp * (pid->error[0] - pid->error[1])
+ 218              		.loc 1 46 5 is_stmt 1 view .LVU67
+ 219              		.loc 1 46 22 is_stmt 0 view .LVU68
+ 220 00a2 90ED007A 		vldr.32	s14, [r0]
+ 221              		.loc 1 46 44 view .LVU69
+ 222 00a6 30EE676A 		vsub.f32	s12, s0, s15
+ 223              		.loc 1 46 27 view .LVU70
+ 224 00aa 27EE067A 		vmul.f32	s14, s14, s12
+  47:Core/Src/pid.c ****                 + pid->Ki * pid->error[0]
+ 225              		.loc 1 47 22 view .LVU71
+ 226 00ae 90ED016A 		vldr.32	s12, [r0, #4]
+ 227              		.loc 1 47 27 view .LVU72
+ 228 00b2 26EE006A 		vmul.f32	s12, s12, s0
+ 229              		.loc 1 47 17 view .LVU73
+ 230 00b6 37EE067A 		vadd.f32	s14, s14, s12
+  48:Core/Src/pid.c ****                 + pid->Kd * (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);
+ 231              		.loc 1 48 22 view .LVU74
+ 232 00ba 90ED026A 		vldr.32	s12, [r0, #8]
+ 233              		.loc 1 48 51 view .LVU75
+ 234 00be 77EEA77A 		vadd.f32	s15, s15, s15
+ 235              		.loc 1 48 44 view .LVU76
+ 236 00c2 30EE670A 		vsub.f32	s0, s0, s15
+ 237              	.LVL10:
+ 238              		.loc 1 48 67 view .LVU77
+ 239 00c6 76EE806A 		vadd.f32	s13, s13, s0
+ 240              		.loc 1 48 27 view .LVU78
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccBCknFH.s 			page 6
+
+
+ 241 00ca 66EE267A 		vmul.f32	s15, s12, s13
+  46:Core/Src/pid.c ****                 + pid->Ki * pid->error[0]
+ 242              		.loc 1 46 11 view .LVU79
+ 243 00ce 77EE277A 		vadd.f32	s15, s14, s15
+ 244              	.LVL11:
+  49:Core/Src/pid.c **** 
+  50:Core/Src/pid.c ****     pid->output += delta;
+ 245              		.loc 1 50 5 is_stmt 1 view .LVU80
+ 246              		.loc 1 50 8 is_stmt 0 view .LVU81
+ 247 00d2 90ED077A 		vldr.32	s14, [r0, #28]
+ 248              		.loc 1 50 17 view .LVU82
+ 249 00d6 77EE277A 		vadd.f32	s15, s14, s15
+ 250              	.LVL12:
+ 251              		.loc 1 50 17 view .LVU83
+ 252 00da C0ED077A 		vstr.32	s15, [r0, #28]
+  51:Core/Src/pid.c **** 
+  52:Core/Src/pid.c ****     /* 输出限幅 */
+  53:Core/Src/pid.c ****     if (pid->output > pid->out_max)  pid->output = pid->out_max;
+ 253              		.loc 1 53 5 is_stmt 1 view .LVU84
+ 254              		.loc 1 53 8 is_stmt 0 view .LVU85
+ 255 00de F4EEE75A 		vcmpe.f32	s11, s15
+ 256 00e2 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 257 00e6 01D5     		bpl	.L17
+ 258              		.loc 1 53 38 is_stmt 1 discriminator 1 view .LVU86
+ 259              		.loc 1 53 50 is_stmt 0 discriminator 1 view .LVU87
+ 260 00e8 C0ED075A 		vstr.32	s11, [r0, #28]
+ 261              	.L17:
+  54:Core/Src/pid.c ****     if (pid->output < pid->out_min)  pid->output = pid->out_min;
+ 262              		.loc 1 54 5 is_stmt 1 view .LVU88
+ 263              		.loc 1 54 12 is_stmt 0 view .LVU89
+ 264 00ec 90ED077A 		vldr.32	s14, [r0, #28]
+ 265              		.loc 1 54 26 view .LVU90
+ 266 00f0 D0ED097A 		vldr.32	s15, [r0, #36]
+ 267              		.loc 1 54 8 view .LVU91
+ 268 00f4 B4EEE77A 		vcmpe.f32	s14, s15
+ 269 00f8 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 270 00fc 01D5     		bpl	.L19
+ 271              		.loc 1 54 38 is_stmt 1 discriminator 1 view .LVU92
+ 272              		.loc 1 54 50 is_stmt 0 discriminator 1 view .LVU93
+ 273 00fe C0ED077A 		vstr.32	s15, [r0, #28]
+ 274              	.L19:
+  55:Core/Src/pid.c **** 
+  56:Core/Src/pid.c ****     return pid->output;
+ 275              		.loc 1 56 5 is_stmt 1 view .LVU94
+ 276              		.loc 1 56 15 is_stmt 0 view .LVU95
+ 277 0102 90ED070A 		vldr.32	s0, [r0, #28]
+  57:Core/Src/pid.c **** }
+ 278              		.loc 1 57 1 view .LVU96
+ 279 0106 7047     		bx	lr
+ 280              		.cfi_endproc
+ 281              	.LFE1:
+ 283              		.section	.text.PID_SetTarget,"ax",%progbits
+ 284              		.align	1
+ 285              		.global	PID_SetTarget
+ 286              		.syntax unified
+ 287              		.thumb
+ 288              		.thumb_func
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccBCknFH.s 			page 7
+
+
+ 290              	PID_SetTarget:
+ 291              	.LVL13:
+ 292              	.LFB2:
+  58:Core/Src/pid.c **** 
+  59:Core/Src/pid.c **** void PID_SetTarget(PID_t *pid, float target)
+  60:Core/Src/pid.c **** {
+ 293              		.loc 1 60 1 is_stmt 1 view -0
+ 294              		.cfi_startproc
+ 295              		@ args = 0, pretend = 0, frame = 0
+ 296              		@ frame_needed = 0, uses_anonymous_args = 0
+ 297              		@ link register save eliminated.
+  61:Core/Src/pid.c ****     pid->target = target;
+ 298              		.loc 1 61 5 view .LVU98
+ 299              		.loc 1 61 17 is_stmt 0 view .LVU99
+ 300 0000 80ED030A 		vstr.32	s0, [r0, #12]
+  62:Core/Src/pid.c **** }
+ 301              		.loc 1 62 1 view .LVU100
+ 302 0004 7047     		bx	lr
+ 303              		.cfi_endproc
+ 304              	.LFE2:
+ 306              		.section	.text.PID_SetTunings,"ax",%progbits
+ 307              		.align	1
+ 308              		.global	PID_SetTunings
+ 309              		.syntax unified
+ 310              		.thumb
+ 311              		.thumb_func
+ 313              	PID_SetTunings:
+ 314              	.LVL14:
+ 315              	.LFB3:
+  63:Core/Src/pid.c **** 
+  64:Core/Src/pid.c **** void PID_SetTunings(PID_t *pid, float Kp, float Ki, float Kd)
+  65:Core/Src/pid.c **** {
+ 316              		.loc 1 65 1 is_stmt 1 view -0
+ 317              		.cfi_startproc
+ 318              		@ args = 0, pretend = 0, frame = 0
+ 319              		@ frame_needed = 0, uses_anonymous_args = 0
+ 320              		@ link register save eliminated.
+  66:Core/Src/pid.c ****     pid->Kp = Kp;
+ 321              		.loc 1 66 5 view .LVU102
+ 322              		.loc 1 66 13 is_stmt 0 view .LVU103
+ 323 0000 80ED000A 		vstr.32	s0, [r0]
+  67:Core/Src/pid.c ****     pid->Ki = Ki;
+ 324              		.loc 1 67 5 is_stmt 1 view .LVU104
+ 325              		.loc 1 67 13 is_stmt 0 view .LVU105
+ 326 0004 C0ED010A 		vstr.32	s1, [r0, #4]
+  68:Core/Src/pid.c ****     pid->Kd = Kd;
+ 327              		.loc 1 68 5 is_stmt 1 view .LVU106
+ 328              		.loc 1 68 13 is_stmt 0 view .LVU107
+ 329 0008 80ED021A 		vstr.32	s2, [r0, #8]
+  69:Core/Src/pid.c **** }
+ 330              		.loc 1 69 1 view .LVU108
+ 331 000c 7047     		bx	lr
+ 332              		.cfi_endproc
+ 333              	.LFE3:
+ 335              		.section	.text.PID_Reset,"ax",%progbits
+ 336              		.align	1
+ 337              		.global	PID_Reset
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccBCknFH.s 			page 8
+
+
+ 338              		.syntax unified
+ 339              		.thumb
+ 340              		.thumb_func
+ 342              	PID_Reset:
+ 343              	.LVL15:
+ 344              	.LFB4:
+  70:Core/Src/pid.c **** 
+  71:Core/Src/pid.c **** void PID_Reset(PID_t *pid)
+  72:Core/Src/pid.c **** {
+ 345              		.loc 1 72 1 is_stmt 1 view -0
+ 346              		.cfi_startproc
+ 347              		@ args = 0, pretend = 0, frame = 0
+ 348              		@ frame_needed = 0, uses_anonymous_args = 0
+ 349              		@ link register save eliminated.
+  73:Core/Src/pid.c ****     pid->error[0] = 0.0f;
+ 350              		.loc 1 73 5 view .LVU110
+ 351              		.loc 1 73 19 is_stmt 0 view .LVU111
+ 352 0000 0023     		movs	r3, #0
+ 353 0002 0361     		str	r3, [r0, #16]	@ float
+  74:Core/Src/pid.c ****     pid->error[1] = 0.0f;
+ 354              		.loc 1 74 5 is_stmt 1 view .LVU112
+ 355              		.loc 1 74 19 is_stmt 0 view .LVU113
+ 356 0004 4361     		str	r3, [r0, #20]	@ float
+  75:Core/Src/pid.c ****     pid->error[2] = 0.0f;
+ 357              		.loc 1 75 5 is_stmt 1 view .LVU114
+ 358              		.loc 1 75 19 is_stmt 0 view .LVU115
+ 359 0006 8361     		str	r3, [r0, #24]	@ float
+  76:Core/Src/pid.c ****     pid->integral = 0.0f;
+ 360              		.loc 1 76 5 is_stmt 1 view .LVU116
+ 361              		.loc 1 76 19 is_stmt 0 view .LVU117
+ 362 0008 8362     		str	r3, [r0, #40]	@ float
+  77:Core/Src/pid.c ****     pid->output = 0.0f;
+ 363              		.loc 1 77 5 is_stmt 1 view .LVU118
+ 364              		.loc 1 77 17 is_stmt 0 view .LVU119
+ 365 000a C361     		str	r3, [r0, #28]	@ float
+  78:Core/Src/pid.c **** }
+ 366              		.loc 1 78 1 view .LVU120
+ 367 000c 7047     		bx	lr
+ 368              		.cfi_endproc
+ 369              	.LFE4:
+ 371              		.text
+ 372              	.Letext0:
+ 373              		.file 2 "Core/Inc/pid.h"
+ 374              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/st
+ 375              		.file 4 "<built-in>"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccBCknFH.s 			page 9
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 pid.c
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:21     .text.PID_Init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:27     .text.PID_Init:00000000 PID_Init
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:95     .text.PID_Init:00000044 $d
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:100    .text.PID_Update:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:106    .text.PID_Update:00000000 PID_Update
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:284    .text.PID_SetTarget:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:290    .text.PID_SetTarget:00000000 PID_SetTarget
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:307    .text.PID_SetTunings:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:313    .text.PID_SetTunings:00000000 PID_SetTunings
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:336    .text.PID_Reset:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccBCknFH.s:342    .text.PID_Reset:00000000 PID_Reset
+
+UNDEFINED SYMBOLS
+memset

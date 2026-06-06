@@ -1,5 +1,6 @@
 #include "spi.h"
 #include "nrf24l01.h"
+#include <math.h>
 
 #define ADDR_AB_LEN    5   // 与宏定义TX_ADR_WIDTH=5一致
 #define ADDR_BC_LEN    5   // 与宏定义TX_ADR_WIDTH=5一致

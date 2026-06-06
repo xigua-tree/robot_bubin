@@ -2,6 +2,7 @@
 #include "font.h"
 #include "i2c.h"              /* hi2c2 句柄引用 */
 #include "stm32f4xx_it.h"
+#include <stdio.h>
 
 /**
  * @brief  OLED 写命令 (硬件I2C2)

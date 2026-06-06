@@ -1,0 +1,2149 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"MahonyAHRS.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/MahonyAHRS.c"
+  20              		.section	.text.invSqrt,"ax",%progbits
+  21              		.align	1
+  22              		.global	invSqrt
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	invSqrt:
+  28              	.LVL0:
+  29              	.LFB2:
+   1:Core/Src/MahonyAHRS.c **** //=================================================================================================
+   2:Core/Src/MahonyAHRS.c **** // MahonyAHRS.c
+   3:Core/Src/MahonyAHRS.c **** //=================================================================================================
+   4:Core/Src/MahonyAHRS.c **** //
+   5:Core/Src/MahonyAHRS.c **** // Madgwick's implementation of Mayhony's AHRS algorithm.
+   6:Core/Src/MahonyAHRS.c **** // See: http://www.x-io.co.uk/node/8#open_source_ahrs_and_imu_algorithms
+   7:Core/Src/MahonyAHRS.c **** //
+   8:Core/Src/MahonyAHRS.c **** // Date			Author			Notes
+   9:Core/Src/MahonyAHRS.c **** // 29/09/2011	SOH Madgwick    Initial release
+  10:Core/Src/MahonyAHRS.c **** // 02/10/2011	SOH Madgwick	Optimised for reduced CPU load
+  11:Core/Src/MahonyAHRS.c **** //
+  12:Core/Src/MahonyAHRS.c **** //=================================================================================================
+  13:Core/Src/MahonyAHRS.c **** 
+  14:Core/Src/MahonyAHRS.c **** //-------------------------------------------------------------------------------------------------
+  15:Core/Src/MahonyAHRS.c **** // Header files
+  16:Core/Src/MahonyAHRS.c **** 
+  17:Core/Src/MahonyAHRS.c **** #include "MahonyAHRS.h"
+  18:Core/Src/MahonyAHRS.c **** #include <math.h>
+  19:Core/Src/MahonyAHRS.c **** 
+  20:Core/Src/MahonyAHRS.c **** //-------------------------------------------------------------------------------------------------
+  21:Core/Src/MahonyAHRS.c **** // Definitions
+  22:Core/Src/MahonyAHRS.c **** // Mahony AHRS 参数 (适配 MPU6050)
+  23:Core/Src/MahonyAHRS.c **** #define sampleFreq    200.0f			// 必须与实际调用频率一致 (main.c 中每5ms调用一次)
+  24:Core/Src/MahonyAHRS.c **** #define twoKpDef      1.0f			// 2*比例增益 (MPU6050 噪声较大，需要较高增益)
+  25:Core/Src/MahonyAHRS.c **** #define twoKiDef      0.01f			// 2*积分增益 (用于估计陀螺仪零偏)
+  26:Core/Src/MahonyAHRS.c **** 
+  27:Core/Src/MahonyAHRS.c **** //#define sampleFreq	1000.0f			// sample frequency in Hz
+  28:Core/Src/MahonyAHRS.c **** //#define twoKpDef	0.5f
+  29:Core/Src/MahonyAHRS.c **** //#define twoKiDef	0.001f
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 2
+
+
+  30:Core/Src/MahonyAHRS.c **** 
+  31:Core/Src/MahonyAHRS.c **** //-------------------------------------------------------------------------------------------------
+  32:Core/Src/MahonyAHRS.c **** // Variable definitions
+  33:Core/Src/MahonyAHRS.c **** 
+  34:Core/Src/MahonyAHRS.c **** volatile float twoKp = twoKpDef;											// 2 * proportional gain (Kp)
+  35:Core/Src/MahonyAHRS.c **** volatile float twoKi = twoKiDef;											// 2 * integral gain (Ki)
+  36:Core/Src/MahonyAHRS.c **** volatile float q0 = 1.0f, q1 = 0.0f, q2 = 0.0f, q3 = 0.0f;				// quaternion of sensor frame relativ
+  37:Core/Src/MahonyAHRS.c **** volatile float integralFBx = 0.0f,  integralFBy = 0.0f, integralFBz = 0.0f;	// integral error terms
+  38:Core/Src/MahonyAHRS.c **** float INS_quat[4];                                                          // quaternion array for
+  39:Core/Src/MahonyAHRS.c **** 
+  40:Core/Src/MahonyAHRS.c **** //-------------------------------------------------------------------------------------------------
+  41:Core/Src/MahonyAHRS.c **** // Function declarations
+  42:Core/Src/MahonyAHRS.c **** 
+  43:Core/Src/MahonyAHRS.c **** float invSqrt(float x);
+  44:Core/Src/MahonyAHRS.c ****  
+  45:Core/Src/MahonyAHRS.c **** //=================================================================================================
+  46:Core/Src/MahonyAHRS.c **** // Functions
+  47:Core/Src/MahonyAHRS.c **** 
+  48:Core/Src/MahonyAHRS.c **** //-------------------------------------------------------------------------------------------------
+  49:Core/Src/MahonyAHRS.c **** // AHRS algorithm update
+  50:Core/Src/MahonyAHRS.c **** 
+  51:Core/Src/MahonyAHRS.c **** void MahonyAHRSupdate(float q[4], float gx, float gy, float gz, float ax, float ay, float az, float
+  52:Core/Src/MahonyAHRS.c **** 	float recipNorm;
+  53:Core/Src/MahonyAHRS.c ****     float q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;  
+  54:Core/Src/MahonyAHRS.c **** 	float hx, hy, bx, bz;
+  55:Core/Src/MahonyAHRS.c **** 	float halfvx, halfvy, halfvz, halfwx, halfwy, halfwz;
+  56:Core/Src/MahonyAHRS.c **** 	float halfex, halfey, halfez;
+  57:Core/Src/MahonyAHRS.c **** 	float qa, qb, qc;
+  58:Core/Src/MahonyAHRS.c **** 
+  59:Core/Src/MahonyAHRS.c **** 	// Use IMU algorithm if magnetometer measurement invalid (avoids NaN in magnetometer normalisation
+  60:Core/Src/MahonyAHRS.c **** 	if((mx == 0.0f) && (my == 0.0f) && (mz == 0.0f)) {
+  61:Core/Src/MahonyAHRS.c **** 		MahonyAHRSupdateIMU(q, gx, gy, gz, ax, ay, az);
+  62:Core/Src/MahonyAHRS.c **** 		return;
+  63:Core/Src/MahonyAHRS.c **** 	}
+  64:Core/Src/MahonyAHRS.c **** 
+  65:Core/Src/MahonyAHRS.c **** 	// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisa
+  66:Core/Src/MahonyAHRS.c **** 	if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
+  67:Core/Src/MahonyAHRS.c **** 
+  68:Core/Src/MahonyAHRS.c **** 		// Normalise accelerometer measurement
+  69:Core/Src/MahonyAHRS.c **** 		recipNorm = invSqrt(ax * ax + ay * ay + az * az);
+  70:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+  71:Core/Src/MahonyAHRS.c **** 		ay *= recipNorm;
+  72:Core/Src/MahonyAHRS.c **** 		az *= recipNorm;     
+  73:Core/Src/MahonyAHRS.c **** 
+  74:Core/Src/MahonyAHRS.c **** 		// Normalise magnetometer measurement
+  75:Core/Src/MahonyAHRS.c **** 		recipNorm = invSqrt(mx * mx + my * my + mz * mz);
+  76:Core/Src/MahonyAHRS.c **** 		mx *= recipNorm;
+  77:Core/Src/MahonyAHRS.c **** 		my *= recipNorm;
+  78:Core/Src/MahonyAHRS.c **** 		mz *= recipNorm;   
+  79:Core/Src/MahonyAHRS.c **** 
+  80:Core/Src/MahonyAHRS.c ****         // Auxiliary variables to avoid repeated arithmetic
+  81:Core/Src/MahonyAHRS.c ****         q0q0 = q[0] * q[0];
+  82:Core/Src/MahonyAHRS.c ****         q0q1 = q[0] * q[1];
+  83:Core/Src/MahonyAHRS.c ****         q0q2 = q[0] * q[2];
+  84:Core/Src/MahonyAHRS.c ****         q0q3 = q[0] * q[3];
+  85:Core/Src/MahonyAHRS.c ****         q1q1 = q[1] * q[1];
+  86:Core/Src/MahonyAHRS.c ****         q1q2 = q[1] * q[2];
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 3
+
+
+  87:Core/Src/MahonyAHRS.c ****         q1q3 = q[1] * q[3];
+  88:Core/Src/MahonyAHRS.c ****         q2q2 = q[2] * q[2];
+  89:Core/Src/MahonyAHRS.c ****         q2q3 = q[2] * q[3];
+  90:Core/Src/MahonyAHRS.c ****         q3q3 = q[3] * q[3];   
+  91:Core/Src/MahonyAHRS.c **** 
+  92:Core/Src/MahonyAHRS.c ****         // Reference direction of Earth's magnetic field
+  93:Core/Src/MahonyAHRS.c ****         hx = 2.0f * (mx * (0.5f - q2q2 - q3q3) + my * (q1q2 - q0q3) + mz * (q1q3 + q0q2));
+  94:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+  95:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+  96:Core/Src/MahonyAHRS.c ****         bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+  97:Core/Src/MahonyAHRS.c **** 
+  98:Core/Src/MahonyAHRS.c **** 		// Estimated direction of gravity and magnetic field
+  99:Core/Src/MahonyAHRS.c **** 		halfvx = q1q3 - q0q2;
+ 100:Core/Src/MahonyAHRS.c **** 		halfvy = q0q1 + q2q3;
+ 101:Core/Src/MahonyAHRS.c **** 		halfvz = q0q0 - 0.5f + q3q3;
+ 102:Core/Src/MahonyAHRS.c ****         halfwx = bx * (0.5f - q2q2 - q3q3) + bz * (q1q3 - q0q2);
+ 103:Core/Src/MahonyAHRS.c ****         halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
+ 104:Core/Src/MahonyAHRS.c ****         halfwz = bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2);  
+ 105:Core/Src/MahonyAHRS.c **** 	
+ 106:Core/Src/MahonyAHRS.c **** 		// Error is sum of cross product between estimated direction and measured direction of field vect
+ 107:Core/Src/MahonyAHRS.c **** 		halfex = (ay * halfvz - az * halfvy) + (my * halfwz - mz * halfwy);
+ 108:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+ 109:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+ 110:Core/Src/MahonyAHRS.c **** 
+ 111:Core/Src/MahonyAHRS.c **** 		// Compute and apply integral feedback if enabled
+ 112:Core/Src/MahonyAHRS.c **** 		if(twoKi > 0.0f) {
+ 113:Core/Src/MahonyAHRS.c **** 			integralFBx += twoKi * halfex * (1.0f / sampleFreq);	// integral error scaled by Ki
+ 114:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 115:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 116:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 117:Core/Src/MahonyAHRS.c **** 			gy += integralFBy;
+ 118:Core/Src/MahonyAHRS.c **** 			gz += integralFBz;
+ 119:Core/Src/MahonyAHRS.c **** 		}
+ 120:Core/Src/MahonyAHRS.c **** 		else {
+ 121:Core/Src/MahonyAHRS.c **** 			integralFBx = 0.0f;	// prevent integral windup
+ 122:Core/Src/MahonyAHRS.c **** 			integralFBy = 0.0f;
+ 123:Core/Src/MahonyAHRS.c **** 			integralFBz = 0.0f;
+ 124:Core/Src/MahonyAHRS.c **** 		}
+ 125:Core/Src/MahonyAHRS.c **** 
+ 126:Core/Src/MahonyAHRS.c **** 		// Apply proportional feedback
+ 127:Core/Src/MahonyAHRS.c **** 		gx += twoKp * halfex;
+ 128:Core/Src/MahonyAHRS.c **** 		gy += twoKp * halfey;
+ 129:Core/Src/MahonyAHRS.c **** 		gz += twoKp * halfez;
+ 130:Core/Src/MahonyAHRS.c **** 	}
+ 131:Core/Src/MahonyAHRS.c **** 	
+ 132:Core/Src/MahonyAHRS.c **** 	// Integrate rate of change of quaternion
+ 133:Core/Src/MahonyAHRS.c **** 	gx *= (0.5f * (1.0f / sampleFreq));		// pre-multiply common factors
+ 134:Core/Src/MahonyAHRS.c **** 	gy *= (0.5f * (1.0f / sampleFreq));
+ 135:Core/Src/MahonyAHRS.c **** 	gz *= (0.5f * (1.0f / sampleFreq));
+ 136:Core/Src/MahonyAHRS.c **** 	qa = q[0];
+ 137:Core/Src/MahonyAHRS.c **** 	qb = q[1];
+ 138:Core/Src/MahonyAHRS.c **** 	qc = q[2];
+ 139:Core/Src/MahonyAHRS.c **** 	q[0] += (-qb * gx - qc * gy - q[3] * gz);
+ 140:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 141:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 142:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 143:Core/Src/MahonyAHRS.c **** 	
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 4
+
+
+ 144:Core/Src/MahonyAHRS.c **** 	// Normalise quaternion
+ 145:Core/Src/MahonyAHRS.c **** 	recipNorm = invSqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+ 146:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 147:Core/Src/MahonyAHRS.c **** 	q[1] *= recipNorm;
+ 148:Core/Src/MahonyAHRS.c **** 	q[2] *= recipNorm;
+ 149:Core/Src/MahonyAHRS.c **** 	q[3] *= recipNorm;
+ 150:Core/Src/MahonyAHRS.c **** }
+ 151:Core/Src/MahonyAHRS.c **** 
+ 152:Core/Src/MahonyAHRS.c **** //-------------------------------------------------------------------------------------------------
+ 153:Core/Src/MahonyAHRS.c **** // IMU algorithm update
+ 154:Core/Src/MahonyAHRS.c **** 
+ 155:Core/Src/MahonyAHRS.c **** void MahonyAHRSupdateIMU(float q[4], float gx, float gy, float gz, float ax, float ay, float az) {
+ 156:Core/Src/MahonyAHRS.c **** 	float recipNorm;
+ 157:Core/Src/MahonyAHRS.c **** 	float halfvx, halfvy, halfvz;
+ 158:Core/Src/MahonyAHRS.c **** 	float halfex, halfey, halfez;
+ 159:Core/Src/MahonyAHRS.c **** 	float qa, qb, qc;
+ 160:Core/Src/MahonyAHRS.c **** 
+ 161:Core/Src/MahonyAHRS.c **** 	// Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisa
+ 162:Core/Src/MahonyAHRS.c **** 	if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
+ 163:Core/Src/MahonyAHRS.c **** 
+ 164:Core/Src/MahonyAHRS.c **** 		// Normalise accelerometer measurement
+ 165:Core/Src/MahonyAHRS.c **** 		recipNorm = invSqrt(ax * ax + ay * ay + az * az);
+ 166:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 167:Core/Src/MahonyAHRS.c **** 		ay *= recipNorm;
+ 168:Core/Src/MahonyAHRS.c **** 		az *= recipNorm;        
+ 169:Core/Src/MahonyAHRS.c **** 
+ 170:Core/Src/MahonyAHRS.c **** 		// Estimated direction of gravity and vector perpendicular to magnetic flux
+ 171:Core/Src/MahonyAHRS.c **** 		halfvx = q[1] * q[3] - q[0] * q[2];
+ 172:Core/Src/MahonyAHRS.c **** 		halfvy = q[0] * q[1] + q[2] * q[3];
+ 173:Core/Src/MahonyAHRS.c **** 		halfvz = q[0] * q[0] - 0.5f + q[3] * q[3];
+ 174:Core/Src/MahonyAHRS.c **** 	
+ 175:Core/Src/MahonyAHRS.c **** 		// Error is sum of cross product between estimated and measured direction of gravity
+ 176:Core/Src/MahonyAHRS.c **** 		halfex = (ay * halfvz - az * halfvy);
+ 177:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz);
+ 178:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx);
+ 179:Core/Src/MahonyAHRS.c **** 
+ 180:Core/Src/MahonyAHRS.c **** 		// Compute and apply integral feedback if enabled
+ 181:Core/Src/MahonyAHRS.c **** 		if(twoKi > 0.0f) {
+ 182:Core/Src/MahonyAHRS.c **** 			integralFBx += twoKi * halfex * (1.0f / sampleFreq);	// integral error scaled by Ki
+ 183:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 184:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 185:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 186:Core/Src/MahonyAHRS.c **** 			gy += integralFBy;
+ 187:Core/Src/MahonyAHRS.c **** 			gz += integralFBz;
+ 188:Core/Src/MahonyAHRS.c **** 		}
+ 189:Core/Src/MahonyAHRS.c **** 		else {
+ 190:Core/Src/MahonyAHRS.c **** 			integralFBx = 0.0f;	// prevent integral windup
+ 191:Core/Src/MahonyAHRS.c **** 			integralFBy = 0.0f;
+ 192:Core/Src/MahonyAHRS.c **** 			integralFBz = 0.0f;
+ 193:Core/Src/MahonyAHRS.c **** 		}
+ 194:Core/Src/MahonyAHRS.c **** 
+ 195:Core/Src/MahonyAHRS.c **** 		// Apply proportional feedback
+ 196:Core/Src/MahonyAHRS.c **** 		gx += twoKp * halfex;
+ 197:Core/Src/MahonyAHRS.c **** 		gy += twoKp * halfey;
+ 198:Core/Src/MahonyAHRS.c **** 		gz += twoKp * halfez;
+ 199:Core/Src/MahonyAHRS.c **** 	}
+ 200:Core/Src/MahonyAHRS.c **** 	
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 5
+
+
+ 201:Core/Src/MahonyAHRS.c **** 	// Integrate rate of change of quaternion
+ 202:Core/Src/MahonyAHRS.c **** 	gx *= (0.5f * (1.0f / sampleFreq));		// pre-multiply common factors
+ 203:Core/Src/MahonyAHRS.c **** 	gy *= (0.5f * (1.0f / sampleFreq));
+ 204:Core/Src/MahonyAHRS.c **** 	gz *= (0.5f * (1.0f / sampleFreq));
+ 205:Core/Src/MahonyAHRS.c **** 	qa = q[0];
+ 206:Core/Src/MahonyAHRS.c **** 	qb = q[1];
+ 207:Core/Src/MahonyAHRS.c **** 	qc = q[2];
+ 208:Core/Src/MahonyAHRS.c **** 	q[0] += (-qb * gx - qc * gy - q[3] * gz);
+ 209:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 210:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 211:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 212:Core/Src/MahonyAHRS.c **** 	
+ 213:Core/Src/MahonyAHRS.c **** 	// Normalise quaternion
+ 214:Core/Src/MahonyAHRS.c **** 	recipNorm = invSqrt(q[0] * q[0] + q[1] * q[1] + q[2] * q[2] + q[3] * q[3]);
+ 215:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 216:Core/Src/MahonyAHRS.c **** 	q[1] *= recipNorm;
+ 217:Core/Src/MahonyAHRS.c **** 	q[2] *= recipNorm;
+ 218:Core/Src/MahonyAHRS.c **** 	q[3] *= recipNorm;
+ 219:Core/Src/MahonyAHRS.c **** }
+ 220:Core/Src/MahonyAHRS.c **** 
+ 221:Core/Src/MahonyAHRS.c **** //-------------------------------------------------------------------------------------------------
+ 222:Core/Src/MahonyAHRS.c **** // Fast inverse square-root
+ 223:Core/Src/MahonyAHRS.c **** // See: http://en.wikipedia.org/wiki/Fast_inverse_square_root
+ 224:Core/Src/MahonyAHRS.c **** 
+ 225:Core/Src/MahonyAHRS.c **** float invSqrt(float x) {
+  30              		.loc 1 225 24 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+ 226:Core/Src/MahonyAHRS.c **** 	float halfx = 0.5f * x;
+  35              		.loc 1 226 2 view .LVU1
+  36              		.loc 1 226 8 is_stmt 0 view .LVU2
+  37 0000 F6EE007A 		vmov.f32	s15, #5.0e-1
+  38 0004 60EE277A 		vmul.f32	s15, s0, s15
+  39              	.LVL1:
+ 227:Core/Src/MahonyAHRS.c **** 	float y = x;
+  40              		.loc 1 227 2 is_stmt 1 view .LVU3
+ 228:Core/Src/MahonyAHRS.c **** 	long i = *(long*)&y;
+  41              		.loc 1 228 2 view .LVU4
+  42              		.loc 1 228 11 is_stmt 0 view .LVU5
+  43 0008 10EE103A 		vmov	r3, s0	@ int
+  44              	.LVL2:
+ 229:Core/Src/MahonyAHRS.c **** 	i = 0x5f3759df - (i>>1);
+  45              		.loc 1 229 2 is_stmt 1 view .LVU6
+ 230:Core/Src/MahonyAHRS.c **** 	y = *(float*)&i;
+  46              		.loc 1 230 2 view .LVU7
+  47              		.loc 1 230 6 is_stmt 0 view .LVU8
+  48 000c 074A     		ldr	r2, .L2
+  49 000e A2EB6303 		sub	r3, r2, r3, asr #1
+  50              	.LVL3:
+  51              		.loc 1 230 6 view .LVU9
+  52 0012 07EE103A 		vmov	s14, r3	@ int
+  53              	.LVL4:
+ 231:Core/Src/MahonyAHRS.c **** 	y = y * (1.5f - (halfx * y * y));
+  54              		.loc 1 231 2 is_stmt 1 view .LVU10
+  55              		.loc 1 231 25 is_stmt 0 view .LVU11
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 6
+
+
+  56 0016 67EE277A 		vmul.f32	s15, s14, s15
+  57              	.LVL5:
+  58              		.loc 1 231 29 view .LVU12
+  59 001a 67EE277A 		vmul.f32	s15, s14, s15
+  60              		.loc 1 231 16 view .LVU13
+  61 001e B7EE080A 		vmov.f32	s0, #1.5e+0
+  62              	.LVL6:
+  63              		.loc 1 231 16 view .LVU14
+  64 0022 30EE670A 		vsub.f32	s0, s0, s15
+  65              	.LVL7:
+ 232:Core/Src/MahonyAHRS.c **** 	return y;
+  66              		.loc 1 232 2 is_stmt 1 view .LVU15
+ 233:Core/Src/MahonyAHRS.c **** }
+  67              		.loc 1 233 1 is_stmt 0 view .LVU16
+  68 0026 27EE000A 		vmul.f32	s0, s14, s0
+  69 002a 7047     		bx	lr
+  70              	.L3:
+  71              		.align	2
+  72              	.L2:
+  73 002c DF59375F 		.word	1597463007
+  74              		.cfi_endproc
+  75              	.LFE2:
+  77              		.section	.text.MahonyAHRSupdateIMU,"ax",%progbits
+  78              		.align	1
+  79              		.global	MahonyAHRSupdateIMU
+  80              		.syntax unified
+  81              		.thumb
+  82              		.thumb_func
+  84              	MahonyAHRSupdateIMU:
+  85              	.LVL8:
+  86              	.LFB1:
+ 155:Core/Src/MahonyAHRS.c **** 	float recipNorm;
+  87              		.loc 1 155 98 is_stmt 1 view -0
+  88              		.cfi_startproc
+  89              		@ args = 0, pretend = 0, frame = 0
+  90              		@ frame_needed = 0, uses_anonymous_args = 0
+ 155:Core/Src/MahonyAHRS.c **** 	float recipNorm;
+  91              		.loc 1 155 98 is_stmt 0 view .LVU18
+  92 0000 10B5     		push	{r4, lr}
+  93              	.LCFI0:
+  94              		.cfi_def_cfa_offset 8
+  95              		.cfi_offset 4, -8
+  96              		.cfi_offset 14, -4
+  97 0002 2DED068B 		vpush.64	{d8, d9, d10}
+  98              	.LCFI1:
+  99              		.cfi_def_cfa_offset 32
+ 100              		.cfi_offset 80, -32
+ 101              		.cfi_offset 81, -28
+ 102              		.cfi_offset 82, -24
+ 103              		.cfi_offset 83, -20
+ 104              		.cfi_offset 84, -16
+ 105              		.cfi_offset 85, -12
+ 106 0006 0446     		mov	r4, r0
+ 107 0008 B0EE409A 		vmov.f32	s18, s0
+ 108 000c F0EE609A 		vmov.f32	s19, s1
+ 109 0010 B0EE418A 		vmov.f32	s16, s2
+ 110 0014 F0EE618A 		vmov.f32	s17, s3
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 7
+
+
+ 111 0018 B0EE42AA 		vmov.f32	s20, s4
+ 112 001c F0EE62AA 		vmov.f32	s21, s5
+ 156:Core/Src/MahonyAHRS.c **** 	float halfvx, halfvy, halfvz;
+ 113              		.loc 1 156 2 is_stmt 1 view .LVU19
+ 157:Core/Src/MahonyAHRS.c **** 	float halfex, halfey, halfez;
+ 114              		.loc 1 157 2 view .LVU20
+ 158:Core/Src/MahonyAHRS.c **** 	float qa, qb, qc;
+ 115              		.loc 1 158 2 view .LVU21
+ 159:Core/Src/MahonyAHRS.c **** 
+ 116              		.loc 1 159 2 view .LVU22
+ 162:Core/Src/MahonyAHRS.c **** 
+ 117              		.loc 1 162 2 view .LVU23
+ 162:Core/Src/MahonyAHRS.c **** 
+ 118              		.loc 1 162 4 is_stmt 0 view .LVU24
+ 119 0020 F5EE401A 		vcmp.f32	s3, #0
+ 120 0024 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 121 0028 0AD1     		bne	.L5
+ 162:Core/Src/MahonyAHRS.c **** 
+ 122              		.loc 1 162 20 discriminator 1 view .LVU25
+ 123 002a B5EE402A 		vcmp.f32	s4, #0
+ 124 002e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 125 0032 05D1     		bne	.L5
+ 162:Core/Src/MahonyAHRS.c **** 
+ 126              		.loc 1 162 5 discriminator 2 view .LVU26
+ 127 0034 F5EE402A 		vcmp.f32	s5, #0
+ 128 0038 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 129 003c 00F09380 		beq	.L6
+ 130              	.L5:
+ 165:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 131              		.loc 1 165 3 is_stmt 1 view .LVU27
+ 165:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 132              		.loc 1 165 26 is_stmt 0 view .LVU28
+ 133 0040 68EEA87A 		vmul.f32	s15, s17, s17
+ 165:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 134              		.loc 1 165 36 view .LVU29
+ 135 0044 2AEE0A7A 		vmul.f32	s14, s20, s20
+ 165:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 136              		.loc 1 165 31 view .LVU30
+ 137 0048 77EE877A 		vadd.f32	s15, s15, s14
+ 165:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 138              		.loc 1 165 46 view .LVU31
+ 139 004c 2AEEAA0A 		vmul.f32	s0, s21, s21
+ 140              	.LVL9:
+ 165:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 141              		.loc 1 165 15 view .LVU32
+ 142 0050 37EE800A 		vadd.f32	s0, s15, s0
+ 143 0054 FFF7FEFF 		bl	invSqrt
+ 144              	.LVL10:
+ 166:Core/Src/MahonyAHRS.c **** 		ay *= recipNorm;
+ 145              		.loc 1 166 3 is_stmt 1 view .LVU33
+ 166:Core/Src/MahonyAHRS.c **** 		ay *= recipNorm;
+ 146              		.loc 1 166 6 is_stmt 0 view .LVU34
+ 147 0058 68EE808A 		vmul.f32	s17, s17, s0
+ 148              	.LVL11:
+ 167:Core/Src/MahonyAHRS.c **** 		az *= recipNorm;        
+ 149              		.loc 1 167 3 is_stmt 1 view .LVU35
+ 167:Core/Src/MahonyAHRS.c **** 		az *= recipNorm;        
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 8
+
+
+ 150              		.loc 1 167 6 is_stmt 0 view .LVU36
+ 151 005c 2AEE00AA 		vmul.f32	s20, s20, s0
+ 152              	.LVL12:
+ 168:Core/Src/MahonyAHRS.c **** 
+ 153              		.loc 1 168 3 is_stmt 1 view .LVU37
+ 168:Core/Src/MahonyAHRS.c **** 
+ 154              		.loc 1 168 6 is_stmt 0 view .LVU38
+ 155 0060 6AEE80AA 		vmul.f32	s21, s21, s0
+ 156              	.LVL13:
+ 171:Core/Src/MahonyAHRS.c **** 		halfvy = q[0] * q[1] + q[2] * q[3];
+ 157              		.loc 1 171 3 is_stmt 1 view .LVU39
+ 171:Core/Src/MahonyAHRS.c **** 		halfvy = q[0] * q[1] + q[2] * q[3];
+ 158              		.loc 1 171 13 is_stmt 0 view .LVU40
+ 159 0064 94ED017A 		vldr.32	s14, [r4, #4]
+ 171:Core/Src/MahonyAHRS.c **** 		halfvy = q[0] * q[1] + q[2] * q[3];
+ 160              		.loc 1 171 20 view .LVU41
+ 161 0068 D4ED036A 		vldr.32	s13, [r4, #12]
+ 171:Core/Src/MahonyAHRS.c **** 		halfvy = q[0] * q[1] + q[2] * q[3];
+ 162              		.loc 1 171 17 view .LVU42
+ 163 006c 27EE266A 		vmul.f32	s12, s14, s13
+ 171:Core/Src/MahonyAHRS.c **** 		halfvy = q[0] * q[1] + q[2] * q[3];
+ 164              		.loc 1 171 27 view .LVU43
+ 165 0070 D4ED007A 		vldr.32	s15, [r4]
+ 171:Core/Src/MahonyAHRS.c **** 		halfvy = q[0] * q[1] + q[2] * q[3];
+ 166              		.loc 1 171 34 view .LVU44
+ 167 0074 D4ED025A 		vldr.32	s11, [r4, #8]
+ 171:Core/Src/MahonyAHRS.c **** 		halfvy = q[0] * q[1] + q[2] * q[3];
+ 168              		.loc 1 171 31 view .LVU45
+ 169 0078 27EEA55A 		vmul.f32	s10, s15, s11
+ 171:Core/Src/MahonyAHRS.c **** 		halfvy = q[0] * q[1] + q[2] * q[3];
+ 170              		.loc 1 171 10 view .LVU46
+ 171 007c 36EE456A 		vsub.f32	s12, s12, s10
+ 172              	.LVL14:
+ 172:Core/Src/MahonyAHRS.c **** 		halfvz = q[0] * q[0] - 0.5f + q[3] * q[3];
+ 173              		.loc 1 172 3 is_stmt 1 view .LVU47
+ 172:Core/Src/MahonyAHRS.c **** 		halfvz = q[0] * q[0] - 0.5f + q[3] * q[3];
+ 174              		.loc 1 172 17 is_stmt 0 view .LVU48
+ 175 0080 27EE277A 		vmul.f32	s14, s14, s15
+ 172:Core/Src/MahonyAHRS.c **** 		halfvz = q[0] * q[0] - 0.5f + q[3] * q[3];
+ 176              		.loc 1 172 31 view .LVU49
+ 177 0084 66EEA55A 		vmul.f32	s11, s13, s11
+ 172:Core/Src/MahonyAHRS.c **** 		halfvz = q[0] * q[0] - 0.5f + q[3] * q[3];
+ 178              		.loc 1 172 10 view .LVU50
+ 179 0088 37EE257A 		vadd.f32	s14, s14, s11
+ 180              	.LVL15:
+ 173:Core/Src/MahonyAHRS.c **** 	
+ 181              		.loc 1 173 3 is_stmt 1 view .LVU51
+ 173:Core/Src/MahonyAHRS.c **** 	
+ 182              		.loc 1 173 17 is_stmt 0 view .LVU52
+ 183 008c 67EEA77A 		vmul.f32	s15, s15, s15
+ 173:Core/Src/MahonyAHRS.c **** 	
+ 184              		.loc 1 173 24 view .LVU53
+ 185 0090 F6EE005A 		vmov.f32	s11, #5.0e-1
+ 186 0094 77EEE57A 		vsub.f32	s15, s15, s11
+ 173:Core/Src/MahonyAHRS.c **** 	
+ 187              		.loc 1 173 38 view .LVU54
+ 188 0098 66EEA66A 		vmul.f32	s13, s13, s13
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 9
+
+
+ 173:Core/Src/MahonyAHRS.c **** 	
+ 189              		.loc 1 173 10 view .LVU55
+ 190 009c 77EEA67A 		vadd.f32	s15, s15, s13
+ 191              	.LVL16:
+ 176:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz);
+ 192              		.loc 1 176 3 is_stmt 1 view .LVU56
+ 176:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz);
+ 193              		.loc 1 176 16 is_stmt 0 view .LVU57
+ 194 00a0 6AEE275A 		vmul.f32	s11, s20, s15
+ 176:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz);
+ 195              		.loc 1 176 30 view .LVU58
+ 196 00a4 6AEE876A 		vmul.f32	s13, s21, s14
+ 176:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz);
+ 197              		.loc 1 176 10 view .LVU59
+ 198 00a8 75EEE65A 		vsub.f32	s11, s11, s13
+ 199              	.LVL17:
+ 177:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx);
+ 200              		.loc 1 177 3 is_stmt 1 view .LVU60
+ 177:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx);
+ 201              		.loc 1 177 16 is_stmt 0 view .LVU61
+ 202 00ac 6AEE86AA 		vmul.f32	s21, s21, s12
+ 203              	.LVL18:
+ 177:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx);
+ 204              		.loc 1 177 30 view .LVU62
+ 205 00b0 68EEA77A 		vmul.f32	s15, s17, s15
+ 206              	.LVL19:
+ 177:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx);
+ 207              		.loc 1 177 10 view .LVU63
+ 208 00b4 7AEEE7AA 		vsub.f32	s21, s21, s15
+ 209              	.LVL20:
+ 178:Core/Src/MahonyAHRS.c **** 
+ 210              		.loc 1 178 3 is_stmt 1 view .LVU64
+ 178:Core/Src/MahonyAHRS.c **** 
+ 211              		.loc 1 178 16 is_stmt 0 view .LVU65
+ 212 00b8 68EE878A 		vmul.f32	s17, s17, s14
+ 213              	.LVL21:
+ 178:Core/Src/MahonyAHRS.c **** 
+ 214              		.loc 1 178 30 view .LVU66
+ 215 00bc 2AEE06AA 		vmul.f32	s20, s20, s12
+ 216              	.LVL22:
+ 178:Core/Src/MahonyAHRS.c **** 
+ 217              		.loc 1 178 10 view .LVU67
+ 218 00c0 78EECA8A 		vsub.f32	s17, s17, s20
+ 219              	.LVL23:
+ 181:Core/Src/MahonyAHRS.c **** 			integralFBx += twoKi * halfex * (1.0f / sampleFreq);	// integral error scaled by Ki
+ 220              		.loc 1 181 3 is_stmt 1 view .LVU68
+ 181:Core/Src/MahonyAHRS.c **** 			integralFBx += twoKi * halfex * (1.0f / sampleFreq);	// integral error scaled by Ki
+ 221              		.loc 1 181 12 is_stmt 0 view .LVU69
+ 222 00c4 614B     		ldr	r3, .L13
+ 223 00c6 D3ED007A 		vldr.32	s15, [r3]
+ 181:Core/Src/MahonyAHRS.c **** 			integralFBx += twoKi * halfex * (1.0f / sampleFreq);	// integral error scaled by Ki
+ 224              		.loc 1 181 5 view .LVU70
+ 225 00ca F5EEC07A 		vcmpe.f32	s15, #0
+ 226 00ce F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 227 00d2 40F3B380 		ble	.L11
+ 182:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 228              		.loc 1 182 4 is_stmt 1 view .LVU71
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 10
+
+
+ 182:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 229              		.loc 1 182 25 is_stmt 0 view .LVU72
+ 230 00d6 D3ED007A 		vldr.32	s15, [r3]
+ 231 00da 67EEA57A 		vmul.f32	s15, s15, s11
+ 182:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 232              		.loc 1 182 34 view .LVU73
+ 233 00de 9FED5C7A 		vldr.32	s14, .L13+4
+ 234              	.LVL24:
+ 182:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 235              		.loc 1 182 34 view .LVU74
+ 236 00e2 67EE877A 		vmul.f32	s15, s15, s14
+ 182:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 237              		.loc 1 182 16 view .LVU75
+ 238 00e6 5B49     		ldr	r1, .L13+8
+ 239 00e8 D1ED006A 		vldr.32	s13, [r1]
+ 240 00ec 76EEA77A 		vadd.f32	s15, s13, s15
+ 241 00f0 C1ED007A 		vstr.32	s15, [r1]
+ 242              	.LVL25:
+ 183:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 243              		.loc 1 183 4 is_stmt 1 view .LVU76
+ 183:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 244              		.loc 1 183 25 is_stmt 0 view .LVU77
+ 245 00f4 D3ED007A 		vldr.32	s15, [r3]
+ 246 00f8 67EEAA7A 		vmul.f32	s15, s15, s21
+ 183:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 247              		.loc 1 183 34 view .LVU78
+ 248 00fc 67EE877A 		vmul.f32	s15, s15, s14
+ 183:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 249              		.loc 1 183 16 view .LVU79
+ 250 0100 554A     		ldr	r2, .L13+12
+ 251 0102 D2ED006A 		vldr.32	s13, [r2]
+ 252 0106 76EEA77A 		vadd.f32	s15, s13, s15
+ 253 010a C2ED007A 		vstr.32	s15, [r2]
+ 184:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 254              		.loc 1 184 4 is_stmt 1 view .LVU80
+ 184:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 255              		.loc 1 184 25 is_stmt 0 view .LVU81
+ 256 010e D3ED007A 		vldr.32	s15, [r3]
+ 257 0112 67EEA87A 		vmul.f32	s15, s15, s17
+ 184:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 258              		.loc 1 184 34 view .LVU82
+ 259 0116 67EE877A 		vmul.f32	s15, s15, s14
+ 184:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 260              		.loc 1 184 16 view .LVU83
+ 261 011a 504B     		ldr	r3, .L13+16
+ 262 011c 93ED007A 		vldr.32	s14, [r3]
+ 263 0120 77EE277A 		vadd.f32	s15, s14, s15
+ 264 0124 C3ED007A 		vstr.32	s15, [r3]
+ 185:Core/Src/MahonyAHRS.c **** 			gy += integralFBy;
+ 265              		.loc 1 185 4 is_stmt 1 view .LVU84
+ 266 0128 D1ED007A 		vldr.32	s15, [r1]
+ 185:Core/Src/MahonyAHRS.c **** 			gy += integralFBy;
+ 267              		.loc 1 185 7 is_stmt 0 view .LVU85
+ 268 012c 39EE279A 		vadd.f32	s18, s18, s15
+ 269              	.LVL26:
+ 186:Core/Src/MahonyAHRS.c **** 			gz += integralFBz;
+ 270              		.loc 1 186 4 is_stmt 1 view .LVU86
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 11
+
+
+ 271 0130 D2ED007A 		vldr.32	s15, [r2]
+ 186:Core/Src/MahonyAHRS.c **** 			gz += integralFBz;
+ 272              		.loc 1 186 7 is_stmt 0 view .LVU87
+ 273 0134 79EEA79A 		vadd.f32	s19, s19, s15
+ 274              	.LVL27:
+ 187:Core/Src/MahonyAHRS.c **** 		}
+ 275              		.loc 1 187 4 is_stmt 1 view .LVU88
+ 276 0138 D3ED007A 		vldr.32	s15, [r3]
+ 187:Core/Src/MahonyAHRS.c **** 		}
+ 277              		.loc 1 187 7 is_stmt 0 view .LVU89
+ 278 013c 38EE278A 		vadd.f32	s16, s16, s15
+ 279              	.LVL28:
+ 280              	.L9:
+ 196:Core/Src/MahonyAHRS.c **** 		gy += twoKp * halfey;
+ 281              		.loc 1 196 3 is_stmt 1 view .LVU90
+ 196:Core/Src/MahonyAHRS.c **** 		gy += twoKp * halfey;
+ 282              		.loc 1 196 15 is_stmt 0 view .LVU91
+ 283 0140 474B     		ldr	r3, .L13+20
+ 284 0142 D3ED007A 		vldr.32	s15, [r3]
+ 285 0146 67EEA57A 		vmul.f32	s15, s15, s11
+ 196:Core/Src/MahonyAHRS.c **** 		gy += twoKp * halfey;
+ 286              		.loc 1 196 6 view .LVU92
+ 287 014a 39EE279A 		vadd.f32	s18, s18, s15
+ 288              	.LVL29:
+ 197:Core/Src/MahonyAHRS.c **** 		gz += twoKp * halfez;
+ 289              		.loc 1 197 3 is_stmt 1 view .LVU93
+ 197:Core/Src/MahonyAHRS.c **** 		gz += twoKp * halfez;
+ 290              		.loc 1 197 15 is_stmt 0 view .LVU94
+ 291 014e D3ED007A 		vldr.32	s15, [r3]
+ 292 0152 67EEAAAA 		vmul.f32	s21, s15, s21
+ 293              	.LVL30:
+ 197:Core/Src/MahonyAHRS.c **** 		gz += twoKp * halfez;
+ 294              		.loc 1 197 6 view .LVU95
+ 295 0156 79EEAA9A 		vadd.f32	s19, s19, s21
+ 296              	.LVL31:
+ 198:Core/Src/MahonyAHRS.c **** 	}
+ 297              		.loc 1 198 3 is_stmt 1 view .LVU96
+ 198:Core/Src/MahonyAHRS.c **** 	}
+ 298              		.loc 1 198 15 is_stmt 0 view .LVU97
+ 299 015a D3ED007A 		vldr.32	s15, [r3]
+ 300 015e 67EEA87A 		vmul.f32	s15, s15, s17
+ 198:Core/Src/MahonyAHRS.c **** 	}
+ 301              		.loc 1 198 6 view .LVU98
+ 302 0162 38EE278A 		vadd.f32	s16, s16, s15
+ 303              	.LVL32:
+ 304              	.L6:
+ 202:Core/Src/MahonyAHRS.c **** 	gy *= (0.5f * (1.0f / sampleFreq));
+ 305              		.loc 1 202 2 is_stmt 1 view .LVU99
+ 202:Core/Src/MahonyAHRS.c **** 	gy *= (0.5f * (1.0f / sampleFreq));
+ 306              		.loc 1 202 5 is_stmt 0 view .LVU100
+ 307 0166 DFED3F7A 		vldr.32	s15, .L13+24
+ 308 016a 29EE270A 		vmul.f32	s0, s18, s15
+ 309              	.LVL33:
+ 203:Core/Src/MahonyAHRS.c **** 	gz *= (0.5f * (1.0f / sampleFreq));
+ 310              		.loc 1 203 2 is_stmt 1 view .LVU101
+ 203:Core/Src/MahonyAHRS.c **** 	gz *= (0.5f * (1.0f / sampleFreq));
+ 311              		.loc 1 203 5 is_stmt 0 view .LVU102
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 12
+
+
+ 312 016e 69EEA70A 		vmul.f32	s1, s19, s15
+ 313              	.LVL34:
+ 204:Core/Src/MahonyAHRS.c **** 	qa = q[0];
+ 314              		.loc 1 204 2 is_stmt 1 view .LVU103
+ 204:Core/Src/MahonyAHRS.c **** 	qa = q[0];
+ 315              		.loc 1 204 5 is_stmt 0 view .LVU104
+ 316 0172 28EE271A 		vmul.f32	s2, s16, s15
+ 317              	.LVL35:
+ 205:Core/Src/MahonyAHRS.c **** 	qb = q[1];
+ 318              		.loc 1 205 2 is_stmt 1 view .LVU105
+ 205:Core/Src/MahonyAHRS.c **** 	qb = q[1];
+ 319              		.loc 1 205 5 is_stmt 0 view .LVU106
+ 320 0176 D4ED006A 		vldr.32	s13, [r4]
+ 321              	.LVL36:
+ 206:Core/Src/MahonyAHRS.c **** 	qc = q[2];
+ 322              		.loc 1 206 2 is_stmt 1 view .LVU107
+ 206:Core/Src/MahonyAHRS.c **** 	qc = q[2];
+ 323              		.loc 1 206 5 is_stmt 0 view .LVU108
+ 324 017a 94ED017A 		vldr.32	s14, [r4, #4]
+ 325              	.LVL37:
+ 207:Core/Src/MahonyAHRS.c **** 	q[0] += (-qb * gx - qc * gy - q[3] * gz);
+ 326              		.loc 1 207 2 is_stmt 1 view .LVU109
+ 207:Core/Src/MahonyAHRS.c **** 	q[0] += (-qb * gx - qc * gy - q[3] * gz);
+ 327              		.loc 1 207 5 is_stmt 0 view .LVU110
+ 328 017e D4ED027A 		vldr.32	s15, [r4, #8]
+ 329              	.LVL38:
+ 208:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 330              		.loc 1 208 2 is_stmt 1 view .LVU111
+ 208:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 331              		.loc 1 208 15 is_stmt 0 view .LVU112
+ 332 0182 27EE409A 		vnmul.f32	s18, s14, s0
+ 208:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 333              		.loc 1 208 25 view .LVU113
+ 334 0186 20EEA76A 		vmul.f32	s12, s1, s15
+ 208:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 335              		.loc 1 208 20 view .LVU114
+ 336 018a 39EE469A 		vsub.f32	s18, s18, s12
+ 208:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 337              		.loc 1 208 33 view .LVU115
+ 338 018e D4ED039A 		vldr.32	s19, [r4, #12]
+ 208:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 339              		.loc 1 208 37 view .LVU116
+ 340 0192 29EE816A 		vmul.f32	s12, s19, s2
+ 208:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 341              		.loc 1 208 30 view .LVU117
+ 342 0196 39EE469A 		vsub.f32	s18, s18, s12
+ 208:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 343              		.loc 1 208 7 view .LVU118
+ 344 019a 39EE269A 		vadd.f32	s18, s18, s13
+ 345 019e 84ED009A 		vstr.32	s18, [r4]
+ 209:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 346              		.loc 1 209 2 is_stmt 1 view .LVU119
+ 209:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 347              		.loc 1 209 14 is_stmt 0 view .LVU120
+ 348 01a2 60EE268A 		vmul.f32	s17, s0, s13
+ 209:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 349              		.loc 1 209 24 view .LVU121
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 13
+
+
+ 350 01a6 21EE276A 		vmul.f32	s12, s2, s15
+ 209:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 351              		.loc 1 209 19 view .LVU122
+ 352 01aa 78EE868A 		vadd.f32	s17, s17, s12
+ 209:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 353              		.loc 1 209 36 view .LVU123
+ 354 01ae 29EEA06A 		vmul.f32	s12, s19, s1
+ 209:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 355              		.loc 1 209 29 view .LVU124
+ 356 01b2 78EEC68A 		vsub.f32	s17, s17, s12
+ 209:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 357              		.loc 1 209 7 view .LVU125
+ 358 01b6 78EE878A 		vadd.f32	s17, s17, s14
+ 359 01ba C4ED018A 		vstr.32	s17, [r4, #4]
+ 210:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 360              		.loc 1 210 2 is_stmt 1 view .LVU126
+ 210:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 361              		.loc 1 210 14 is_stmt 0 view .LVU127
+ 362 01be 20EEA68A 		vmul.f32	s16, s1, s13
+ 210:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 363              		.loc 1 210 24 view .LVU128
+ 364 01c2 21EE076A 		vmul.f32	s12, s2, s14
+ 210:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 365              		.loc 1 210 19 view .LVU129
+ 366 01c6 38EE468A 		vsub.f32	s16, s16, s12
+ 210:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 367              		.loc 1 210 36 view .LVU130
+ 368 01ca 29EE806A 		vmul.f32	s12, s19, s0
+ 210:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 369              		.loc 1 210 29 view .LVU131
+ 370 01ce 38EE068A 		vadd.f32	s16, s16, s12
+ 210:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 371              		.loc 1 210 7 view .LVU132
+ 372 01d2 38EE278A 		vadd.f32	s16, s16, s15
+ 373 01d6 84ED028A 		vstr.32	s16, [r4, #8]
+ 211:Core/Src/MahonyAHRS.c **** 	
+ 374              		.loc 1 211 2 is_stmt 1 view .LVU133
+ 211:Core/Src/MahonyAHRS.c **** 	
+ 375              		.loc 1 211 14 is_stmt 0 view .LVU134
+ 376 01da 21EE261A 		vmul.f32	s2, s2, s13
+ 377              	.LVL39:
+ 211:Core/Src/MahonyAHRS.c **** 	
+ 378              		.loc 1 211 24 view .LVU135
+ 379 01de 60EE870A 		vmul.f32	s1, s1, s14
+ 380              	.LVL40:
+ 211:Core/Src/MahonyAHRS.c **** 	
+ 381              		.loc 1 211 19 view .LVU136
+ 382 01e2 31EE201A 		vadd.f32	s2, s2, s1
+ 211:Core/Src/MahonyAHRS.c **** 	
+ 383              		.loc 1 211 34 view .LVU137
+ 384 01e6 20EE270A 		vmul.f32	s0, s0, s15
+ 385              	.LVL41:
+ 211:Core/Src/MahonyAHRS.c **** 	
+ 386              		.loc 1 211 29 view .LVU138
+ 387 01ea 31EE401A 		vsub.f32	s2, s2, s0
+ 211:Core/Src/MahonyAHRS.c **** 	
+ 388              		.loc 1 211 7 view .LVU139
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 14
+
+
+ 389 01ee 79EE819A 		vadd.f32	s19, s19, s2
+ 390 01f2 C4ED039A 		vstr.32	s19, [r4, #12]
+ 214:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 391              		.loc 1 214 2 is_stmt 1 view .LVU140
+ 214:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 392              		.loc 1 214 27 is_stmt 0 view .LVU141
+ 393 01f6 69EE097A 		vmul.f32	s15, s18, s18
+ 394              	.LVL42:
+ 214:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 395              		.loc 1 214 41 view .LVU142
+ 396 01fa 28EEA87A 		vmul.f32	s14, s17, s17
+ 397              	.LVL43:
+ 214:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 398              		.loc 1 214 34 view .LVU143
+ 399 01fe 77EE877A 		vadd.f32	s15, s15, s14
+ 214:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 400              		.loc 1 214 55 view .LVU144
+ 401 0202 28EE087A 		vmul.f32	s14, s16, s16
+ 214:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 402              		.loc 1 214 48 view .LVU145
+ 403 0206 77EE877A 		vadd.f32	s15, s15, s14
+ 214:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 404              		.loc 1 214 69 view .LVU146
+ 405 020a 29EEA90A 		vmul.f32	s0, s19, s19
+ 214:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 406              		.loc 1 214 14 view .LVU147
+ 407 020e 37EE800A 		vadd.f32	s0, s15, s0
+ 408 0212 FFF7FEFF 		bl	invSqrt
+ 409              	.LVL44:
+ 215:Core/Src/MahonyAHRS.c **** 	q[1] *= recipNorm;
+ 410              		.loc 1 215 2 is_stmt 1 view .LVU148
+ 215:Core/Src/MahonyAHRS.c **** 	q[1] *= recipNorm;
+ 411              		.loc 1 215 7 is_stmt 0 view .LVU149
+ 412 0216 29EE009A 		vmul.f32	s18, s18, s0
+ 413 021a 84ED009A 		vstr.32	s18, [r4]
+ 216:Core/Src/MahonyAHRS.c **** 	q[2] *= recipNorm;
+ 414              		.loc 1 216 2 is_stmt 1 view .LVU150
+ 216:Core/Src/MahonyAHRS.c **** 	q[2] *= recipNorm;
+ 415              		.loc 1 216 7 is_stmt 0 view .LVU151
+ 416 021e 68EE808A 		vmul.f32	s17, s17, s0
+ 417 0222 C4ED018A 		vstr.32	s17, [r4, #4]
+ 217:Core/Src/MahonyAHRS.c **** 	q[3] *= recipNorm;
+ 418              		.loc 1 217 2 is_stmt 1 view .LVU152
+ 217:Core/Src/MahonyAHRS.c **** 	q[3] *= recipNorm;
+ 419              		.loc 1 217 7 is_stmt 0 view .LVU153
+ 420 0226 28EE008A 		vmul.f32	s16, s16, s0
+ 421 022a 84ED028A 		vstr.32	s16, [r4, #8]
+ 218:Core/Src/MahonyAHRS.c **** }
+ 422              		.loc 1 218 2 is_stmt 1 view .LVU154
+ 218:Core/Src/MahonyAHRS.c **** }
+ 423              		.loc 1 218 7 is_stmt 0 view .LVU155
+ 424 022e 69EE809A 		vmul.f32	s19, s19, s0
+ 425 0232 C4ED039A 		vstr.32	s19, [r4, #12]
+ 219:Core/Src/MahonyAHRS.c **** 
+ 426              		.loc 1 219 1 view .LVU156
+ 427 0236 BDEC068B 		vldm	sp!, {d8-d10}
+ 428              	.LCFI2:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 15
+
+
+ 429              		.cfi_remember_state
+ 430              		.cfi_restore 84
+ 431              		.cfi_restore 85
+ 432              		.cfi_restore 82
+ 433              		.cfi_restore 83
+ 434              		.cfi_restore 80
+ 435              		.cfi_restore 81
+ 436              		.cfi_def_cfa_offset 8
+ 437 023a 10BD     		pop	{r4, pc}
+ 438              	.LVL45:
+ 439              	.L11:
+ 440              	.LCFI3:
+ 441              		.cfi_restore_state
+ 190:Core/Src/MahonyAHRS.c **** 			integralFBy = 0.0f;
+ 442              		.loc 1 190 4 is_stmt 1 view .LVU157
+ 190:Core/Src/MahonyAHRS.c **** 			integralFBy = 0.0f;
+ 443              		.loc 1 190 16 is_stmt 0 view .LVU158
+ 444 023c 0023     		movs	r3, #0
+ 445 023e 054A     		ldr	r2, .L13+8
+ 446 0240 1360     		str	r3, [r2]	@ float
+ 447              	.LVL46:
+ 191:Core/Src/MahonyAHRS.c **** 			integralFBz = 0.0f;
+ 448              		.loc 1 191 4 is_stmt 1 view .LVU159
+ 191:Core/Src/MahonyAHRS.c **** 			integralFBz = 0.0f;
+ 449              		.loc 1 191 16 is_stmt 0 view .LVU160
+ 450 0242 054A     		ldr	r2, .L13+12
+ 451 0244 1360     		str	r3, [r2]	@ float
+ 192:Core/Src/MahonyAHRS.c **** 		}
+ 452              		.loc 1 192 4 is_stmt 1 view .LVU161
+ 192:Core/Src/MahonyAHRS.c **** 		}
+ 453              		.loc 1 192 16 is_stmt 0 view .LVU162
+ 454 0246 054A     		ldr	r2, .L13+16
+ 455 0248 1360     		str	r3, [r2]	@ float
+ 456 024a 79E7     		b	.L9
+ 457              	.L14:
+ 458              		.align	2
+ 459              	.L13:
+ 460 024c 00000000 		.word	twoKi
+ 461 0250 0AD7A33B 		.word	1000593162
+ 462 0254 00000000 		.word	integralFBx
+ 463 0258 00000000 		.word	integralFBy
+ 464 025c 00000000 		.word	integralFBz
+ 465 0260 00000000 		.word	twoKp
+ 466 0264 0AD7233B 		.word	992204554
+ 467              		.cfi_endproc
+ 468              	.LFE1:
+ 470              		.section	.text.MahonyAHRSupdate,"ax",%progbits
+ 471              		.align	1
+ 472              		.global	MahonyAHRSupdate
+ 473              		.syntax unified
+ 474              		.thumb
+ 475              		.thumb_func
+ 477              	MahonyAHRSupdate:
+ 478              	.LVL47:
+ 479              	.LFB0:
+  51:Core/Src/MahonyAHRS.c **** 	float recipNorm;
+ 480              		.loc 1 51 125 is_stmt 1 view -0
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 16
+
+
+ 481              		.cfi_startproc
+ 482              		@ args = 0, pretend = 0, frame = 24
+ 483              		@ frame_needed = 0, uses_anonymous_args = 0
+  51:Core/Src/MahonyAHRS.c **** 	float recipNorm;
+ 484              		.loc 1 51 125 is_stmt 0 view .LVU164
+ 485 0000 10B5     		push	{r4, lr}
+ 486              	.LCFI4:
+ 487              		.cfi_def_cfa_offset 8
+ 488              		.cfi_offset 4, -8
+ 489              		.cfi_offset 14, -4
+ 490 0002 2DED108B 		vpush.64	{d8, d9, d10, d11, d12, d13, d14, d15}
+ 491              	.LCFI5:
+ 492              		.cfi_def_cfa_offset 72
+ 493              		.cfi_offset 80, -72
+ 494              		.cfi_offset 81, -68
+ 495              		.cfi_offset 82, -64
+ 496              		.cfi_offset 83, -60
+ 497              		.cfi_offset 84, -56
+ 498              		.cfi_offset 85, -52
+ 499              		.cfi_offset 86, -48
+ 500              		.cfi_offset 87, -44
+ 501              		.cfi_offset 88, -40
+ 502              		.cfi_offset 89, -36
+ 503              		.cfi_offset 90, -32
+ 504              		.cfi_offset 91, -28
+ 505              		.cfi_offset 92, -24
+ 506              		.cfi_offset 93, -20
+ 507              		.cfi_offset 94, -16
+ 508              		.cfi_offset 95, -12
+ 509 0006 86B0     		sub	sp, sp, #24
+ 510              	.LCFI6:
+ 511              		.cfi_def_cfa_offset 96
+ 512 0008 0446     		mov	r4, r0
+ 513 000a B0EE40AA 		vmov.f32	s20, s0
+ 514 000e F0EE60AA 		vmov.f32	s21, s1
+ 515 0012 B0EE418A 		vmov.f32	s16, s2
+ 516 0016 F0EE618A 		vmov.f32	s17, s3
+ 517 001a B0EE42BA 		vmov.f32	s22, s4
+ 518 001e B0EE62CA 		vmov.f32	s24, s5
+ 519 0022 B0EE439A 		vmov.f32	s18, s6
+ 520 0026 F0EE63BA 		vmov.f32	s23, s7
+ 521 002a F0EE449A 		vmov.f32	s19, s8
+  52:Core/Src/MahonyAHRS.c ****     float q0q0, q0q1, q0q2, q0q3, q1q1, q1q2, q1q3, q2q2, q2q3, q3q3;  
+ 522              		.loc 1 52 2 is_stmt 1 view .LVU165
+  53:Core/Src/MahonyAHRS.c **** 	float hx, hy, bx, bz;
+ 523              		.loc 1 53 5 view .LVU166
+  54:Core/Src/MahonyAHRS.c **** 	float halfvx, halfvy, halfvz, halfwx, halfwy, halfwz;
+ 524              		.loc 1 54 2 view .LVU167
+  55:Core/Src/MahonyAHRS.c **** 	float halfex, halfey, halfez;
+ 525              		.loc 1 55 2 view .LVU168
+  56:Core/Src/MahonyAHRS.c **** 	float qa, qb, qc;
+ 526              		.loc 1 56 2 view .LVU169
+  57:Core/Src/MahonyAHRS.c **** 
+ 527              		.loc 1 57 2 view .LVU170
+  60:Core/Src/MahonyAHRS.c **** 		MahonyAHRSupdateIMU(q, gx, gy, gz, ax, ay, az);
+ 528              		.loc 1 60 2 view .LVU171
+  60:Core/Src/MahonyAHRS.c **** 		MahonyAHRSupdateIMU(q, gx, gy, gz, ax, ay, az);
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 17
+
+
+ 529              		.loc 1 60 4 is_stmt 0 view .LVU172
+ 530 002e B5EE403A 		vcmp.f32	s6, #0
+ 531 0032 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 532 0036 0AD1     		bne	.L16
+  60:Core/Src/MahonyAHRS.c **** 		MahonyAHRSupdateIMU(q, gx, gy, gz, ax, ay, az);
+ 533              		.loc 1 60 18 discriminator 1 view .LVU173
+ 534 0038 F5EE403A 		vcmp.f32	s7, #0
+ 535 003c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 536 0040 05D1     		bne	.L16
+  60:Core/Src/MahonyAHRS.c **** 		MahonyAHRSupdateIMU(q, gx, gy, gz, ax, ay, az);
+ 537              		.loc 1 60 34 discriminator 2 view .LVU174
+ 538 0042 B5EE404A 		vcmp.f32	s8, #0
+ 539 0046 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 540 004a 00F0B181 		beq	.L26
+ 541              	.L16:
+  66:Core/Src/MahonyAHRS.c **** 
+ 542              		.loc 1 66 2 is_stmt 1 view .LVU175
+  66:Core/Src/MahonyAHRS.c **** 
+ 543              		.loc 1 66 4 is_stmt 0 view .LVU176
+ 544 004e F5EE408A 		vcmp.f32	s17, #0
+ 545 0052 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 546 0056 0AD1     		bne	.L18
+  66:Core/Src/MahonyAHRS.c **** 
+ 547              		.loc 1 66 20 discriminator 1 view .LVU177
+ 548 0058 B5EE40BA 		vcmp.f32	s22, #0
+ 549 005c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 550 0060 05D1     		bne	.L18
+  66:Core/Src/MahonyAHRS.c **** 
+ 551              		.loc 1 66 5 discriminator 2 view .LVU178
+ 552 0062 B5EE40CA 		vcmp.f32	s24, #0
+ 553 0066 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 554 006a 00F03581 		beq	.L19
+ 555              	.L18:
+  69:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 556              		.loc 1 69 3 is_stmt 1 view .LVU179
+  69:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 557              		.loc 1 69 26 is_stmt 0 view .LVU180
+ 558 006e 68EEA87A 		vmul.f32	s15, s17, s17
+  69:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 559              		.loc 1 69 36 view .LVU181
+ 560 0072 2BEE0B7A 		vmul.f32	s14, s22, s22
+  69:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 561              		.loc 1 69 31 view .LVU182
+ 562 0076 77EE877A 		vadd.f32	s15, s15, s14
+  69:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 563              		.loc 1 69 46 view .LVU183
+ 564 007a 2CEE0C0A 		vmul.f32	s0, s24, s24
+ 565              	.LVL48:
+  69:Core/Src/MahonyAHRS.c **** 		ax *= recipNorm;
+ 566              		.loc 1 69 15 view .LVU184
+ 567 007e 37EE800A 		vadd.f32	s0, s15, s0
+ 568 0082 FFF7FEFF 		bl	invSqrt
+ 569              	.LVL49:
+  70:Core/Src/MahonyAHRS.c **** 		ay *= recipNorm;
+ 570              		.loc 1 70 3 is_stmt 1 view .LVU185
+  70:Core/Src/MahonyAHRS.c **** 		ay *= recipNorm;
+ 571              		.loc 1 70 6 is_stmt 0 view .LVU186
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 18
+
+
+ 572 0086 68EE805A 		vmul.f32	s11, s17, s0
+ 573 008a CDED025A 		vstr.32	s11, [sp, #8]
+ 574              	.LVL50:
+  71:Core/Src/MahonyAHRS.c **** 		az *= recipNorm;     
+ 575              		.loc 1 71 3 is_stmt 1 view .LVU187
+  71:Core/Src/MahonyAHRS.c **** 		az *= recipNorm;     
+ 576              		.loc 1 71 6 is_stmt 0 view .LVU188
+ 577 008e 2BEE005A 		vmul.f32	s10, s22, s0
+ 578 0092 8DED035A 		vstr.32	s10, [sp, #12]
+ 579              	.LVL51:
+  72:Core/Src/MahonyAHRS.c **** 
+ 580              		.loc 1 72 3 is_stmt 1 view .LVU189
+  72:Core/Src/MahonyAHRS.c **** 
+ 581              		.loc 1 72 6 is_stmt 0 view .LVU190
+ 582 0096 6CEE004A 		vmul.f32	s9, s24, s0
+ 583 009a CDED044A 		vstr.32	s9, [sp, #16]
+ 584              	.LVL52:
+  75:Core/Src/MahonyAHRS.c **** 		mx *= recipNorm;
+ 585              		.loc 1 75 3 is_stmt 1 view .LVU191
+  75:Core/Src/MahonyAHRS.c **** 		mx *= recipNorm;
+ 586              		.loc 1 75 26 is_stmt 0 view .LVU192
+ 587 009e 69EE097A 		vmul.f32	s15, s18, s18
+  75:Core/Src/MahonyAHRS.c **** 		mx *= recipNorm;
+ 588              		.loc 1 75 36 view .LVU193
+ 589 00a2 2BEEAB7A 		vmul.f32	s14, s23, s23
+  75:Core/Src/MahonyAHRS.c **** 		mx *= recipNorm;
+ 590              		.loc 1 75 31 view .LVU194
+ 591 00a6 77EE877A 		vadd.f32	s15, s15, s14
+  75:Core/Src/MahonyAHRS.c **** 		mx *= recipNorm;
+ 592              		.loc 1 75 46 view .LVU195
+ 593 00aa 29EEA90A 		vmul.f32	s0, s19, s19
+ 594              	.LVL53:
+  75:Core/Src/MahonyAHRS.c **** 		mx *= recipNorm;
+ 595              		.loc 1 75 15 view .LVU196
+ 596 00ae 37EE800A 		vadd.f32	s0, s15, s0
+ 597 00b2 FFF7FEFF 		bl	invSqrt
+ 598              	.LVL54:
+  76:Core/Src/MahonyAHRS.c **** 		my *= recipNorm;
+ 599              		.loc 1 76 3 is_stmt 1 view .LVU197
+  76:Core/Src/MahonyAHRS.c **** 		my *= recipNorm;
+ 600              		.loc 1 76 6 is_stmt 0 view .LVU198
+ 601 00b6 29EE009A 		vmul.f32	s18, s18, s0
+ 602              	.LVL55:
+  77:Core/Src/MahonyAHRS.c **** 		mz *= recipNorm;   
+ 603              		.loc 1 77 3 is_stmt 1 view .LVU199
+  77:Core/Src/MahonyAHRS.c **** 		mz *= recipNorm;   
+ 604              		.loc 1 77 6 is_stmt 0 view .LVU200
+ 605 00ba 6BEE80BA 		vmul.f32	s23, s23, s0
+ 606              	.LVL56:
+  78:Core/Src/MahonyAHRS.c **** 
+ 607              		.loc 1 78 3 is_stmt 1 view .LVU201
+  78:Core/Src/MahonyAHRS.c **** 
+ 608              		.loc 1 78 6 is_stmt 0 view .LVU202
+ 609 00be 69EE809A 		vmul.f32	s19, s19, s0
+ 610              	.LVL57:
+  81:Core/Src/MahonyAHRS.c ****         q0q1 = q[0] * q[1];
+ 611              		.loc 1 81 9 is_stmt 1 view .LVU203
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 19
+
+
+  81:Core/Src/MahonyAHRS.c ****         q0q1 = q[0] * q[1];
+ 612              		.loc 1 81 17 is_stmt 0 view .LVU204
+ 613 00c2 D4ED007A 		vldr.32	s15, [r4]
+  81:Core/Src/MahonyAHRS.c ****         q0q1 = q[0] * q[1];
+ 614              		.loc 1 81 14 view .LVU205
+ 615 00c6 27EEA77A 		vmul.f32	s14, s15, s15
+ 616 00ca 8DED057A 		vstr.32	s14, [sp, #20]
+ 617              	.LVL58:
+  82:Core/Src/MahonyAHRS.c ****         q0q2 = q[0] * q[2];
+ 618              		.loc 1 82 9 is_stmt 1 view .LVU206
+  82:Core/Src/MahonyAHRS.c ****         q0q2 = q[0] * q[2];
+ 619              		.loc 1 82 24 is_stmt 0 view .LVU207
+ 620 00ce 94ED01BA 		vldr.32	s22, [r4, #4]
+  82:Core/Src/MahonyAHRS.c ****         q0q2 = q[0] * q[2];
+ 621              		.loc 1 82 14 view .LVU208
+ 622 00d2 27EE8BFA 		vmul.f32	s30, s15, s22
+ 623              	.LVL59:
+  83:Core/Src/MahonyAHRS.c ****         q0q3 = q[0] * q[3];
+ 624              		.loc 1 83 9 is_stmt 1 view .LVU209
+  83:Core/Src/MahonyAHRS.c ****         q0q3 = q[0] * q[3];
+ 625              		.loc 1 83 24 is_stmt 0 view .LVU210
+ 626 00d6 D4ED028A 		vldr.32	s17, [r4, #8]
+  83:Core/Src/MahonyAHRS.c ****         q0q3 = q[0] * q[3];
+ 627              		.loc 1 83 14 view .LVU211
+ 628 00da 67EEA8FA 		vmul.f32	s31, s15, s17
+ 629              	.LVL60:
+  84:Core/Src/MahonyAHRS.c ****         q1q1 = q[1] * q[1];
+ 630              		.loc 1 84 9 is_stmt 1 view .LVU212
+  84:Core/Src/MahonyAHRS.c ****         q1q1 = q[1] * q[1];
+ 631              		.loc 1 84 24 is_stmt 0 view .LVU213
+ 632 00de 94ED03DA 		vldr.32	s26, [r4, #12]
+  84:Core/Src/MahonyAHRS.c ****         q1q1 = q[1] * q[1];
+ 633              		.loc 1 84 14 view .LVU214
+ 634 00e2 67EE8D7A 		vmul.f32	s15, s15, s26
+ 635              	.LVL61:
+  85:Core/Src/MahonyAHRS.c ****         q1q2 = q[1] * q[2];
+ 636              		.loc 1 85 9 is_stmt 1 view .LVU215
+  85:Core/Src/MahonyAHRS.c ****         q1q2 = q[1] * q[2];
+ 637              		.loc 1 85 14 is_stmt 0 view .LVU216
+ 638 00e6 6BEE0BCA 		vmul.f32	s25, s22, s22
+ 639              	.LVL62:
+  86:Core/Src/MahonyAHRS.c ****         q1q3 = q[1] * q[3];
+ 640              		.loc 1 86 9 is_stmt 1 view .LVU217
+  86:Core/Src/MahonyAHRS.c ****         q1q3 = q[1] * q[3];
+ 641              		.loc 1 86 14 is_stmt 0 view .LVU218
+ 642 00ea 6BEE286A 		vmul.f32	s13, s22, s17
+ 643              	.LVL63:
+  87:Core/Src/MahonyAHRS.c ****         q2q2 = q[2] * q[2];
+ 644              		.loc 1 87 9 is_stmt 1 view .LVU219
+  87:Core/Src/MahonyAHRS.c ****         q2q2 = q[2] * q[2];
+ 645              		.loc 1 87 14 is_stmt 0 view .LVU220
+ 646 00ee 2BEE0DBA 		vmul.f32	s22, s22, s26
+ 647              	.LVL64:
+  88:Core/Src/MahonyAHRS.c ****         q2q3 = q[2] * q[3];
+ 648              		.loc 1 88 9 is_stmt 1 view .LVU221
+  88:Core/Src/MahonyAHRS.c ****         q2q3 = q[2] * q[3];
+ 649              		.loc 1 88 14 is_stmt 0 view .LVU222
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 20
+
+
+ 650 00f2 68EEA8EA 		vmul.f32	s29, s17, s17
+ 651              	.LVL65:
+  89:Core/Src/MahonyAHRS.c ****         q3q3 = q[3] * q[3];   
+ 652              		.loc 1 89 9 is_stmt 1 view .LVU223
+  89:Core/Src/MahonyAHRS.c ****         q3q3 = q[3] * q[3];   
+ 653              		.loc 1 89 14 is_stmt 0 view .LVU224
+ 654 00f6 68EE8D8A 		vmul.f32	s17, s17, s26
+ 655              	.LVL66:
+  90:Core/Src/MahonyAHRS.c **** 
+ 656              		.loc 1 90 9 is_stmt 1 view .LVU225
+  90:Core/Src/MahonyAHRS.c **** 
+ 657              		.loc 1 90 14 is_stmt 0 view .LVU226
+ 658 00fa 2DEE0DDA 		vmul.f32	s26, s26, s26
+ 659              	.LVL67:
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 660              		.loc 1 93 9 is_stmt 1 view .LVU227
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 661              		.loc 1 93 33 is_stmt 0 view .LVU228
+ 662 00fe B6EE00EA 		vmov.f32	s28, #5.0e-1
+ 663 0102 3EEE6ECA 		vsub.f32	s24, s28, s29
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 664              		.loc 1 93 40 view .LVU229
+ 665 0106 3CEE4DCA 		vsub.f32	s24, s24, s26
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 666              		.loc 1 93 25 view .LVU230
+ 667 010a 2CEE097A 		vmul.f32	s14, s24, s18
+ 668              	.LVL68:
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 669              		.loc 1 93 61 view .LVU231
+ 670 010e 76EEE7DA 		vsub.f32	s27, s13, s15
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 671              		.loc 1 93 53 view .LVU232
+ 672 0112 2DEEAB6A 		vmul.f32	s12, s27, s23
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 673              		.loc 1 93 48 view .LVU233
+ 674 0116 37EE067A 		vadd.f32	s14, s14, s12
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 675              		.loc 1 93 82 view .LVU234
+ 676 011a 3FEE8B6A 		vadd.f32	s12, s31, s22
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 677              		.loc 1 93 74 view .LVU235
+ 678 011e 8DED016A 		vstr.32	s12, [sp, #4]
+ 679 0122 26EE296A 		vmul.f32	s12, s12, s19
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 680              		.loc 1 93 69 view .LVU236
+ 681 0126 37EE067A 		vadd.f32	s14, s14, s12
+  93:Core/Src/MahonyAHRS.c ****         hy = 2.0f * (mx * (q1q2 + q0q3) + my * (0.5f - q1q1 - q3q3) + mz * (q2q3 - q0q1));
+ 682              		.loc 1 93 12 view .LVU237
+ 683 012a 37EE077A 		vadd.f32	s14, s14, s14
+ 684              	.LVL69:
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 685              		.loc 1 94 9 is_stmt 1 view .LVU238
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 686              		.loc 1 94 33 is_stmt 0 view .LVU239
+ 687 012e 77EEA67A 		vadd.f32	s15, s15, s13
+ 688              	.LVL70:
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 21
+
+
+ 689              		.loc 1 94 25 view .LVU240
+ 690 0132 67EE897A 		vmul.f32	s15, s15, s18
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 691              		.loc 1 94 54 view .LVU241
+ 692 0136 7EEE6CCA 		vsub.f32	s25, s28, s25
+ 693              	.LVL71:
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 694              		.loc 1 94 61 view .LVU242
+ 695 013a 7CEECD6A 		vsub.f32	s13, s25, s26
+ 696              	.LVL72:
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 697              		.loc 1 94 46 view .LVU243
+ 698 013e 66EEAB6A 		vmul.f32	s13, s13, s23
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 699              		.loc 1 94 41 view .LVU244
+ 700 0142 77EEA67A 		vadd.f32	s15, s15, s13
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 701              		.loc 1 94 82 view .LVU245
+ 702 0146 78EECF6A 		vsub.f32	s13, s17, s30
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 703              		.loc 1 94 74 view .LVU246
+ 704 014a 66EEA96A 		vmul.f32	s13, s13, s19
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 705              		.loc 1 94 69 view .LVU247
+ 706 014e 77EEA67A 		vadd.f32	s15, s15, s13
+  94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
+ 707              		.loc 1 94 12 view .LVU248
+ 708 0152 77EEA77A 		vadd.f32	s15, s15, s15
+ 709              	.LVL73:
+  95:Core/Src/MahonyAHRS.c ****         bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+ 710              		.loc 1 95 9 is_stmt 1 view .LVU249
+  95:Core/Src/MahonyAHRS.c ****         bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+ 711              		.loc 1 95 22 is_stmt 0 view .LVU250
+ 712 0156 27EE077A 		vmul.f32	s14, s14, s14
+ 713              	.LVL74:
+  95:Core/Src/MahonyAHRS.c ****         bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+ 714              		.loc 1 95 32 view .LVU251
+ 715 015a 67EEA77A 		vmul.f32	s15, s15, s15
+ 716              	.LVL75:
+  95:Core/Src/MahonyAHRS.c ****         bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+ 717              		.loc 1 95 14 view .LVU252
+ 718 015e 77EE277A 		vadd.f32	s15, s14, s15
+ 719 0162 17EE900A 		vmov	r0, s15
+ 720 0166 FFF7FEFF 		bl	__aeabi_f2d
+ 721              	.LVL76:
+  95:Core/Src/MahonyAHRS.c ****         bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+ 722              		.loc 1 95 14 view .LVU253
+ 723 016a 41EC100B 		vmov	d0, r0, r1
+ 724 016e FFF7FEFF 		bl	sqrt
+ 725              	.LVL77:
+ 726 0172 51EC100B 		vmov	r0, r1, d0
+  95:Core/Src/MahonyAHRS.c ****         bz = 2.0f * (mx * (q1q3 - q0q2) + my * (q2q3 + q0q1) + mz * (0.5f - q1q1 - q2q2));
+ 727              		.loc 1 95 12 discriminator 1 view .LVU254
+ 728 0176 FFF7FEFF 		bl	__aeabi_d2f
+ 729              	.LVL78:
+ 730 017a 07EE100A 		vmov	s14, r0
+ 731              	.LVL79:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 22
+
+
+  96:Core/Src/MahonyAHRS.c **** 
+ 732              		.loc 1 96 9 is_stmt 1 view .LVU255
+  96:Core/Src/MahonyAHRS.c **** 
+ 733              		.loc 1 96 33 is_stmt 0 view .LVU256
+ 734 017e 3BEE6FBA 		vsub.f32	s22, s22, s31
+ 735              	.LVL80:
+  96:Core/Src/MahonyAHRS.c **** 
+ 736              		.loc 1 96 25 view .LVU257
+ 737 0182 6BEE097A 		vmul.f32	s15, s22, s18
+  96:Core/Src/MahonyAHRS.c **** 
+ 738              		.loc 1 96 54 view .LVU258
+ 739 0186 7FEE288A 		vadd.f32	s17, s30, s17
+ 740              	.LVL81:
+  96:Core/Src/MahonyAHRS.c **** 
+ 741              		.loc 1 96 46 view .LVU259
+ 742 018a 68EEAB6A 		vmul.f32	s13, s17, s23
+  96:Core/Src/MahonyAHRS.c **** 
+ 743              		.loc 1 96 41 view .LVU260
+ 744 018e 77EEA67A 		vadd.f32	s15, s15, s13
+  96:Core/Src/MahonyAHRS.c **** 
+ 745              		.loc 1 96 82 view .LVU261
+ 746 0192 7CEEEECA 		vsub.f32	s25, s25, s29
+  96:Core/Src/MahonyAHRS.c **** 
+ 747              		.loc 1 96 67 view .LVU262
+ 748 0196 6CEEA96A 		vmul.f32	s13, s25, s19
+  96:Core/Src/MahonyAHRS.c **** 
+ 749              		.loc 1 96 62 view .LVU263
+ 750 019a 77EEA67A 		vadd.f32	s15, s15, s13
+  96:Core/Src/MahonyAHRS.c **** 
+ 751              		.loc 1 96 12 view .LVU264
+ 752 019e 77EEA77A 		vadd.f32	s15, s15, s15
+ 753              	.LVL82:
+  99:Core/Src/MahonyAHRS.c **** 		halfvy = q0q1 + q2q3;
+ 754              		.loc 1 99 3 is_stmt 1 view .LVU265
+ 100:Core/Src/MahonyAHRS.c **** 		halfvz = q0q0 - 0.5f + q3q3;
+ 755              		.loc 1 100 3 view .LVU266
+ 101:Core/Src/MahonyAHRS.c ****         halfwx = bx * (0.5f - q2q2 - q3q3) + bz * (q1q3 - q0q2);
+ 756              		.loc 1 101 3 view .LVU267
+ 101:Core/Src/MahonyAHRS.c ****         halfwx = bx * (0.5f - q2q2 - q3q3) + bz * (q1q3 - q0q2);
+ 757              		.loc 1 101 17 is_stmt 0 view .LVU268
+ 758 01a2 DDED056A 		vldr.32	s13, [sp, #20]
+ 759 01a6 76EECE6A 		vsub.f32	s13, s13, s28
+ 101:Core/Src/MahonyAHRS.c ****         halfwx = bx * (0.5f - q2q2 - q3q3) + bz * (q1q3 - q0q2);
+ 760              		.loc 1 101 10 view .LVU269
+ 761 01aa 76EE8D6A 		vadd.f32	s13, s13, s26
+ 762              	.LVL83:
+ 102:Core/Src/MahonyAHRS.c ****         halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
+ 763              		.loc 1 102 9 is_stmt 1 view .LVU270
+ 102:Core/Src/MahonyAHRS.c ****         halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
+ 764              		.loc 1 102 21 is_stmt 0 view .LVU271
+ 765 01ae 2CEE07CA 		vmul.f32	s24, s24, s14
+ 766              	.LVL84:
+ 102:Core/Src/MahonyAHRS.c ****         halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
+ 767              		.loc 1 102 49 view .LVU272
+ 768 01b2 2BEE276A 		vmul.f32	s12, s22, s15
+ 102:Core/Src/MahonyAHRS.c ****         halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
+ 769              		.loc 1 102 16 view .LVU273
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 23
+
+
+ 770 01b6 3CEE06CA 		vadd.f32	s24, s24, s12
+ 771              	.LVL85:
+ 103:Core/Src/MahonyAHRS.c ****         halfwz = bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2);  
+ 772              		.loc 1 103 9 is_stmt 1 view .LVU274
+ 103:Core/Src/MahonyAHRS.c ****         halfwz = bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2);  
+ 773              		.loc 1 103 21 is_stmt 0 view .LVU275
+ 774 01ba 6DEE87DA 		vmul.f32	s27, s27, s14
+ 775              	.LVL86:
+ 103:Core/Src/MahonyAHRS.c ****         halfwz = bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2);  
+ 776              		.loc 1 103 42 view .LVU276
+ 777 01be 28EEA76A 		vmul.f32	s12, s17, s15
+ 103:Core/Src/MahonyAHRS.c ****         halfwz = bx * (q0q2 + q1q3) + bz * (0.5f - q1q1 - q2q2);  
+ 778              		.loc 1 103 16 view .LVU277
+ 779 01c2 7DEE86DA 		vadd.f32	s27, s27, s12
+ 780              	.LVL87:
+ 104:Core/Src/MahonyAHRS.c **** 	
+ 781              		.loc 1 104 9 is_stmt 1 view .LVU278
+ 104:Core/Src/MahonyAHRS.c **** 	
+ 782              		.loc 1 104 21 is_stmt 0 view .LVU279
+ 783 01c6 9DED016A 		vldr.32	s12, [sp, #4]
+ 784 01ca 26EE077A 		vmul.f32	s14, s12, s14
+ 104:Core/Src/MahonyAHRS.c **** 	
+ 785              		.loc 1 104 42 view .LVU280
+ 786 01ce 6CEEA7CA 		vmul.f32	s25, s25, s15
+ 104:Core/Src/MahonyAHRS.c **** 	
+ 787              		.loc 1 104 16 view .LVU281
+ 788 01d2 77EE2C7A 		vadd.f32	s15, s14, s25
+ 789              	.LVL88:
+ 107:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+ 790              		.loc 1 107 3 is_stmt 1 view .LVU282
+ 107:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+ 791              		.loc 1 107 16 is_stmt 0 view .LVU283
+ 792 01d6 9DED035A 		vldr.32	s10, [sp, #12]
+ 793 01da 25EE266A 		vmul.f32	s12, s10, s13
+ 107:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+ 794              		.loc 1 107 30 view .LVU284
+ 795 01de DDED044A 		vldr.32	s9, [sp, #16]
+ 796 01e2 28EEA47A 		vmul.f32	s14, s17, s9
+ 107:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+ 797              		.loc 1 107 25 view .LVU285
+ 798 01e6 36EE476A 		vsub.f32	s12, s12, s14
+ 107:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+ 799              		.loc 1 107 46 view .LVU286
+ 800 01ea 2BEEA77A 		vmul.f32	s14, s23, s15
+ 107:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+ 801              		.loc 1 107 60 view .LVU287
+ 802 01ee 69EEAD5A 		vmul.f32	s11, s19, s27
+ 107:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+ 803              		.loc 1 107 55 view .LVU288
+ 804 01f2 37EE657A 		vsub.f32	s14, s14, s11
+ 107:Core/Src/MahonyAHRS.c **** 		halfey = (az * halfvx - ax * halfvz) + (mz * halfwx - mx * halfwz);
+ 805              		.loc 1 107 10 view .LVU289
+ 806 01f6 36EE076A 		vadd.f32	s12, s12, s14
+ 807              	.LVL89:
+ 108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+ 808              		.loc 1 108 3 is_stmt 1 view .LVU290
+ 108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 24
+
+
+ 809              		.loc 1 108 16 is_stmt 0 view .LVU291
+ 810 01fa 2BEE247A 		vmul.f32	s14, s22, s9
+ 108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+ 811              		.loc 1 108 30 view .LVU292
+ 812 01fe DDED025A 		vldr.32	s11, [sp, #8]
+ 813 0202 65EEA66A 		vmul.f32	s13, s11, s13
+ 814              	.LVL90:
+ 108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+ 815              		.loc 1 108 25 view .LVU293
+ 816 0206 37EE667A 		vsub.f32	s14, s14, s13
+ 108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+ 817              		.loc 1 108 46 view .LVU294
+ 818 020a 69EE8C9A 		vmul.f32	s19, s19, s24
+ 819              	.LVL91:
+ 108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+ 820              		.loc 1 108 60 view .LVU295
+ 821 020e 69EE277A 		vmul.f32	s15, s18, s15
+ 822              	.LVL92:
+ 108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+ 823              		.loc 1 108 55 view .LVU296
+ 824 0212 79EEE79A 		vsub.f32	s19, s19, s15
+ 108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
+ 825              		.loc 1 108 10 view .LVU297
+ 826 0216 37EE297A 		vadd.f32	s14, s14, s19
+ 827              	.LVL93:
+ 109:Core/Src/MahonyAHRS.c **** 
+ 828              		.loc 1 109 3 is_stmt 1 view .LVU298
+ 109:Core/Src/MahonyAHRS.c **** 
+ 829              		.loc 1 109 16 is_stmt 0 view .LVU299
+ 830 021a 68EEA58A 		vmul.f32	s17, s17, s11
+ 831              	.LVL94:
+ 109:Core/Src/MahonyAHRS.c **** 
+ 832              		.loc 1 109 30 view .LVU300
+ 833 021e 2BEE05BA 		vmul.f32	s22, s22, s10
+ 834              	.LVL95:
+ 109:Core/Src/MahonyAHRS.c **** 
+ 835              		.loc 1 109 25 view .LVU301
+ 836 0222 78EECB8A 		vsub.f32	s17, s17, s22
+ 109:Core/Src/MahonyAHRS.c **** 
+ 837              		.loc 1 109 46 view .LVU302
+ 838 0226 29EE2D9A 		vmul.f32	s18, s18, s27
+ 839              	.LVL96:
+ 109:Core/Src/MahonyAHRS.c **** 
+ 840              		.loc 1 109 60 view .LVU303
+ 841 022a 6BEE8CBA 		vmul.f32	s23, s23, s24
+ 842              	.LVL97:
+ 109:Core/Src/MahonyAHRS.c **** 
+ 843              		.loc 1 109 55 view .LVU304
+ 844 022e 39EE6B9A 		vsub.f32	s18, s18, s23
+ 109:Core/Src/MahonyAHRS.c **** 
+ 845              		.loc 1 109 10 view .LVU305
+ 846 0232 78EE898A 		vadd.f32	s17, s17, s18
+ 847              	.LVL98:
+ 112:Core/Src/MahonyAHRS.c **** 			integralFBx += twoKi * halfex * (1.0f / sampleFreq);	// integral error scaled by Ki
+ 848              		.loc 1 112 3 is_stmt 1 view .LVU306
+ 112:Core/Src/MahonyAHRS.c **** 			integralFBx += twoKi * halfex * (1.0f / sampleFreq);	// integral error scaled by Ki
+ 849              		.loc 1 112 12 is_stmt 0 view .LVU307
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 25
+
+
+ 850 0236 644B     		ldr	r3, .L27
+ 851 0238 D3ED007A 		vldr.32	s15, [r3]
+ 112:Core/Src/MahonyAHRS.c **** 			integralFBx += twoKi * halfex * (1.0f / sampleFreq);	// integral error scaled by Ki
+ 852              		.loc 1 112 5 view .LVU308
+ 853 023c F5EEC07A 		vcmpe.f32	s15, #0
+ 854 0240 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 855 0244 40F3B780 		ble	.L24
+ 113:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 856              		.loc 1 113 4 is_stmt 1 view .LVU309
+ 113:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 857              		.loc 1 113 25 is_stmt 0 view .LVU310
+ 858 0248 D3ED007A 		vldr.32	s15, [r3]
+ 859 024c 67EE867A 		vmul.f32	s15, s15, s12
+ 113:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 860              		.loc 1 113 34 view .LVU311
+ 861 0250 DFED5E6A 		vldr.32	s13, .L27+4
+ 862 0254 67EEA67A 		vmul.f32	s15, s15, s13
+ 113:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
+ 863              		.loc 1 113 16 view .LVU312
+ 864 0258 5D49     		ldr	r1, .L27+8
+ 865 025a D1ED005A 		vldr.32	s11, [r1]
+ 866 025e 75EEA77A 		vadd.f32	s15, s11, s15
+ 867 0262 C1ED007A 		vstr.32	s15, [r1]
+ 114:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 868              		.loc 1 114 4 is_stmt 1 view .LVU313
+ 114:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 869              		.loc 1 114 25 is_stmt 0 view .LVU314
+ 870 0266 D3ED007A 		vldr.32	s15, [r3]
+ 871 026a 67EE877A 		vmul.f32	s15, s15, s14
+ 114:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 872              		.loc 1 114 34 view .LVU315
+ 873 026e 67EEA67A 		vmul.f32	s15, s15, s13
+ 114:Core/Src/MahonyAHRS.c **** 			integralFBz += twoKi * halfez * (1.0f / sampleFreq);
+ 874              		.loc 1 114 16 view .LVU316
+ 875 0272 584A     		ldr	r2, .L27+12
+ 876 0274 D2ED005A 		vldr.32	s11, [r2]
+ 877 0278 75EEA77A 		vadd.f32	s15, s11, s15
+ 878 027c C2ED007A 		vstr.32	s15, [r2]
+ 115:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 879              		.loc 1 115 4 is_stmt 1 view .LVU317
+ 115:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 880              		.loc 1 115 25 is_stmt 0 view .LVU318
+ 881 0280 D3ED007A 		vldr.32	s15, [r3]
+ 882 0284 67EEA87A 		vmul.f32	s15, s15, s17
+ 115:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 883              		.loc 1 115 34 view .LVU319
+ 884 0288 67EEA67A 		vmul.f32	s15, s15, s13
+ 115:Core/Src/MahonyAHRS.c **** 			gx += integralFBx;	// apply integral feedback
+ 885              		.loc 1 115 16 view .LVU320
+ 886 028c 524B     		ldr	r3, .L27+16
+ 887 028e D3ED006A 		vldr.32	s13, [r3]
+ 888 0292 76EEA77A 		vadd.f32	s15, s13, s15
+ 889 0296 C3ED007A 		vstr.32	s15, [r3]
+ 116:Core/Src/MahonyAHRS.c **** 			gy += integralFBy;
+ 890              		.loc 1 116 4 is_stmt 1 view .LVU321
+ 891 029a D1ED007A 		vldr.32	s15, [r1]
+ 116:Core/Src/MahonyAHRS.c **** 			gy += integralFBy;
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 26
+
+
+ 892              		.loc 1 116 7 is_stmt 0 view .LVU322
+ 893 029e 3AEE27AA 		vadd.f32	s20, s20, s15
+ 894              	.LVL99:
+ 117:Core/Src/MahonyAHRS.c **** 			gz += integralFBz;
+ 895              		.loc 1 117 4 is_stmt 1 view .LVU323
+ 896 02a2 D2ED007A 		vldr.32	s15, [r2]
+ 117:Core/Src/MahonyAHRS.c **** 			gz += integralFBz;
+ 897              		.loc 1 117 7 is_stmt 0 view .LVU324
+ 898 02a6 7AEEA7AA 		vadd.f32	s21, s21, s15
+ 899              	.LVL100:
+ 118:Core/Src/MahonyAHRS.c **** 		}
+ 900              		.loc 1 118 4 is_stmt 1 view .LVU325
+ 901 02aa D3ED007A 		vldr.32	s15, [r3]
+ 118:Core/Src/MahonyAHRS.c **** 		}
+ 902              		.loc 1 118 7 is_stmt 0 view .LVU326
+ 903 02ae 38EE278A 		vadd.f32	s16, s16, s15
+ 904              	.LVL101:
+ 905              	.L22:
+ 127:Core/Src/MahonyAHRS.c **** 		gy += twoKp * halfey;
+ 906              		.loc 1 127 3 is_stmt 1 view .LVU327
+ 127:Core/Src/MahonyAHRS.c **** 		gy += twoKp * halfey;
+ 907              		.loc 1 127 15 is_stmt 0 view .LVU328
+ 908 02b2 4A4B     		ldr	r3, .L27+20
+ 909 02b4 D3ED007A 		vldr.32	s15, [r3]
+ 910 02b8 67EE867A 		vmul.f32	s15, s15, s12
+ 127:Core/Src/MahonyAHRS.c **** 		gy += twoKp * halfey;
+ 911              		.loc 1 127 6 view .LVU329
+ 912 02bc 3AEE27AA 		vadd.f32	s20, s20, s15
+ 913              	.LVL102:
+ 128:Core/Src/MahonyAHRS.c **** 		gz += twoKp * halfez;
+ 914              		.loc 1 128 3 is_stmt 1 view .LVU330
+ 128:Core/Src/MahonyAHRS.c **** 		gz += twoKp * halfez;
+ 915              		.loc 1 128 15 is_stmt 0 view .LVU331
+ 916 02c0 D3ED007A 		vldr.32	s15, [r3]
+ 917 02c4 27EE877A 		vmul.f32	s14, s15, s14
+ 918              	.LVL103:
+ 128:Core/Src/MahonyAHRS.c **** 		gz += twoKp * halfez;
+ 919              		.loc 1 128 6 view .LVU332
+ 920 02c8 7AEE87AA 		vadd.f32	s21, s21, s14
+ 921              	.LVL104:
+ 129:Core/Src/MahonyAHRS.c **** 	}
+ 922              		.loc 1 129 3 is_stmt 1 view .LVU333
+ 129:Core/Src/MahonyAHRS.c **** 	}
+ 923              		.loc 1 129 15 is_stmt 0 view .LVU334
+ 924 02cc D3ED007A 		vldr.32	s15, [r3]
+ 925 02d0 67EEA87A 		vmul.f32	s15, s15, s17
+ 129:Core/Src/MahonyAHRS.c **** 	}
+ 926              		.loc 1 129 6 view .LVU335
+ 927 02d4 38EE278A 		vadd.f32	s16, s16, s15
+ 928              	.LVL105:
+ 929              	.L19:
+ 133:Core/Src/MahonyAHRS.c **** 	gy *= (0.5f * (1.0f / sampleFreq));
+ 930              		.loc 1 133 2 is_stmt 1 view .LVU336
+ 133:Core/Src/MahonyAHRS.c **** 	gy *= (0.5f * (1.0f / sampleFreq));
+ 931              		.loc 1 133 5 is_stmt 0 view .LVU337
+ 932 02d8 DFED417A 		vldr.32	s15, .L27+24
+ 933 02dc 2AEE27AA 		vmul.f32	s20, s20, s15
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 27
+
+
+ 934              	.LVL106:
+ 134:Core/Src/MahonyAHRS.c **** 	gz *= (0.5f * (1.0f / sampleFreq));
+ 935              		.loc 1 134 2 is_stmt 1 view .LVU338
+ 134:Core/Src/MahonyAHRS.c **** 	gz *= (0.5f * (1.0f / sampleFreq));
+ 936              		.loc 1 134 5 is_stmt 0 view .LVU339
+ 937 02e0 6AEEA7AA 		vmul.f32	s21, s21, s15
+ 938              	.LVL107:
+ 135:Core/Src/MahonyAHRS.c **** 	qa = q[0];
+ 939              		.loc 1 135 2 is_stmt 1 view .LVU340
+ 135:Core/Src/MahonyAHRS.c **** 	qa = q[0];
+ 940              		.loc 1 135 5 is_stmt 0 view .LVU341
+ 941 02e4 28EE278A 		vmul.f32	s16, s16, s15
+ 942              	.LVL108:
+ 136:Core/Src/MahonyAHRS.c **** 	qb = q[1];
+ 943              		.loc 1 136 2 is_stmt 1 view .LVU342
+ 136:Core/Src/MahonyAHRS.c **** 	qb = q[1];
+ 944              		.loc 1 136 5 is_stmt 0 view .LVU343
+ 945 02e8 94ED006A 		vldr.32	s12, [r4]
+ 946              	.LVL109:
+ 137:Core/Src/MahonyAHRS.c **** 	qc = q[2];
+ 947              		.loc 1 137 2 is_stmt 1 view .LVU344
+ 137:Core/Src/MahonyAHRS.c **** 	qc = q[2];
+ 948              		.loc 1 137 5 is_stmt 0 view .LVU345
+ 949 02ec D4ED016A 		vldr.32	s13, [r4, #4]
+ 950              	.LVL110:
+ 138:Core/Src/MahonyAHRS.c **** 	q[0] += (-qb * gx - qc * gy - q[3] * gz);
+ 951              		.loc 1 138 2 is_stmt 1 view .LVU346
+ 138:Core/Src/MahonyAHRS.c **** 	q[0] += (-qb * gx - qc * gy - q[3] * gz);
+ 952              		.loc 1 138 5 is_stmt 0 view .LVU347
+ 953 02f0 94ED027A 		vldr.32	s14, [r4, #8]
+ 954              	.LVL111:
+ 139:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 955              		.loc 1 139 2 is_stmt 1 view .LVU348
+ 139:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 956              		.loc 1 139 15 is_stmt 0 view .LVU349
+ 957 02f4 66EECA9A 		vnmul.f32	s19, s13, s20
+ 139:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 958              		.loc 1 139 25 view .LVU350
+ 959 02f8 6AEE877A 		vmul.f32	s15, s21, s14
+ 139:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 960              		.loc 1 139 20 view .LVU351
+ 961 02fc 79EEE79A 		vsub.f32	s19, s19, s15
+ 139:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 962              		.loc 1 139 33 view .LVU352
+ 963 0300 D4ED037A 		vldr.32	s15, [r4, #12]
+ 139:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 964              		.loc 1 139 37 view .LVU353
+ 965 0304 67EE885A 		vmul.f32	s11, s15, s16
+ 139:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 966              		.loc 1 139 30 view .LVU354
+ 967 0308 79EEE59A 		vsub.f32	s19, s19, s11
+ 139:Core/Src/MahonyAHRS.c **** 	q[1] += (qa * gx + qc * gz - q[3] * gy);
+ 968              		.loc 1 139 7 view .LVU355
+ 969 030c 79EE869A 		vadd.f32	s19, s19, s12
+ 970 0310 C4ED009A 		vstr.32	s19, [r4]
+ 140:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 971              		.loc 1 140 2 is_stmt 1 view .LVU356
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 28
+
+
+ 140:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 972              		.loc 1 140 14 is_stmt 0 view .LVU357
+ 973 0314 2AEE069A 		vmul.f32	s18, s20, s12
+ 140:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 974              		.loc 1 140 24 view .LVU358
+ 975 0318 68EE075A 		vmul.f32	s11, s16, s14
+ 140:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 976              		.loc 1 140 19 view .LVU359
+ 977 031c 39EE259A 		vadd.f32	s18, s18, s11
+ 140:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 978              		.loc 1 140 36 view .LVU360
+ 979 0320 67EEAA5A 		vmul.f32	s11, s15, s21
+ 140:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 980              		.loc 1 140 29 view .LVU361
+ 981 0324 39EE659A 		vsub.f32	s18, s18, s11
+ 140:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
+ 982              		.loc 1 140 7 view .LVU362
+ 983 0328 39EE269A 		vadd.f32	s18, s18, s13
+ 984 032c 84ED019A 		vstr.32	s18, [r4, #4]
+ 141:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 985              		.loc 1 141 2 is_stmt 1 view .LVU363
+ 141:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 986              		.loc 1 141 14 is_stmt 0 view .LVU364
+ 987 0330 6AEE868A 		vmul.f32	s17, s21, s12
+ 141:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 988              		.loc 1 141 24 view .LVU365
+ 989 0334 68EE265A 		vmul.f32	s11, s16, s13
+ 141:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 990              		.loc 1 141 19 view .LVU366
+ 991 0338 78EEE58A 		vsub.f32	s17, s17, s11
+ 141:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 992              		.loc 1 141 36 view .LVU367
+ 993 033c 67EE8A5A 		vmul.f32	s11, s15, s20
+ 141:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 994              		.loc 1 141 29 view .LVU368
+ 995 0340 78EEA58A 		vadd.f32	s17, s17, s11
+ 141:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
+ 996              		.loc 1 141 7 view .LVU369
+ 997 0344 78EE878A 		vadd.f32	s17, s17, s14
+ 998 0348 C4ED028A 		vstr.32	s17, [r4, #8]
+ 142:Core/Src/MahonyAHRS.c **** 	
+ 999              		.loc 1 142 2 is_stmt 1 view .LVU370
+ 142:Core/Src/MahonyAHRS.c **** 	
+ 1000              		.loc 1 142 14 is_stmt 0 view .LVU371
+ 1001 034c 28EE068A 		vmul.f32	s16, s16, s12
+ 1002              	.LVL112:
+ 142:Core/Src/MahonyAHRS.c **** 	
+ 1003              		.loc 1 142 24 view .LVU372
+ 1004 0350 6AEEA6AA 		vmul.f32	s21, s21, s13
+ 1005              	.LVL113:
+ 142:Core/Src/MahonyAHRS.c **** 	
+ 1006              		.loc 1 142 19 view .LVU373
+ 1007 0354 38EE2A8A 		vadd.f32	s16, s16, s21
+ 142:Core/Src/MahonyAHRS.c **** 	
+ 1008              		.loc 1 142 34 view .LVU374
+ 1009 0358 2AEE07AA 		vmul.f32	s20, s20, s14
+ 1010              	.LVL114:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 29
+
+
+ 142:Core/Src/MahonyAHRS.c **** 	
+ 1011              		.loc 1 142 29 view .LVU375
+ 1012 035c 38EE4A8A 		vsub.f32	s16, s16, s20
+ 142:Core/Src/MahonyAHRS.c **** 	
+ 1013              		.loc 1 142 7 view .LVU376
+ 1014 0360 37EE888A 		vadd.f32	s16, s15, s16
+ 1015 0364 84ED038A 		vstr.32	s16, [r4, #12]
+ 145:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 1016              		.loc 1 145 2 is_stmt 1 view .LVU377
+ 145:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 1017              		.loc 1 145 27 is_stmt 0 view .LVU378
+ 1018 0368 69EEA97A 		vmul.f32	s15, s19, s19
+ 145:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 1019              		.loc 1 145 41 view .LVU379
+ 1020 036c 29EE097A 		vmul.f32	s14, s18, s18
+ 1021              	.LVL115:
+ 145:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 1022              		.loc 1 145 34 view .LVU380
+ 1023 0370 77EE877A 		vadd.f32	s15, s15, s14
+ 145:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 1024              		.loc 1 145 55 view .LVU381
+ 1025 0374 28EEA87A 		vmul.f32	s14, s17, s17
+ 145:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 1026              		.loc 1 145 48 view .LVU382
+ 1027 0378 77EE877A 		vadd.f32	s15, s15, s14
+ 145:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 1028              		.loc 1 145 69 view .LVU383
+ 1029 037c 28EE080A 		vmul.f32	s0, s16, s16
+ 145:Core/Src/MahonyAHRS.c **** 	q[0] *= recipNorm;
+ 1030              		.loc 1 145 14 view .LVU384
+ 1031 0380 37EE800A 		vadd.f32	s0, s15, s0
+ 1032 0384 FFF7FEFF 		bl	invSqrt
+ 1033              	.LVL116:
+ 146:Core/Src/MahonyAHRS.c **** 	q[1] *= recipNorm;
+ 1034              		.loc 1 146 2 is_stmt 1 view .LVU385
+ 146:Core/Src/MahonyAHRS.c **** 	q[1] *= recipNorm;
+ 1035              		.loc 1 146 7 is_stmt 0 view .LVU386
+ 1036 0388 69EE809A 		vmul.f32	s19, s19, s0
+ 1037 038c C4ED009A 		vstr.32	s19, [r4]
+ 147:Core/Src/MahonyAHRS.c **** 	q[2] *= recipNorm;
+ 1038              		.loc 1 147 2 is_stmt 1 view .LVU387
+ 147:Core/Src/MahonyAHRS.c **** 	q[2] *= recipNorm;
+ 1039              		.loc 1 147 7 is_stmt 0 view .LVU388
+ 1040 0390 29EE009A 		vmul.f32	s18, s18, s0
+ 1041 0394 84ED019A 		vstr.32	s18, [r4, #4]
+ 148:Core/Src/MahonyAHRS.c **** 	q[3] *= recipNorm;
+ 1042              		.loc 1 148 2 is_stmt 1 view .LVU389
+ 148:Core/Src/MahonyAHRS.c **** 	q[3] *= recipNorm;
+ 1043              		.loc 1 148 7 is_stmt 0 view .LVU390
+ 1044 0398 68EE808A 		vmul.f32	s17, s17, s0
+ 1045 039c C4ED028A 		vstr.32	s17, [r4, #8]
+ 149:Core/Src/MahonyAHRS.c **** }
+ 1046              		.loc 1 149 2 is_stmt 1 view .LVU391
+ 149:Core/Src/MahonyAHRS.c **** }
+ 1047              		.loc 1 149 7 is_stmt 0 view .LVU392
+ 1048 03a0 28EE008A 		vmul.f32	s16, s16, s0
+ 1049 03a4 84ED038A 		vstr.32	s16, [r4, #12]
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 30
+
+
+ 1050              	.LVL117:
+ 1051              	.L15:
+ 150:Core/Src/MahonyAHRS.c **** 
+ 1052              		.loc 1 150 1 view .LVU393
+ 1053 03a8 06B0     		add	sp, sp, #24
+ 1054              	.LCFI7:
+ 1055              		.cfi_remember_state
+ 1056              		.cfi_def_cfa_offset 72
+ 1057              		@ sp needed
+ 1058 03aa BDEC108B 		vldm	sp!, {d8-d15}
+ 1059              	.LCFI8:
+ 1060              		.cfi_restore 94
+ 1061              		.cfi_restore 95
+ 1062              		.cfi_restore 92
+ 1063              		.cfi_restore 93
+ 1064              		.cfi_restore 90
+ 1065              		.cfi_restore 91
+ 1066              		.cfi_restore 88
+ 1067              		.cfi_restore 89
+ 1068              		.cfi_restore 86
+ 1069              		.cfi_restore 87
+ 1070              		.cfi_restore 84
+ 1071              		.cfi_restore 85
+ 1072              		.cfi_restore 82
+ 1073              		.cfi_restore 83
+ 1074              		.cfi_restore 80
+ 1075              		.cfi_restore 81
+ 1076              		.cfi_def_cfa_offset 8
+ 1077 03ae 10BD     		pop	{r4, pc}
+ 1078              	.LVL118:
+ 1079              	.L26:
+ 1080              	.LCFI9:
+ 1081              		.cfi_restore_state
+  61:Core/Src/MahonyAHRS.c **** 		return;
+ 1082              		.loc 1 61 3 is_stmt 1 view .LVU394
+ 1083 03b0 FFF7FEFF 		bl	MahonyAHRSupdateIMU
+ 1084              	.LVL119:
+  62:Core/Src/MahonyAHRS.c **** 	}
+ 1085              		.loc 1 62 3 view .LVU395
+ 1086 03b4 F8E7     		b	.L15
+ 1087              	.LVL120:
+ 1088              	.L24:
+ 121:Core/Src/MahonyAHRS.c **** 			integralFBy = 0.0f;
+ 1089              		.loc 1 121 4 view .LVU396
+ 121:Core/Src/MahonyAHRS.c **** 			integralFBy = 0.0f;
+ 1090              		.loc 1 121 16 is_stmt 0 view .LVU397
+ 1091 03b6 0023     		movs	r3, #0
+ 1092 03b8 054A     		ldr	r2, .L27+8
+ 1093 03ba 1360     		str	r3, [r2]	@ float
+ 122:Core/Src/MahonyAHRS.c **** 			integralFBz = 0.0f;
+ 1094              		.loc 1 122 4 is_stmt 1 view .LVU398
+ 122:Core/Src/MahonyAHRS.c **** 			integralFBz = 0.0f;
+ 1095              		.loc 1 122 16 is_stmt 0 view .LVU399
+ 1096 03bc 054A     		ldr	r2, .L27+12
+ 1097 03be 1360     		str	r3, [r2]	@ float
+ 123:Core/Src/MahonyAHRS.c **** 		}
+ 1098              		.loc 1 123 4 is_stmt 1 view .LVU400
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 31
+
+
+ 123:Core/Src/MahonyAHRS.c **** 		}
+ 1099              		.loc 1 123 16 is_stmt 0 view .LVU401
+ 1100 03c0 054A     		ldr	r2, .L27+16
+ 1101 03c2 1360     		str	r3, [r2]	@ float
+ 1102 03c4 75E7     		b	.L22
+ 1103              	.L28:
+ 1104 03c6 00BF     		.align	2
+ 1105              	.L27:
+ 1106 03c8 00000000 		.word	twoKi
+ 1107 03cc 0AD7A33B 		.word	1000593162
+ 1108 03d0 00000000 		.word	integralFBx
+ 1109 03d4 00000000 		.word	integralFBy
+ 1110 03d8 00000000 		.word	integralFBz
+ 1111 03dc 00000000 		.word	twoKp
+ 1112 03e0 0AD7233B 		.word	992204554
+ 1113              		.cfi_endproc
+ 1114              	.LFE0:
+ 1116              		.section	.text.QuaternionToEuler,"ax",%progbits
+ 1117              		.align	1
+ 1118              		.global	QuaternionToEuler
+ 1119              		.syntax unified
+ 1120              		.thumb
+ 1121              		.thumb_func
+ 1123              	QuaternionToEuler:
+ 1124              	.LVL121:
+ 1125              	.LFB3:
+ 234:Core/Src/MahonyAHRS.c **** 
+ 235:Core/Src/MahonyAHRS.c **** //-------------------------------------------------------------------------------------------------
+ 236:Core/Src/MahonyAHRS.c **** // Quaternion to Euler angles conversion
+ 237:Core/Src/MahonyAHRS.c **** // Converts quaternion (q0=w, q1=x, q2=y, q3=z) to Tait-Bryan Euler angles in degrees
+ 238:Core/Src/MahonyAHRS.c **** // Rotation sequence: ZYX (yaw-pitch-roll), aerospace convention
+ 239:Core/Src/MahonyAHRS.c **** //-------------------------------------------------------------------------------------------------
+ 240:Core/Src/MahonyAHRS.c **** 
+ 241:Core/Src/MahonyAHRS.c **** void QuaternionToEuler(const float q[4], float *roll, float *pitch, float *yaw)
+ 242:Core/Src/MahonyAHRS.c **** {
+ 1126              		.loc 1 242 1 is_stmt 1 view -0
+ 1127              		.cfi_startproc
+ 1128              		@ args = 0, pretend = 0, frame = 0
+ 1129              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1130              		.loc 1 242 1 is_stmt 0 view .LVU403
+ 1131 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 1132              	.LCFI10:
+ 1133              		.cfi_def_cfa_offset 24
+ 1134              		.cfi_offset 3, -24
+ 1135              		.cfi_offset 4, -20
+ 1136              		.cfi_offset 5, -16
+ 1137              		.cfi_offset 6, -12
+ 1138              		.cfi_offset 7, -8
+ 1139              		.cfi_offset 14, -4
+ 1140 0002 2DED028B 		vpush.64	{d8}
+ 1141              	.LCFI11:
+ 1142              		.cfi_def_cfa_offset 32
+ 1143              		.cfi_offset 80, -32
+ 1144              		.cfi_offset 81, -28
+ 1145 0006 0446     		mov	r4, r0
+ 1146 0008 0F46     		mov	r7, r1
+ 1147 000a 1646     		mov	r6, r2
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 32
+
+
+ 1148 000c 1D46     		mov	r5, r3
+ 243:Core/Src/MahonyAHRS.c ****     /* Roll (phi) — rotation about X axis */
+ 244:Core/Src/MahonyAHRS.c ****     *roll = atan2f(2.0f * (q[0] * q[1] + q[2] * q[3]),
+ 1149              		.loc 1 244 5 is_stmt 1 view .LVU404
+ 1150              		.loc 1 244 29 is_stmt 0 view .LVU405
+ 1151 000e 90ED000A 		vldr.32	s0, [r0]
+ 1152              		.loc 1 244 36 view .LVU406
+ 1153 0012 D0ED010A 		vldr.32	s1, [r0, #4]
+ 1154              		.loc 1 244 33 view .LVU407
+ 1155 0016 20EE200A 		vmul.f32	s0, s0, s1
+ 1156              		.loc 1 244 43 view .LVU408
+ 1157 001a D0ED027A 		vldr.32	s15, [r0, #8]
+ 1158              		.loc 1 244 50 view .LVU409
+ 1159 001e 90ED037A 		vldr.32	s14, [r0, #12]
+ 1160              		.loc 1 244 47 view .LVU410
+ 1161 0022 27EE877A 		vmul.f32	s14, s15, s14
+ 1162              		.loc 1 244 40 view .LVU411
+ 1163 0026 30EE070A 		vadd.f32	s0, s0, s14
+ 245:Core/Src/MahonyAHRS.c ****                    1.0f - 2.0f * (q[1] * q[1] + q[2] * q[2]));
+ 1164              		.loc 1 245 40 view .LVU412
+ 1165 002a 60EEA00A 		vmul.f32	s1, s1, s1
+ 1166              		.loc 1 245 54 view .LVU413
+ 1167 002e 67EEA77A 		vmul.f32	s15, s15, s15
+ 1168              		.loc 1 245 47 view .LVU414
+ 1169 0032 70EEA70A 		vadd.f32	s1, s1, s15
+ 1170              		.loc 1 245 32 view .LVU415
+ 1171 0036 70EEA00A 		vadd.f32	s1, s1, s1
+ 244:Core/Src/MahonyAHRS.c ****                    1.0f - 2.0f * (q[1] * q[1] + q[2] * q[2]));
+ 1172              		.loc 1 244 13 view .LVU416
+ 1173 003a B7EE008A 		vmov.f32	s16, #1.0e+0
+ 1174 003e 78EE600A 		vsub.f32	s1, s16, s1
+ 1175 0042 30EE000A 		vadd.f32	s0, s0, s0
+ 1176 0046 FFF7FEFF 		bl	atan2f
+ 1177              	.LVL122:
+ 244:Core/Src/MahonyAHRS.c ****                    1.0f - 2.0f * (q[1] * q[1] + q[2] * q[2]));
+ 1178              		.loc 1 244 11 discriminator 1 view .LVU417
+ 1179 004a 87ED000A 		vstr.32	s0, [r7]
+ 246:Core/Src/MahonyAHRS.c **** 
+ 247:Core/Src/MahonyAHRS.c ****     /* Pitch (theta) — rotation about Y axis */
+ 248:Core/Src/MahonyAHRS.c ****     float sinp = 2.0f * (q[0] * q[2] - q[3] * q[1]);
+ 1180              		.loc 1 248 5 is_stmt 1 view .LVU418
+ 1181              		.loc 1 248 27 is_stmt 0 view .LVU419
+ 1182 004e 94ED000A 		vldr.32	s0, [r4]
+ 1183              		.loc 1 248 34 view .LVU420
+ 1184 0052 D4ED027A 		vldr.32	s15, [r4, #8]
+ 1185              		.loc 1 248 31 view .LVU421
+ 1186 0056 20EE270A 		vmul.f32	s0, s0, s15
+ 1187              		.loc 1 248 41 view .LVU422
+ 1188 005a D4ED037A 		vldr.32	s15, [r4, #12]
+ 1189              		.loc 1 248 48 view .LVU423
+ 1190 005e 94ED017A 		vldr.32	s14, [r4, #4]
+ 1191              		.loc 1 248 45 view .LVU424
+ 1192 0062 67EE877A 		vmul.f32	s15, s15, s14
+ 1193              		.loc 1 248 38 view .LVU425
+ 1194 0066 30EE670A 		vsub.f32	s0, s0, s15
+ 1195              		.loc 1 248 11 view .LVU426
+ 1196 006a 30EE000A 		vadd.f32	s0, s0, s0
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 33
+
+
+ 1197              	.LVL123:
+ 249:Core/Src/MahonyAHRS.c **** 
+ 250:Core/Src/MahonyAHRS.c ****     /* Clamp to [-1, 1] to prevent NaN from floating-point rounding */
+ 251:Core/Src/MahonyAHRS.c ****     if (sinp >  1.0f) sinp =  1.0f;
+ 1198              		.loc 1 251 5 is_stmt 1 view .LVU427
+ 1199              		.loc 1 251 8 is_stmt 0 view .LVU428
+ 1200 006e B4EEC80A 		vcmpe.f32	s0, s16
+ 1201 0072 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1202 0076 3CDD     		ble	.L34
+ 1203              		.loc 1 251 28 discriminator 1 view .LVU429
+ 1204 0078 B7EE000A 		vmov.f32	s0, #1.0e+0
+ 1205              	.LVL124:
+ 1206              	.L30:
+ 252:Core/Src/MahonyAHRS.c ****     if (sinp < -1.0f) sinp = -1.0f;
+ 253:Core/Src/MahonyAHRS.c ****     *pitch = asinf(sinp);
+ 1207              		.loc 1 253 5 is_stmt 1 view .LVU430
+ 1208              		.loc 1 253 14 is_stmt 0 view .LVU431
+ 1209 007c FFF7FEFF 		bl	asinf
+ 1210              	.LVL125:
+ 1211              		.loc 1 253 12 discriminator 1 view .LVU432
+ 1212 0080 86ED000A 		vstr.32	s0, [r6]
+ 254:Core/Src/MahonyAHRS.c **** 
+ 255:Core/Src/MahonyAHRS.c ****     /* Yaw (psi) — rotation about Z axis */
+ 256:Core/Src/MahonyAHRS.c ****     *yaw = atan2f(2.0f * (q[0] * q[3] + q[1] * q[2]),
+ 1213              		.loc 1 256 5 is_stmt 1 view .LVU433
+ 1214              		.loc 1 256 28 is_stmt 0 view .LVU434
+ 1215 0084 94ED000A 		vldr.32	s0, [r4]
+ 1216              		.loc 1 256 35 view .LVU435
+ 1217 0088 D4ED037A 		vldr.32	s15, [r4, #12]
+ 1218              		.loc 1 256 32 view .LVU436
+ 1219 008c 20EE270A 		vmul.f32	s0, s0, s15
+ 1220              		.loc 1 256 42 view .LVU437
+ 1221 0090 94ED017A 		vldr.32	s14, [r4, #4]
+ 1222              		.loc 1 256 49 view .LVU438
+ 1223 0094 D4ED020A 		vldr.32	s1, [r4, #8]
+ 1224              		.loc 1 256 46 view .LVU439
+ 1225 0098 27EE207A 		vmul.f32	s14, s14, s1
+ 1226              		.loc 1 256 39 view .LVU440
+ 1227 009c 30EE070A 		vadd.f32	s0, s0, s14
+ 257:Core/Src/MahonyAHRS.c ****                   1.0f - 2.0f * (q[2] * q[2] + q[3] * q[3]));
+ 1228              		.loc 1 257 39 view .LVU441
+ 1229 00a0 60EEA00A 		vmul.f32	s1, s1, s1
+ 1230              		.loc 1 257 53 view .LVU442
+ 1231 00a4 67EEA77A 		vmul.f32	s15, s15, s15
+ 1232              		.loc 1 257 46 view .LVU443
+ 1233 00a8 70EEA70A 		vadd.f32	s1, s1, s15
+ 1234              		.loc 1 257 31 view .LVU444
+ 1235 00ac 70EEA00A 		vadd.f32	s1, s1, s1
+ 256:Core/Src/MahonyAHRS.c ****                   1.0f - 2.0f * (q[2] * q[2] + q[3] * q[3]));
+ 1236              		.loc 1 256 12 view .LVU445
+ 1237 00b0 F7EE007A 		vmov.f32	s15, #1.0e+0
+ 1238 00b4 77EEE00A 		vsub.f32	s1, s15, s1
+ 1239 00b8 30EE000A 		vadd.f32	s0, s0, s0
+ 1240 00bc FFF7FEFF 		bl	atan2f
+ 1241              	.LVL126:
+ 256:Core/Src/MahonyAHRS.c ****                   1.0f - 2.0f * (q[2] * q[2] + q[3] * q[3]));
+ 1242              		.loc 1 256 10 discriminator 1 view .LVU446
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 34
+
+
+ 1243 00c0 85ED000A 		vstr.32	s0, [r5]
+ 258:Core/Src/MahonyAHRS.c **** 
+ 259:Core/Src/MahonyAHRS.c ****     /* Convert radians to degrees */
+ 260:Core/Src/MahonyAHRS.c ****     const float rad2deg = 57.29577951308232f;  /* 180.0f / PI */
+ 1244              		.loc 1 260 5 is_stmt 1 view .LVU447
+ 1245              	.LVL127:
+ 261:Core/Src/MahonyAHRS.c ****     *roll  *= rad2deg;
+ 1246              		.loc 1 261 5 view .LVU448
+ 1247 00c4 D7ED007A 		vldr.32	s15, [r7]
+ 1248              		.loc 1 261 12 is_stmt 0 view .LVU449
+ 1249 00c8 9FED0F7A 		vldr.32	s14, .L35
+ 1250 00cc 67EE877A 		vmul.f32	s15, s15, s14
+ 1251 00d0 C7ED007A 		vstr.32	s15, [r7]
+ 262:Core/Src/MahonyAHRS.c ****     *pitch *= rad2deg;
+ 1252              		.loc 1 262 5 is_stmt 1 view .LVU450
+ 1253 00d4 D6ED007A 		vldr.32	s15, [r6]
+ 1254              		.loc 1 262 12 is_stmt 0 view .LVU451
+ 1255 00d8 67EE877A 		vmul.f32	s15, s15, s14
+ 1256 00dc C6ED007A 		vstr.32	s15, [r6]
+ 263:Core/Src/MahonyAHRS.c ****     *yaw   *= rad2deg;
+ 1257              		.loc 1 263 5 is_stmt 1 view .LVU452
+ 1258 00e0 D5ED007A 		vldr.32	s15, [r5]
+ 1259              		.loc 1 263 12 is_stmt 0 view .LVU453
+ 1260 00e4 67EE877A 		vmul.f32	s15, s15, s14
+ 1261 00e8 C5ED007A 		vstr.32	s15, [r5]
+ 264:Core/Src/MahonyAHRS.c **** }
+ 1262              		.loc 1 264 1 view .LVU454
+ 1263 00ec BDEC028B 		vldm	sp!, {d8}
+ 1264              	.LCFI12:
+ 1265              		.cfi_remember_state
+ 1266              		.cfi_restore 80
+ 1267              		.cfi_restore 81
+ 1268              		.cfi_def_cfa_offset 24
+ 1269 00f0 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 1270              	.LVL128:
+ 1271              	.L34:
+ 1272              	.LCFI13:
+ 1273              		.cfi_restore_state
+ 252:Core/Src/MahonyAHRS.c ****     *pitch = asinf(sinp);
+ 1274              		.loc 1 252 5 is_stmt 1 view .LVU455
+ 252:Core/Src/MahonyAHRS.c ****     *pitch = asinf(sinp);
+ 1275              		.loc 1 252 8 is_stmt 0 view .LVU456
+ 1276 00f2 FFEE007A 		vmov.f32	s15, #-1.0e+0
+ 1277 00f6 B4EEE70A 		vcmpe.f32	s0, s15
+ 1278 00fa F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1279 00fe BDD5     		bpl	.L30
+ 252:Core/Src/MahonyAHRS.c ****     *pitch = asinf(sinp);
+ 1280              		.loc 1 252 28 discriminator 1 view .LVU457
+ 1281 0100 BFEE000A 		vmov.f32	s0, #-1.0e+0
+ 1282              	.LVL129:
+ 252:Core/Src/MahonyAHRS.c ****     *pitch = asinf(sinp);
+ 1283              		.loc 1 252 28 discriminator 1 view .LVU458
+ 1284 0104 BAE7     		b	.L30
+ 1285              	.L36:
+ 1286 0106 00BF     		.align	2
+ 1287              	.L35:
+ 1288 0108 E12E6542 		.word	1113927393
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 35
+
+
+ 1289              		.cfi_endproc
+ 1290              	.LFE3:
+ 1292              		.global	INS_quat
+ 1293              		.section	.bss.INS_quat,"aw",%nobits
+ 1294              		.align	2
+ 1297              	INS_quat:
+ 1298 0000 00000000 		.space	16
+ 1298      00000000 
+ 1298      00000000 
+ 1298      00000000 
+ 1299              		.global	integralFBz
+ 1300              		.section	.bss.integralFBz,"aw",%nobits
+ 1301              		.align	2
+ 1304              	integralFBz:
+ 1305 0000 00000000 		.space	4
+ 1306              		.global	integralFBy
+ 1307              		.section	.bss.integralFBy,"aw",%nobits
+ 1308              		.align	2
+ 1311              	integralFBy:
+ 1312 0000 00000000 		.space	4
+ 1313              		.global	integralFBx
+ 1314              		.section	.bss.integralFBx,"aw",%nobits
+ 1315              		.align	2
+ 1318              	integralFBx:
+ 1319 0000 00000000 		.space	4
+ 1320              		.global	q3
+ 1321              		.section	.bss.q3,"aw",%nobits
+ 1322              		.align	2
+ 1325              	q3:
+ 1326 0000 00000000 		.space	4
+ 1327              		.global	q2
+ 1328              		.section	.bss.q2,"aw",%nobits
+ 1329              		.align	2
+ 1332              	q2:
+ 1333 0000 00000000 		.space	4
+ 1334              		.global	q1
+ 1335              		.section	.bss.q1,"aw",%nobits
+ 1336              		.align	2
+ 1339              	q1:
+ 1340 0000 00000000 		.space	4
+ 1341              		.global	q0
+ 1342              		.section	.data.q0,"aw"
+ 1343              		.align	2
+ 1346              	q0:
+ 1347 0000 0000803F 		.word	1065353216
+ 1348              		.global	twoKi
+ 1349              		.section	.data.twoKi,"aw"
+ 1350              		.align	2
+ 1353              	twoKi:
+ 1354 0000 0AD7233C 		.word	1008981770
+ 1355              		.global	twoKp
+ 1356              		.section	.data.twoKp,"aw"
+ 1357              		.align	2
+ 1360              	twoKp:
+ 1361 0000 0000803F 		.word	1065353216
+ 1362              		.text
+ 1363              	.Letext0:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 36
+
+
+ 1364              		.file 2 "Core/Inc/MahonyAHRS.h"
+ 1365              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 37
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 MahonyAHRS.c
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:21     .text.invSqrt:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:27     .text.invSqrt:00000000 invSqrt
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:73     .text.invSqrt:0000002c $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:78     .text.MahonyAHRSupdateIMU:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:84     .text.MahonyAHRSupdateIMU:00000000 MahonyAHRSupdateIMU
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:460    .text.MahonyAHRSupdateIMU:0000024c $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1353   .data.twoKi:00000000 twoKi
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1318   .bss.integralFBx:00000000 integralFBx
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1311   .bss.integralFBy:00000000 integralFBy
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1304   .bss.integralFBz:00000000 integralFBz
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1360   .data.twoKp:00000000 twoKp
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:471    .text.MahonyAHRSupdate:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:477    .text.MahonyAHRSupdate:00000000 MahonyAHRSupdate
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1106   .text.MahonyAHRSupdate:000003c8 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1117   .text.QuaternionToEuler:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1123   .text.QuaternionToEuler:00000000 QuaternionToEuler
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1288   .text.QuaternionToEuler:00000108 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1297   .bss.INS_quat:00000000 INS_quat
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1294   .bss.INS_quat:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1301   .bss.integralFBz:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1308   .bss.integralFBy:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1315   .bss.integralFBx:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1325   .bss.q3:00000000 q3
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1322   .bss.q3:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1332   .bss.q2:00000000 q2
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1329   .bss.q2:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1339   .bss.q1:00000000 q1
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1336   .bss.q1:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1346   .data.q0:00000000 q0
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1343   .data.q0:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1350   .data.twoKi:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1357   .data.twoKp:00000000 $d
+
+UNDEFINED SYMBOLS
+__aeabi_f2d
+sqrt
+__aeabi_d2f
+atan2f
+asinf

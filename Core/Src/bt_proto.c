@@ -2,6 +2,9 @@
 #include <string.h>
 #include "main.h"
 
+/* IMU 欧拉角（由 main.c 中的 imu_update_task 更新） */
+extern float g_roll, g_pitch, g_yaw;
+
 
 /* 状态机静态变量 */
 static BT_ParseState_t s_state = BT_STATE_HEAD;
@@ -59,12 +62,16 @@ uint8_t BT_Pack_Tx(const BT_TxPacket_t *pkt, uint8_t *buf)
 {
     buf[0] = BT_FRAME_HEAD;
 
-    /* count(i32) + encL(i32) + encR(i32) + speed(f32) + error(f32) = 20字节 */
+    /* count(i32) + encL(i32) + encR(i32) + speed(f32) + error(f32)
+       + roll(f32) + pitch(f32) + yaw(f32) = 32字节 */
     memcpy(&buf[1],  &pkt->count,      sizeof(pkt->count));
     memcpy(&buf[5],  &pkt->Encoder_l,  sizeof(pkt->Encoder_l));
     memcpy(&buf[9],  &pkt->Encoder_r,  sizeof(pkt->Encoder_r));
     memcpy(&buf[13], &pkt->speed,      sizeof(pkt->speed));
     memcpy(&buf[17], &pkt->error,      sizeof(pkt->error));
+    memcpy(&buf[21], &pkt->roll,       sizeof(pkt->roll));
+    memcpy(&buf[25], &pkt->pitch,      sizeof(pkt->pitch));
+    memcpy(&buf[29], &pkt->yaw,        sizeof(pkt->yaw));
 
     /* 校验和（数据字节之和的低8位） */
     uint8_t checksum = 0;
@@ -102,6 +109,9 @@ void blue_setparam_task()
             s_tx_pkt.error = SpeedCtrl_GetError(0);
             s_tx_pkt.Encoder_l = encoderl_value;
             s_tx_pkt.Encoder_r = encoderr_value;
+            s_tx_pkt.roll  = g_roll;
+            s_tx_pkt.pitch = g_pitch;
+            s_tx_pkt.yaw   = g_yaw;
             s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
             HAL_UART_Transmit(&huart3, s_tx_buf, s_tx_len, 100);
         }

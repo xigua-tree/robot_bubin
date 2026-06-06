@@ -1,0 +1,3632 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"oled.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/oled.c"
+  20              		.section	.text.oled_write_cmd,"ax",%progbits
+  21              		.align	1
+  22              		.global	oled_write_cmd
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	oled_write_cmd:
+  28              	.LVL0:
+  29              	.LFB137:
+   1:Core/Src/oled.c **** #include "oled.h"
+   2:Core/Src/oled.c **** #include "font.h"
+   3:Core/Src/oled.c **** #include "i2c.h"              /* hi2c2 句柄引用 */
+   4:Core/Src/oled.c **** #include "stm32f4xx_it.h"
+   5:Core/Src/oled.c **** #include <stdio.h>
+   6:Core/Src/oled.c **** 
+   7:Core/Src/oled.c **** /**
+   8:Core/Src/oled.c ****  * @brief  OLED 写命令 (硬件I2C2)
+   9:Core/Src/oled.c ****  */
+  10:Core/Src/oled.c **** void oled_write_cmd(uint8_t cmd)
+  11:Core/Src/oled.c **** {
+  30              		.loc 1 11 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 8
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 11 1 is_stmt 0 view .LVU1
+  35 0000 00B5     		push	{lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 4
+  38              		.cfi_offset 14, -4
+  39 0002 85B0     		sub	sp, sp, #20
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 24
+  12:Core/Src/oled.c ****     uint8_t buf[2] = {0x00, cmd};
+  42              		.loc 1 12 5 is_stmt 1 view .LVU2
+  43              		.loc 1 12 13 is_stmt 0 view .LVU3
+  44 0004 0023     		movs	r3, #0
+  45 0006 8DF80C30 		strb	r3, [sp, #12]
+  46 000a 8DF80D00 		strb	r0, [sp, #13]
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 2
+
+
+  13:Core/Src/oled.c ****     HAL_I2C_Master_Transmit(&hi2c2, 0x78, buf, 2, 100);
+  47              		.loc 1 13 5 is_stmt 1 view .LVU4
+  48 000e 6423     		movs	r3, #100
+  49 0010 0093     		str	r3, [sp]
+  50 0012 0223     		movs	r3, #2
+  51 0014 03AA     		add	r2, sp, #12
+  52 0016 7821     		movs	r1, #120
+  53 0018 0248     		ldr	r0, .L3
+  54              	.LVL1:
+  55              		.loc 1 13 5 is_stmt 0 view .LVU5
+  56 001a FFF7FEFF 		bl	HAL_I2C_Master_Transmit
+  57              	.LVL2:
+  14:Core/Src/oled.c **** }
+  58              		.loc 1 14 1 view .LVU6
+  59 001e 05B0     		add	sp, sp, #20
+  60              	.LCFI2:
+  61              		.cfi_def_cfa_offset 4
+  62              		@ sp needed
+  63 0020 5DF804FB 		ldr	pc, [sp], #4
+  64              	.L4:
+  65              		.align	2
+  66              	.L3:
+  67 0024 00000000 		.word	hi2c2
+  68              		.cfi_endproc
+  69              	.LFE137:
+  71              		.section	.text.oled_write_data,"ax",%progbits
+  72              		.align	1
+  73              		.global	oled_write_data
+  74              		.syntax unified
+  75              		.thumb
+  76              		.thumb_func
+  78              	oled_write_data:
+  79              	.LVL3:
+  80              	.LFB138:
+  15:Core/Src/oled.c **** 
+  16:Core/Src/oled.c **** /**
+  17:Core/Src/oled.c ****  * @brief  OLED 写数据 (硬件I2C2)
+  18:Core/Src/oled.c ****  */
+  19:Core/Src/oled.c **** void oled_write_data(uint8_t data)
+  20:Core/Src/oled.c **** {
+  81              		.loc 1 20 1 is_stmt 1 view -0
+  82              		.cfi_startproc
+  83              		@ args = 0, pretend = 0, frame = 8
+  84              		@ frame_needed = 0, uses_anonymous_args = 0
+  85              		.loc 1 20 1 is_stmt 0 view .LVU8
+  86 0000 00B5     		push	{lr}
+  87              	.LCFI3:
+  88              		.cfi_def_cfa_offset 4
+  89              		.cfi_offset 14, -4
+  90 0002 85B0     		sub	sp, sp, #20
+  91              	.LCFI4:
+  92              		.cfi_def_cfa_offset 24
+  21:Core/Src/oled.c ****     uint8_t buf[2] = {0x40, data};
+  93              		.loc 1 21 5 is_stmt 1 view .LVU9
+  94              		.loc 1 21 13 is_stmt 0 view .LVU10
+  95 0004 4023     		movs	r3, #64
+  96 0006 8DF80C30 		strb	r3, [sp, #12]
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 3
+
+
+  97 000a 8DF80D00 		strb	r0, [sp, #13]
+  22:Core/Src/oled.c ****     HAL_I2C_Master_Transmit(&hi2c2, 0x78, buf, 2, 100);
+  98              		.loc 1 22 5 is_stmt 1 view .LVU11
+  99 000e 6423     		movs	r3, #100
+ 100 0010 0093     		str	r3, [sp]
+ 101 0012 0223     		movs	r3, #2
+ 102 0014 03AA     		add	r2, sp, #12
+ 103 0016 7821     		movs	r1, #120
+ 104 0018 0248     		ldr	r0, .L7
+ 105              	.LVL4:
+ 106              		.loc 1 22 5 is_stmt 0 view .LVU12
+ 107 001a FFF7FEFF 		bl	HAL_I2C_Master_Transmit
+ 108              	.LVL5:
+  23:Core/Src/oled.c **** }
+ 109              		.loc 1 23 1 view .LVU13
+ 110 001e 05B0     		add	sp, sp, #20
+ 111              	.LCFI5:
+ 112              		.cfi_def_cfa_offset 4
+ 113              		@ sp needed
+ 114 0020 5DF804FB 		ldr	pc, [sp], #4
+ 115              	.L8:
+ 116              		.align	2
+ 117              	.L7:
+ 118 0024 00000000 		.word	hi2c2
+ 119              		.cfi_endproc
+ 120              	.LFE138:
+ 122              		.section	.text.oled_set_cursor,"ax",%progbits
+ 123              		.align	1
+ 124              		.global	oled_set_cursor
+ 125              		.syntax unified
+ 126              		.thumb
+ 127              		.thumb_func
+ 129              	oled_set_cursor:
+ 130              	.LVL6:
+ 131              	.LFB140:
+  24:Core/Src/oled.c **** 
+  25:Core/Src/oled.c **** /**
+  26:Core/Src/oled.c ****  * @brief  OLED 初始化 (128x64, I2C2地址0x78)
+  27:Core/Src/oled.c ****  */
+  28:Core/Src/oled.c **** void oled_init(void)
+  29:Core/Src/oled.c **** {
+  30:Core/Src/oled.c ****     HAL_Delay(100);                 /* 等待OLED上电稳定 */
+  31:Core/Src/oled.c **** 
+  32:Core/Src/oled.c ****     oled_write_cmd(0xAE);           /* 关闭显示 */
+  33:Core/Src/oled.c ****     oled_write_cmd(0xD5);           /* 设置时钟分频 */
+  34:Core/Src/oled.c ****     oled_write_cmd(0x80);
+  35:Core/Src/oled.c ****     oled_write_cmd(0xA8);           /* 设置多路复用率 */
+  36:Core/Src/oled.c ****     oled_write_cmd(0x3F);
+  37:Core/Src/oled.c ****     oled_write_cmd(0xD3);           /* 设置显示偏移 */
+  38:Core/Src/oled.c ****     oled_write_cmd(0x00);
+  39:Core/Src/oled.c ****     oled_write_cmd(0x40);           /* 设置显示起始行 */
+  40:Core/Src/oled.c ****     oled_write_cmd(0xA1);           /* 段重映射 (左右翻转) */
+  41:Core/Src/oled.c ****     oled_write_cmd(0xC8);           /* COM扫描方向 (上下翻转) */
+  42:Core/Src/oled.c ****     oled_write_cmd(0xDA);           /* 设置COM硬件配置 */
+  43:Core/Src/oled.c ****     oled_write_cmd(0x12);
+  44:Core/Src/oled.c ****     oled_write_cmd(0x81);           /* 设置对比度 */
+  45:Core/Src/oled.c ****     oled_write_cmd(0xCF);
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 4
+
+
+  46:Core/Src/oled.c ****     oled_write_cmd(0xD9);           /* 设置预充电周期 */
+  47:Core/Src/oled.c ****     oled_write_cmd(0xF1);
+  48:Core/Src/oled.c ****     oled_write_cmd(0xDB);           /* 设置VCOMH电压 */
+  49:Core/Src/oled.c ****     oled_write_cmd(0x30);
+  50:Core/Src/oled.c ****     oled_write_cmd(0xA4);           /* 全局显示开启 */
+  51:Core/Src/oled.c ****     oled_write_cmd(0xA6);           /* 正常显示(非反色) */
+  52:Core/Src/oled.c ****     oled_write_cmd(0x8D);           /* 电荷泵设置 */
+  53:Core/Src/oled.c ****     oled_write_cmd(0x14);           /* 使能电荷泵 */
+  54:Core/Src/oled.c ****     oled_write_cmd(0xAF);           /* 开启显示 */
+  55:Core/Src/oled.c **** 
+  56:Core/Src/oled.c ****     oled_fill(0x00);                /* 清屏 */
+  57:Core/Src/oled.c **** }
+  58:Core/Src/oled.c **** 
+  59:Core/Src/oled.c **** void oled_set_cursor(uint8_t x, uint8_t y)
+  60:Core/Src/oled.c **** {
+ 132              		.loc 1 60 1 is_stmt 1 view -0
+ 133              		.cfi_startproc
+ 134              		@ args = 0, pretend = 0, frame = 0
+ 135              		@ frame_needed = 0, uses_anonymous_args = 0
+ 136              		.loc 1 60 1 is_stmt 0 view .LVU15
+ 137 0000 10B5     		push	{r4, lr}
+ 138              	.LCFI6:
+ 139              		.cfi_def_cfa_offset 8
+ 140              		.cfi_offset 4, -8
+ 141              		.cfi_offset 14, -4
+ 142 0002 0446     		mov	r4, r0
+  61:Core/Src/oled.c ****     oled_write_cmd(0xB0 + y);
+ 143              		.loc 1 61 5 is_stmt 1 view .LVU16
+ 144 0004 A1F15000 		sub	r0, r1, #80
+ 145              	.LVL7:
+ 146              		.loc 1 61 5 is_stmt 0 view .LVU17
+ 147 0008 C0B2     		uxtb	r0, r0
+ 148 000a FFF7FEFF 		bl	oled_write_cmd
+ 149              	.LVL8:
+  62:Core/Src/oled.c ****     oled_write_cmd((x & 0x0F) | 0x00);
+ 150              		.loc 1 62 5 is_stmt 1 view .LVU18
+ 151 000e 04F00F00 		and	r0, r4, #15
+ 152 0012 FFF7FEFF 		bl	oled_write_cmd
+ 153              	.LVL9:
+  63:Core/Src/oled.c ****     oled_write_cmd(((x & 0xF0) >> 4) | 0x10);
+ 154              		.loc 1 63 5 view .LVU19
+ 155              		.loc 1 63 32 is_stmt 0 view .LVU20
+ 156 0016 2009     		lsrs	r0, r4, #4
+ 157              		.loc 1 63 5 view .LVU21
+ 158 0018 40F01000 		orr	r0, r0, #16
+ 159 001c FFF7FEFF 		bl	oled_write_cmd
+ 160              	.LVL10:
+  64:Core/Src/oled.c **** }
+ 161              		.loc 1 64 1 view .LVU22
+ 162 0020 10BD     		pop	{r4, pc}
+ 163              		.loc 1 64 1 view .LVU23
+ 164              		.cfi_endproc
+ 165              	.LFE140:
+ 167              		.section	.text.oled_fill,"ax",%progbits
+ 168              		.align	1
+ 169              		.global	oled_fill
+ 170              		.syntax unified
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 5
+
+
+ 171              		.thumb
+ 172              		.thumb_func
+ 174              	oled_fill:
+ 175              	.LVL11:
+ 176              	.LFB141:
+  65:Core/Src/oled.c **** 
+  66:Core/Src/oled.c **** void oled_fill(uint8_t data)
+  67:Core/Src/oled.c **** {
+ 177              		.loc 1 67 1 is_stmt 1 view -0
+ 178              		.cfi_startproc
+ 179              		@ args = 0, pretend = 0, frame = 0
+ 180              		@ frame_needed = 0, uses_anonymous_args = 0
+ 181              		.loc 1 67 1 is_stmt 0 view .LVU25
+ 182 0000 70B5     		push	{r4, r5, r6, lr}
+ 183              	.LCFI7:
+ 184              		.cfi_def_cfa_offset 16
+ 185              		.cfi_offset 4, -16
+ 186              		.cfi_offset 5, -12
+ 187              		.cfi_offset 6, -8
+ 188              		.cfi_offset 14, -4
+ 189 0002 0546     		mov	r5, r0
+  68:Core/Src/oled.c ****     uint8_t i, j;
+ 190              		.loc 1 68 5 is_stmt 1 view .LVU26
+  69:Core/Src/oled.c ****     for (i = 0; i < 8; i++) {
+ 191              		.loc 1 69 5 view .LVU27
+ 192              	.LVL12:
+ 193              		.loc 1 69 12 is_stmt 0 view .LVU28
+ 194 0004 0026     		movs	r6, #0
+ 195              		.loc 1 69 5 view .LVU29
+ 196 0006 01E0     		b	.L12
+ 197              	.LVL13:
+ 198              	.L18:
+ 199              		.loc 1 69 25 is_stmt 1 discriminator 2 view .LVU30
+ 200 0008 0136     		adds	r6, r6, #1
+ 201              	.LVL14:
+ 202              		.loc 1 69 25 is_stmt 0 discriminator 2 view .LVU31
+ 203 000a F6B2     		uxtb	r6, r6
+ 204              	.LVL15:
+ 205              	.L12:
+ 206              		.loc 1 69 19 is_stmt 1 discriminator 1 view .LVU32
+ 207 000c 072E     		cmp	r6, #7
+ 208 000e 0DD8     		bhi	.L17
+  70:Core/Src/oled.c ****         oled_set_cursor(0, i);
+ 209              		.loc 1 70 9 view .LVU33
+ 210 0010 3146     		mov	r1, r6
+ 211 0012 0020     		movs	r0, #0
+ 212 0014 FFF7FEFF 		bl	oled_set_cursor
+ 213              	.LVL16:
+  71:Core/Src/oled.c ****         for (j = 0; j < 128; j++) {
+ 214              		.loc 1 71 9 view .LVU34
+ 215              		.loc 1 71 16 is_stmt 0 view .LVU35
+ 216 0018 0024     		movs	r4, #0
+ 217              	.LVL17:
+ 218              	.L13:
+ 219              		.loc 1 71 23 is_stmt 1 discriminator 1 view .LVU36
+ 220 001a 14F0800F 		tst	r4, #128
+ 221 001e F3D1     		bne	.L18
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 6
+
+
+  72:Core/Src/oled.c ****             oled_write_data(data);
+ 222              		.loc 1 72 13 view .LVU37
+ 223 0020 2846     		mov	r0, r5
+ 224 0022 FFF7FEFF 		bl	oled_write_data
+ 225              	.LVL18:
+  71:Core/Src/oled.c ****         for (j = 0; j < 128; j++) {
+ 226              		.loc 1 71 31 discriminator 3 view .LVU38
+ 227 0026 0134     		adds	r4, r4, #1
+ 228              	.LVL19:
+  71:Core/Src/oled.c ****         for (j = 0; j < 128; j++) {
+ 229              		.loc 1 71 31 is_stmt 0 discriminator 3 view .LVU39
+ 230 0028 E4B2     		uxtb	r4, r4
+ 231              	.LVL20:
+  71:Core/Src/oled.c ****         for (j = 0; j < 128; j++) {
+ 232              		.loc 1 71 31 discriminator 3 view .LVU40
+ 233 002a F6E7     		b	.L13
+ 234              	.LVL21:
+ 235              	.L17:
+  73:Core/Src/oled.c ****         }
+  74:Core/Src/oled.c ****     }
+  75:Core/Src/oled.c **** }
+ 236              		.loc 1 75 1 view .LVU41
+ 237 002c 70BD     		pop	{r4, r5, r6, pc}
+ 238              		.loc 1 75 1 view .LVU42
+ 239              		.cfi_endproc
+ 240              	.LFE141:
+ 242              		.section	.text.oled_init,"ax",%progbits
+ 243              		.align	1
+ 244              		.global	oled_init
+ 245              		.syntax unified
+ 246              		.thumb
+ 247              		.thumb_func
+ 249              	oled_init:
+ 250              	.LFB139:
+  29:Core/Src/oled.c ****     HAL_Delay(100);                 /* 等待OLED上电稳定 */
+ 251              		.loc 1 29 1 is_stmt 1 view -0
+ 252              		.cfi_startproc
+ 253              		@ args = 0, pretend = 0, frame = 0
+ 254              		@ frame_needed = 0, uses_anonymous_args = 0
+ 255 0000 08B5     		push	{r3, lr}
+ 256              	.LCFI8:
+ 257              		.cfi_def_cfa_offset 8
+ 258              		.cfi_offset 3, -8
+ 259              		.cfi_offset 14, -4
+  30:Core/Src/oled.c **** 
+ 260              		.loc 1 30 5 view .LVU44
+ 261 0002 6420     		movs	r0, #100
+ 262 0004 FFF7FEFF 		bl	HAL_Delay
+ 263              	.LVL22:
+  32:Core/Src/oled.c ****     oled_write_cmd(0xD5);           /* 设置时钟分频 */
+ 264              		.loc 1 32 5 view .LVU45
+ 265 0008 AE20     		movs	r0, #174
+ 266 000a FFF7FEFF 		bl	oled_write_cmd
+ 267              	.LVL23:
+  33:Core/Src/oled.c ****     oled_write_cmd(0x80);
+ 268              		.loc 1 33 5 view .LVU46
+ 269 000e D520     		movs	r0, #213
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 7
+
+
+ 270 0010 FFF7FEFF 		bl	oled_write_cmd
+ 271              	.LVL24:
+  34:Core/Src/oled.c ****     oled_write_cmd(0xA8);           /* 设置多路复用率 */
+ 272              		.loc 1 34 5 view .LVU47
+ 273 0014 8020     		movs	r0, #128
+ 274 0016 FFF7FEFF 		bl	oled_write_cmd
+ 275              	.LVL25:
+  35:Core/Src/oled.c ****     oled_write_cmd(0x3F);
+ 276              		.loc 1 35 5 view .LVU48
+ 277 001a A820     		movs	r0, #168
+ 278 001c FFF7FEFF 		bl	oled_write_cmd
+ 279              	.LVL26:
+  36:Core/Src/oled.c ****     oled_write_cmd(0xD3);           /* 设置显示偏移 */
+ 280              		.loc 1 36 5 view .LVU49
+ 281 0020 3F20     		movs	r0, #63
+ 282 0022 FFF7FEFF 		bl	oled_write_cmd
+ 283              	.LVL27:
+  37:Core/Src/oled.c ****     oled_write_cmd(0x00);
+ 284              		.loc 1 37 5 view .LVU50
+ 285 0026 D320     		movs	r0, #211
+ 286 0028 FFF7FEFF 		bl	oled_write_cmd
+ 287              	.LVL28:
+  38:Core/Src/oled.c ****     oled_write_cmd(0x40);           /* 设置显示起始行 */
+ 288              		.loc 1 38 5 view .LVU51
+ 289 002c 0020     		movs	r0, #0
+ 290 002e FFF7FEFF 		bl	oled_write_cmd
+ 291              	.LVL29:
+  39:Core/Src/oled.c ****     oled_write_cmd(0xA1);           /* 段重映射 (左右翻转) */
+ 292              		.loc 1 39 5 view .LVU52
+ 293 0032 4020     		movs	r0, #64
+ 294 0034 FFF7FEFF 		bl	oled_write_cmd
+ 295              	.LVL30:
+  40:Core/Src/oled.c ****     oled_write_cmd(0xC8);           /* COM扫描方向 (上下翻转) */
+ 296              		.loc 1 40 5 view .LVU53
+ 297 0038 A120     		movs	r0, #161
+ 298 003a FFF7FEFF 		bl	oled_write_cmd
+ 299              	.LVL31:
+  41:Core/Src/oled.c ****     oled_write_cmd(0xDA);           /* 设置COM硬件配置 */
+ 300              		.loc 1 41 5 view .LVU54
+ 301 003e C820     		movs	r0, #200
+ 302 0040 FFF7FEFF 		bl	oled_write_cmd
+ 303              	.LVL32:
+  42:Core/Src/oled.c ****     oled_write_cmd(0x12);
+ 304              		.loc 1 42 5 view .LVU55
+ 305 0044 DA20     		movs	r0, #218
+ 306 0046 FFF7FEFF 		bl	oled_write_cmd
+ 307              	.LVL33:
+  43:Core/Src/oled.c ****     oled_write_cmd(0x81);           /* 设置对比度 */
+ 308              		.loc 1 43 5 view .LVU56
+ 309 004a 1220     		movs	r0, #18
+ 310 004c FFF7FEFF 		bl	oled_write_cmd
+ 311              	.LVL34:
+  44:Core/Src/oled.c ****     oled_write_cmd(0xCF);
+ 312              		.loc 1 44 5 view .LVU57
+ 313 0050 8120     		movs	r0, #129
+ 314 0052 FFF7FEFF 		bl	oled_write_cmd
+ 315              	.LVL35:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 8
+
+
+  45:Core/Src/oled.c ****     oled_write_cmd(0xD9);           /* 设置预充电周期 */
+ 316              		.loc 1 45 5 view .LVU58
+ 317 0056 CF20     		movs	r0, #207
+ 318 0058 FFF7FEFF 		bl	oled_write_cmd
+ 319              	.LVL36:
+  46:Core/Src/oled.c ****     oled_write_cmd(0xF1);
+ 320              		.loc 1 46 5 view .LVU59
+ 321 005c D920     		movs	r0, #217
+ 322 005e FFF7FEFF 		bl	oled_write_cmd
+ 323              	.LVL37:
+  47:Core/Src/oled.c ****     oled_write_cmd(0xDB);           /* 设置VCOMH电压 */
+ 324              		.loc 1 47 5 view .LVU60
+ 325 0062 F120     		movs	r0, #241
+ 326 0064 FFF7FEFF 		bl	oled_write_cmd
+ 327              	.LVL38:
+  48:Core/Src/oled.c ****     oled_write_cmd(0x30);
+ 328              		.loc 1 48 5 view .LVU61
+ 329 0068 DB20     		movs	r0, #219
+ 330 006a FFF7FEFF 		bl	oled_write_cmd
+ 331              	.LVL39:
+  49:Core/Src/oled.c ****     oled_write_cmd(0xA4);           /* 全局显示开启 */
+ 332              		.loc 1 49 5 view .LVU62
+ 333 006e 3020     		movs	r0, #48
+ 334 0070 FFF7FEFF 		bl	oled_write_cmd
+ 335              	.LVL40:
+  50:Core/Src/oled.c ****     oled_write_cmd(0xA6);           /* 正常显示(非反色) */
+ 336              		.loc 1 50 5 view .LVU63
+ 337 0074 A420     		movs	r0, #164
+ 338 0076 FFF7FEFF 		bl	oled_write_cmd
+ 339              	.LVL41:
+  51:Core/Src/oled.c ****     oled_write_cmd(0x8D);           /* 电荷泵设置 */
+ 340              		.loc 1 51 5 view .LVU64
+ 341 007a A620     		movs	r0, #166
+ 342 007c FFF7FEFF 		bl	oled_write_cmd
+ 343              	.LVL42:
+  52:Core/Src/oled.c ****     oled_write_cmd(0x14);           /* 使能电荷泵 */
+ 344              		.loc 1 52 5 view .LVU65
+ 345 0080 8D20     		movs	r0, #141
+ 346 0082 FFF7FEFF 		bl	oled_write_cmd
+ 347              	.LVL43:
+  53:Core/Src/oled.c ****     oled_write_cmd(0xAF);           /* 开启显示 */
+ 348              		.loc 1 53 5 view .LVU66
+ 349 0086 1420     		movs	r0, #20
+ 350 0088 FFF7FEFF 		bl	oled_write_cmd
+ 351              	.LVL44:
+  54:Core/Src/oled.c **** 
+ 352              		.loc 1 54 5 view .LVU67
+ 353 008c AF20     		movs	r0, #175
+ 354 008e FFF7FEFF 		bl	oled_write_cmd
+ 355              	.LVL45:
+  56:Core/Src/oled.c **** }
+ 356              		.loc 1 56 5 view .LVU68
+ 357 0092 0020     		movs	r0, #0
+ 358 0094 FFF7FEFF 		bl	oled_fill
+ 359              	.LVL46:
+  57:Core/Src/oled.c **** 
+ 360              		.loc 1 57 1 is_stmt 0 view .LVU69
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 9
+
+
+ 361 0098 08BD     		pop	{r3, pc}
+ 362              		.cfi_endproc
+ 363              	.LFE139:
+ 365              		.section	.text.oled_show_char,"ax",%progbits
+ 366              		.align	1
+ 367              		.global	oled_show_char
+ 368              		.syntax unified
+ 369              		.thumb
+ 370              		.thumb_func
+ 372              	oled_show_char:
+ 373              	.LVL47:
+ 374              	.LFB142:
+  76:Core/Src/oled.c **** 
+  77:Core/Src/oled.c **** void oled_show_char(uint8_t x, uint8_t y, uint8_t num, uint8_t size)
+  78:Core/Src/oled.c **** {
+ 375              		.loc 1 78 1 is_stmt 1 view -0
+ 376              		.cfi_startproc
+ 377              		@ args = 0, pretend = 0, frame = 0
+ 378              		@ frame_needed = 0, uses_anonymous_args = 0
+ 379              		.loc 1 78 1 is_stmt 0 view .LVU71
+ 380 0000 2DE9F84F 		push	{r3, r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 381              	.LCFI9:
+ 382              		.cfi_def_cfa_offset 40
+ 383              		.cfi_offset 3, -40
+ 384              		.cfi_offset 4, -36
+ 385              		.cfi_offset 5, -32
+ 386              		.cfi_offset 6, -28
+ 387              		.cfi_offset 7, -24
+ 388              		.cfi_offset 8, -20
+ 389              		.cfi_offset 9, -16
+ 390              		.cfi_offset 10, -12
+ 391              		.cfi_offset 11, -8
+ 392              		.cfi_offset 14, -4
+ 393 0004 8146     		mov	r9, r0
+ 394 0006 8A46     		mov	r10, r1
+ 395 0008 1D46     		mov	r5, r3
+  79:Core/Src/oled.c ****     uint8_t i, j, page;
+ 396              		.loc 1 79 5 is_stmt 1 view .LVU72
+  80:Core/Src/oled.c ****     num = num - ' ';
+ 397              		.loc 1 80 5 view .LVU73
+ 398              		.loc 1 80 9 is_stmt 0 view .LVU74
+ 399 000a 203A     		subs	r2, r2, #32
+ 400              	.LVL48:
+ 401              		.loc 1 80 9 view .LVU75
+ 402 000c 5FFA82F8 		uxtb	r8, r2
+ 403              	.LVL49:
+  81:Core/Src/oled.c ****     page = size / 8;
+ 404              		.loc 1 81 5 is_stmt 1 view .LVU76
+ 405              		.loc 1 81 10 is_stmt 0 view .LVU77
+ 406 0010 4FEAD30B 		lsr	fp, r3, #3
+ 407              	.LVL50:
+  82:Core/Src/oled.c ****     if (size % 8) page++;
+ 408              		.loc 1 82 5 is_stmt 1 view .LVU78
+ 409              		.loc 1 82 8 is_stmt 0 view .LVU79
+ 410 0014 13F0070F 		tst	r3, #7
+ 411 0018 01D0     		beq	.L22
+ 412              		.loc 1 82 19 is_stmt 1 discriminator 1 view .LVU80
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 10
+
+
+ 413              		.loc 1 82 23 is_stmt 0 discriminator 1 view .LVU81
+ 414 001a 0BF1010B 		add	fp, fp, #1
+ 415              	.LVL51:
+ 416              	.L22:
+  83:Core/Src/oled.c **** 
+  84:Core/Src/oled.c ****     for (j = 0; j < page; j++) {
+ 417              		.loc 1 84 5 is_stmt 1 view .LVU82
+ 418              		.loc 1 84 12 is_stmt 0 view .LVU83
+ 419 001e 0027     		movs	r7, #0
+ 420              		.loc 1 84 5 view .LVU84
+ 421 0020 26E0     		b	.L23
+ 422              	.LVL52:
+ 423              	.L32:
+  85:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+  86:Core/Src/oled.c ****         for (i = size / 2 * j; i < size / 2 * (j + 1); i++) {
+  87:Core/Src/oled.c ****             if (size == 12)
+  88:Core/Src/oled.c ****                 oled_write_data(ascii_6X12[num][i]);
+ 424              		.loc 1 88 17 is_stmt 1 view .LVU85
+ 425              		.loc 1 88 48 is_stmt 0 view .LVU86
+ 426 0022 08EB4801 		add	r1, r8, r8, lsl #1
+ 427 0026 1A4B     		ldr	r3, .L35
+ 428 0028 03EB8103 		add	r3, r3, r1, lsl #2
+ 429              		.loc 1 88 17 view .LVU87
+ 430 002c 985C     		ldrb	r0, [r3, r2]	@ zero_extendqisi2
+ 431 002e FFF7FEFF 		bl	oled_write_data
+ 432              	.LVL53:
+ 433              	.L26:
+  86:Core/Src/oled.c ****             if (size == 12)
+ 434              		.loc 1 86 57 is_stmt 1 discriminator 2 view .LVU88
+ 435 0032 0134     		adds	r4, r4, #1
+ 436              	.LVL54:
+  86:Core/Src/oled.c ****             if (size == 12)
+ 437              		.loc 1 86 57 is_stmt 0 discriminator 2 view .LVU89
+ 438 0034 E4B2     		uxtb	r4, r4
+ 439              	.LVL55:
+ 440              	.L24:
+  86:Core/Src/oled.c ****             if (size == 12)
+ 441              		.loc 1 86 34 is_stmt 1 discriminator 1 view .LVU90
+ 442 0036 2246     		mov	r2, r4
+  86:Core/Src/oled.c ****             if (size == 12)
+ 443              		.loc 1 86 45 is_stmt 0 discriminator 1 view .LVU91
+ 444 0038 07FB0663 		mla	r3, r7, r6, r6
+  86:Core/Src/oled.c ****             if (size == 12)
+ 445              		.loc 1 86 34 discriminator 1 view .LVU92
+ 446 003c 9C42     		cmp	r4, r3
+ 447 003e 15DA     		bge	.L31
+  87:Core/Src/oled.c ****                 oled_write_data(ascii_6X12[num][i]);
+ 448              		.loc 1 87 13 is_stmt 1 view .LVU93
+  87:Core/Src/oled.c ****                 oled_write_data(ascii_6X12[num][i]);
+ 449              		.loc 1 87 16 is_stmt 0 view .LVU94
+ 450 0040 0C2D     		cmp	r5, #12
+ 451 0042 EED0     		beq	.L32
+  89:Core/Src/oled.c ****             else if (size == 16)
+ 452              		.loc 1 89 18 is_stmt 1 view .LVU95
+ 453              		.loc 1 89 21 is_stmt 0 view .LVU96
+ 454 0044 102D     		cmp	r5, #16
+ 455 0046 0AD0     		beq	.L33
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 11
+
+
+  90:Core/Src/oled.c ****                 oled_write_data(ascii_8X16[num][i]);
+  91:Core/Src/oled.c ****             else if (size == 24)
+ 456              		.loc 1 91 18 is_stmt 1 view .LVU97
+ 457              		.loc 1 91 21 is_stmt 0 view .LVU98
+ 458 0048 182D     		cmp	r5, #24
+ 459 004a F2D1     		bne	.L26
+  92:Core/Src/oled.c ****                 oled_write_data(ascii_12X24[num][i]);
+ 460              		.loc 1 92 17 is_stmt 1 view .LVU99
+ 461              		.loc 1 92 49 is_stmt 0 view .LVU100
+ 462 004c 08EBC802 		add	r2, r8, r8, lsl #3
+ 463 0050 104B     		ldr	r3, .L35+4
+ 464 0052 03EB8203 		add	r3, r3, r2, lsl #2
+ 465              		.loc 1 92 17 view .LVU101
+ 466 0056 185D     		ldrb	r0, [r3, r4]	@ zero_extendqisi2
+ 467 0058 FFF7FEFF 		bl	oled_write_data
+ 468              	.LVL56:
+ 469 005c E9E7     		b	.L26
+ 470              	.L33:
+  90:Core/Src/oled.c ****                 oled_write_data(ascii_8X16[num][i]);
+ 471              		.loc 1 90 17 is_stmt 1 view .LVU102
+  90:Core/Src/oled.c ****                 oled_write_data(ascii_8X16[num][i]);
+ 472              		.loc 1 90 48 is_stmt 0 view .LVU103
+ 473 005e 0E4B     		ldr	r3, .L35+8
+ 474 0060 03EB0813 		add	r3, r3, r8, lsl #4
+  90:Core/Src/oled.c ****                 oled_write_data(ascii_8X16[num][i]);
+ 475              		.loc 1 90 17 view .LVU104
+ 476 0064 985C     		ldrb	r0, [r3, r2]	@ zero_extendqisi2
+ 477 0066 FFF7FEFF 		bl	oled_write_data
+ 478              	.LVL57:
+ 479 006a E2E7     		b	.L26
+ 480              	.L31:
+  84:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+ 481              		.loc 1 84 28 is_stmt 1 discriminator 2 view .LVU105
+ 482 006c 0137     		adds	r7, r7, #1
+ 483              	.LVL58:
+  84:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+ 484              		.loc 1 84 28 is_stmt 0 discriminator 2 view .LVU106
+ 485 006e FFB2     		uxtb	r7, r7
+ 486              	.LVL59:
+ 487              	.L23:
+  84:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+ 488              		.loc 1 84 19 is_stmt 1 discriminator 1 view .LVU107
+ 489 0070 5F45     		cmp	r7, fp
+ 490 0072 0AD2     		bcs	.L34
+  85:Core/Src/oled.c ****         for (i = size / 2 * j; i < size / 2 * (j + 1); i++) {
+ 491              		.loc 1 85 9 view .LVU108
+ 492 0074 07EB0A01 		add	r1, r7, r10
+ 493 0078 C9B2     		uxtb	r1, r1
+ 494 007a 4846     		mov	r0, r9
+ 495 007c FFF7FEFF 		bl	oled_set_cursor
+ 496              	.LVL60:
+  86:Core/Src/oled.c ****             if (size == 12)
+ 497              		.loc 1 86 9 view .LVU109
+  86:Core/Src/oled.c ****             if (size == 12)
+ 498              		.loc 1 86 27 is_stmt 0 view .LVU110
+ 499 0080 6E08     		lsrs	r6, r5, #1
+  86:Core/Src/oled.c ****             if (size == 12)
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 12
+
+
+ 500              		.loc 1 86 16 view .LVU111
+ 501 0082 16FB07F4 		smulbb	r4, r6, r7
+ 502 0086 E4B2     		uxtb	r4, r4
+ 503              	.LVL61:
+  86:Core/Src/oled.c ****             if (size == 12)
+ 504              		.loc 1 86 9 view .LVU112
+ 505 0088 D5E7     		b	.L24
+ 506              	.LVL62:
+ 507              	.L34:
+  93:Core/Src/oled.c ****         }
+  94:Core/Src/oled.c ****     }
+  95:Core/Src/oled.c **** }
+ 508              		.loc 1 95 1 view .LVU113
+ 509 008a BDE8F88F 		pop	{r3, r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 510              	.LVL63:
+ 511              	.L36:
+ 512              		.loc 1 95 1 view .LVU114
+ 513 008e 00BF     		.align	2
+ 514              	.L35:
+ 515 0090 00000000 		.word	ascii_6X12
+ 516 0094 00000000 		.word	ascii_12X24
+ 517 0098 00000000 		.word	ascii_8X16
+ 518              		.cfi_endproc
+ 519              	.LFE142:
+ 521              		.section	.text.oled_show_string,"ax",%progbits
+ 522              		.align	1
+ 523              		.global	oled_show_string
+ 524              		.syntax unified
+ 525              		.thumb
+ 526              		.thumb_func
+ 528              	oled_show_string:
+ 529              	.LVL64:
+ 530              	.LFB143:
+  96:Core/Src/oled.c **** 
+  97:Core/Src/oled.c **** void oled_show_string(uint8_t x, uint8_t y, char *p, uint8_t size)
+  98:Core/Src/oled.c **** {
+ 531              		.loc 1 98 1 is_stmt 1 view -0
+ 532              		.cfi_startproc
+ 533              		@ args = 0, pretend = 0, frame = 0
+ 534              		@ frame_needed = 0, uses_anonymous_args = 0
+ 535              		.loc 1 98 1 is_stmt 0 view .LVU116
+ 536 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 537              	.LCFI10:
+ 538              		.cfi_def_cfa_offset 24
+ 539              		.cfi_offset 3, -24
+ 540              		.cfi_offset 4, -20
+ 541              		.cfi_offset 5, -16
+ 542              		.cfi_offset 6, -12
+ 543              		.cfi_offset 7, -8
+ 544              		.cfi_offset 14, -4
+ 545 0002 0446     		mov	r4, r0
+ 546 0004 0F46     		mov	r7, r1
+ 547 0006 1546     		mov	r5, r2
+ 548 0008 1E46     		mov	r6, r3
+  99:Core/Src/oled.c ****     while (*p != '\0') {
+ 549              		.loc 1 99 5 is_stmt 1 view .LVU117
+ 550              		.loc 1 99 11 is_stmt 0 view .LVU118
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 13
+
+
+ 551 000a 08E0     		b	.L38
+ 552              	.LVL65:
+ 553              	.L39:
+ 100:Core/Src/oled.c ****         oled_show_char(x, y, *p, size);
+ 554              		.loc 1 100 9 is_stmt 1 view .LVU119
+ 555 000c 3346     		mov	r3, r6
+ 556 000e 3946     		mov	r1, r7
+ 557 0010 2046     		mov	r0, r4
+ 558 0012 FFF7FEFF 		bl	oled_show_char
+ 559              	.LVL66:
+ 101:Core/Src/oled.c ****         x += size / 2;
+ 560              		.loc 1 101 9 view .LVU120
+ 561              		.loc 1 101 11 is_stmt 0 view .LVU121
+ 562 0016 04EB5604 		add	r4, r4, r6, lsr #1
+ 563              	.LVL67:
+ 564              		.loc 1 101 11 view .LVU122
+ 565 001a E4B2     		uxtb	r4, r4
+ 566              	.LVL68:
+ 102:Core/Src/oled.c ****         p++;
+ 567              		.loc 1 102 9 is_stmt 1 view .LVU123
+ 568              		.loc 1 102 10 is_stmt 0 view .LVU124
+ 569 001c 0135     		adds	r5, r5, #1
+ 570              	.LVL69:
+ 571              	.L38:
+  99:Core/Src/oled.c ****         oled_show_char(x, y, *p, size);
+ 572              		.loc 1 99 15 is_stmt 1 view .LVU125
+  99:Core/Src/oled.c ****         oled_show_char(x, y, *p, size);
+ 573              		.loc 1 99 12 is_stmt 0 view .LVU126
+ 574 001e 2A78     		ldrb	r2, [r5]	@ zero_extendqisi2
+  99:Core/Src/oled.c ****         oled_show_char(x, y, *p, size);
+ 575              		.loc 1 99 15 view .LVU127
+ 576 0020 002A     		cmp	r2, #0
+ 577 0022 F3D1     		bne	.L39
+ 103:Core/Src/oled.c ****     }
+ 104:Core/Src/oled.c **** }
+ 578              		.loc 1 104 1 view .LVU128
+ 579 0024 F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 580              		.loc 1 104 1 view .LVU129
+ 581              		.cfi_endproc
+ 582              	.LFE143:
+ 584              		.section	.text.oled_show_chinese,"ax",%progbits
+ 585              		.align	1
+ 586              		.global	oled_show_chinese
+ 587              		.syntax unified
+ 588              		.thumb
+ 589              		.thumb_func
+ 591              	oled_show_chinese:
+ 592              	.LVL70:
+ 593              	.LFB144:
+ 105:Core/Src/oled.c **** 
+ 106:Core/Src/oled.c **** void oled_show_chinese(uint8_t x, uint8_t y, uint8_t N, uint8_t size)
+ 107:Core/Src/oled.c **** {
+ 594              		.loc 1 107 1 is_stmt 1 view -0
+ 595              		.cfi_startproc
+ 596              		@ args = 0, pretend = 0, frame = 0
+ 597              		@ frame_needed = 0, uses_anonymous_args = 0
+ 598              		.loc 1 107 1 is_stmt 0 view .LVU131
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 14
+
+
+ 599 0000 2DE9F843 		push	{r3, r4, r5, r6, r7, r8, r9, lr}
+ 600              	.LCFI11:
+ 601              		.cfi_def_cfa_offset 32
+ 602              		.cfi_offset 3, -32
+ 603              		.cfi_offset 4, -28
+ 604              		.cfi_offset 5, -24
+ 605              		.cfi_offset 6, -20
+ 606              		.cfi_offset 7, -16
+ 607              		.cfi_offset 8, -12
+ 608              		.cfi_offset 9, -8
+ 609              		.cfi_offset 14, -4
+ 610 0004 8146     		mov	r9, r0
+ 611 0006 8846     		mov	r8, r1
+ 612 0008 1746     		mov	r7, r2
+ 613 000a 1D46     		mov	r5, r3
+ 108:Core/Src/oled.c ****     uint16_t i, j;
+ 614              		.loc 1 108 5 is_stmt 1 view .LVU132
+ 109:Core/Src/oled.c ****     for (j = 0; j < size / 8; j++) {
+ 615              		.loc 1 109 5 view .LVU133
+ 616              	.LVL71:
+ 617              		.loc 1 109 12 is_stmt 0 view .LVU134
+ 618 000c 0026     		movs	r6, #0
+ 619              		.loc 1 109 5 view .LVU135
+ 620 000e 1BE0     		b	.L42
+ 621              	.LVL72:
+ 622              	.L50:
+ 110:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+ 111:Core/Src/oled.c ****         for (i = size * j; i < size * (j + 1); i++) {
+ 112:Core/Src/oled.c ****             if (size == 16)
+ 113:Core/Src/oled.c ****                 oled_write_data(chinese_16x16[N][i]);
+ 623              		.loc 1 113 17 is_stmt 1 view .LVU136
+ 624              		.loc 1 113 49 is_stmt 0 view .LVU137
+ 625 0010 154A     		ldr	r2, .L52
+ 626 0012 02EB4712 		add	r2, r2, r7, lsl #5
+ 627              		.loc 1 113 17 view .LVU138
+ 628 0016 D05C     		ldrb	r0, [r2, r3]	@ zero_extendqisi2
+ 629 0018 FFF7FEFF 		bl	oled_write_data
+ 630              	.LVL73:
+ 631              	.L45:
+ 111:Core/Src/oled.c ****             if (size == 16)
+ 632              		.loc 1 111 49 is_stmt 1 discriminator 2 view .LVU139
+ 633 001c 0134     		adds	r4, r4, #1
+ 634              	.LVL74:
+ 111:Core/Src/oled.c ****             if (size == 16)
+ 635              		.loc 1 111 49 is_stmt 0 discriminator 2 view .LVU140
+ 636 001e A4B2     		uxth	r4, r4
+ 637              	.LVL75:
+ 638              	.L43:
+ 111:Core/Src/oled.c ****             if (size == 16)
+ 639              		.loc 1 111 30 is_stmt 1 discriminator 1 view .LVU141
+ 640 0020 2346     		mov	r3, r4
+ 111:Core/Src/oled.c ****             if (size == 16)
+ 641              		.loc 1 111 37 is_stmt 0 discriminator 1 view .LVU142
+ 642 0022 06FB055C 		mla	ip, r6, r5, r5
+ 111:Core/Src/oled.c ****             if (size == 16)
+ 643              		.loc 1 111 30 discriminator 1 view .LVU143
+ 644 0026 6445     		cmp	r4, ip
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 15
+
+
+ 645 0028 0CDA     		bge	.L49
+ 112:Core/Src/oled.c ****                 oled_write_data(chinese_16x16[N][i]);
+ 646              		.loc 1 112 13 is_stmt 1 view .LVU144
+ 112:Core/Src/oled.c ****                 oled_write_data(chinese_16x16[N][i]);
+ 647              		.loc 1 112 16 is_stmt 0 view .LVU145
+ 648 002a 102D     		cmp	r5, #16
+ 649 002c F0D0     		beq	.L50
+ 114:Core/Src/oled.c ****             else if (size == 24)
+ 650              		.loc 1 114 18 is_stmt 1 view .LVU146
+ 651              		.loc 1 114 21 is_stmt 0 view .LVU147
+ 652 002e 182D     		cmp	r5, #24
+ 653 0030 F4D1     		bne	.L45
+ 115:Core/Src/oled.c ****                 oled_write_data(chinese_24x24[N][i]);
+ 654              		.loc 1 115 17 is_stmt 1 view .LVU148
+ 655              		.loc 1 115 49 is_stmt 0 view .LVU149
+ 656 0032 07EBC702 		add	r2, r7, r7, lsl #3
+ 657 0036 0D4B     		ldr	r3, .L52+4
+ 658 0038 03EBC203 		add	r3, r3, r2, lsl #3
+ 659              		.loc 1 115 17 view .LVU150
+ 660 003c 185D     		ldrb	r0, [r3, r4]	@ zero_extendqisi2
+ 661 003e FFF7FEFF 		bl	oled_write_data
+ 662              	.LVL76:
+ 663 0042 EBE7     		b	.L45
+ 664              	.L49:
+ 109:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+ 665              		.loc 1 109 32 is_stmt 1 discriminator 2 view .LVU151
+ 666 0044 0136     		adds	r6, r6, #1
+ 667              	.LVL77:
+ 109:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+ 668              		.loc 1 109 32 is_stmt 0 discriminator 2 view .LVU152
+ 669 0046 B6B2     		uxth	r6, r6
+ 670              	.LVL78:
+ 671              	.L42:
+ 109:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+ 672              		.loc 1 109 19 is_stmt 1 discriminator 1 view .LVU153
+ 673 0048 B6EBD50F 		cmp	r6, r5, lsr #3
+ 674 004c 09D2     		bcs	.L51
+ 110:Core/Src/oled.c ****         for (i = size * j; i < size * (j + 1); i++) {
+ 675              		.loc 1 110 9 view .LVU154
+ 676 004e 08EB0601 		add	r1, r8, r6
+ 677 0052 C9B2     		uxtb	r1, r1
+ 678 0054 4846     		mov	r0, r9
+ 679 0056 FFF7FEFF 		bl	oled_set_cursor
+ 680              	.LVL79:
+ 111:Core/Src/oled.c ****             if (size == 16)
+ 681              		.loc 1 111 9 view .LVU155
+ 111:Core/Src/oled.c ****             if (size == 16)
+ 682              		.loc 1 111 16 is_stmt 0 view .LVU156
+ 683 005a 15FB06F4 		smulbb	r4, r5, r6
+ 684 005e A4B2     		uxth	r4, r4
+ 685              	.LVL80:
+ 111:Core/Src/oled.c ****             if (size == 16)
+ 686              		.loc 1 111 9 view .LVU157
+ 687 0060 DEE7     		b	.L43
+ 688              	.LVL81:
+ 689              	.L51:
+ 116:Core/Src/oled.c ****         }
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 16
+
+
+ 117:Core/Src/oled.c ****     }
+ 118:Core/Src/oled.c **** }
+ 690              		.loc 1 118 1 view .LVU158
+ 691 0062 BDE8F883 		pop	{r3, r4, r5, r6, r7, r8, r9, pc}
+ 692              	.LVL82:
+ 693              	.L53:
+ 694              		.loc 1 118 1 view .LVU159
+ 695 0066 00BF     		.align	2
+ 696              	.L52:
+ 697 0068 00000000 		.word	chinese_16x16
+ 698 006c 00000000 		.word	chinese_24x24
+ 699              		.cfi_endproc
+ 700              	.LFE144:
+ 702              		.section	.text.oled_show_image,"ax",%progbits
+ 703              		.align	1
+ 704              		.global	oled_show_image
+ 705              		.syntax unified
+ 706              		.thumb
+ 707              		.thumb_func
+ 709              	oled_show_image:
+ 710              	.LVL83:
+ 711              	.LFB145:
+ 119:Core/Src/oled.c **** 
+ 120:Core/Src/oled.c **** void oled_show_image(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t *bmp)
+ 121:Core/Src/oled.c **** {
+ 712              		.loc 1 121 1 is_stmt 1 view -0
+ 713              		.cfi_startproc
+ 714              		@ args = 4, pretend = 0, frame = 0
+ 715              		@ frame_needed = 0, uses_anonymous_args = 0
+ 716              		.loc 1 121 1 is_stmt 0 view .LVU161
+ 717 0000 2DE9F047 		push	{r4, r5, r6, r7, r8, r9, r10, lr}
+ 718              	.LCFI12:
+ 719              		.cfi_def_cfa_offset 32
+ 720              		.cfi_offset 4, -32
+ 721              		.cfi_offset 5, -28
+ 722              		.cfi_offset 6, -24
+ 723              		.cfi_offset 7, -20
+ 724              		.cfi_offset 8, -16
+ 725              		.cfi_offset 9, -12
+ 726              		.cfi_offset 10, -8
+ 727              		.cfi_offset 14, -4
+ 728 0004 8246     		mov	r10, r0
+ 729 0006 8946     		mov	r9, r1
+ 730 0008 1546     		mov	r5, r2
+ 731 000a 9846     		mov	r8, r3
+ 732 000c 089F     		ldr	r7, [sp, #32]
+ 122:Core/Src/oled.c ****     uint8_t i, j;
+ 733              		.loc 1 122 5 is_stmt 1 view .LVU162
+ 123:Core/Src/oled.c ****     for (j = 0; j < height; j++) {
+ 734              		.loc 1 123 5 view .LVU163
+ 735              	.LVL84:
+ 736              		.loc 1 123 12 is_stmt 0 view .LVU164
+ 737 000e 0026     		movs	r6, #0
+ 738              		.loc 1 123 5 view .LVU165
+ 739 0010 0AE0     		b	.L55
+ 740              	.LVL85:
+ 741              	.L57:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 17
+
+
+ 124:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+ 125:Core/Src/oled.c ****         for (i = 0; i < width; i++) {
+ 126:Core/Src/oled.c ****             oled_write_data(bmp[width * j + i]);
+ 742              		.loc 1 126 13 is_stmt 1 view .LVU166
+ 743              		.loc 1 126 43 is_stmt 0 view .LVU167
+ 744 0012 06FB0543 		mla	r3, r6, r5, r4
+ 745              		.loc 1 126 13 view .LVU168
+ 746 0016 F85C     		ldrb	r0, [r7, r3]	@ zero_extendqisi2
+ 747 0018 FFF7FEFF 		bl	oled_write_data
+ 748              	.LVL86:
+ 125:Core/Src/oled.c ****             oled_write_data(bmp[width * j + i]);
+ 749              		.loc 1 125 33 is_stmt 1 discriminator 3 view .LVU169
+ 750 001c 0134     		adds	r4, r4, #1
+ 751              	.LVL87:
+ 125:Core/Src/oled.c ****             oled_write_data(bmp[width * j + i]);
+ 752              		.loc 1 125 33 is_stmt 0 discriminator 3 view .LVU170
+ 753 001e E4B2     		uxtb	r4, r4
+ 754              	.LVL88:
+ 755              	.L56:
+ 125:Core/Src/oled.c ****             oled_write_data(bmp[width * j + i]);
+ 756              		.loc 1 125 23 is_stmt 1 discriminator 1 view .LVU171
+ 757 0020 AC42     		cmp	r4, r5
+ 758 0022 F6D3     		bcc	.L57
+ 123:Core/Src/oled.c ****     for (j = 0; j < height; j++) {
+ 759              		.loc 1 123 30 discriminator 2 view .LVU172
+ 760 0024 0136     		adds	r6, r6, #1
+ 761              	.LVL89:
+ 123:Core/Src/oled.c ****     for (j = 0; j < height; j++) {
+ 762              		.loc 1 123 30 is_stmt 0 discriminator 2 view .LVU173
+ 763 0026 F6B2     		uxtb	r6, r6
+ 764              	.LVL90:
+ 765              	.L55:
+ 123:Core/Src/oled.c ****     for (j = 0; j < height; j++) {
+ 766              		.loc 1 123 19 is_stmt 1 discriminator 1 view .LVU174
+ 767 0028 4645     		cmp	r6, r8
+ 768 002a 07D2     		bcs	.L60
+ 124:Core/Src/oled.c ****         oled_set_cursor(x, y + j);
+ 769              		.loc 1 124 9 view .LVU175
+ 770 002c 06EB0901 		add	r1, r6, r9
+ 771 0030 C9B2     		uxtb	r1, r1
+ 772 0032 5046     		mov	r0, r10
+ 773 0034 FFF7FEFF 		bl	oled_set_cursor
+ 774              	.LVL91:
+ 125:Core/Src/oled.c ****             oled_write_data(bmp[width * j + i]);
+ 775              		.loc 1 125 9 view .LVU176
+ 125:Core/Src/oled.c ****             oled_write_data(bmp[width * j + i]);
+ 776              		.loc 1 125 16 is_stmt 0 view .LVU177
+ 777 0038 0024     		movs	r4, #0
+ 125:Core/Src/oled.c ****             oled_write_data(bmp[width * j + i]);
+ 778              		.loc 1 125 9 view .LVU178
+ 779 003a F1E7     		b	.L56
+ 780              	.LVL92:
+ 781              	.L60:
+ 127:Core/Src/oled.c ****         }
+ 128:Core/Src/oled.c ****     }
+ 129:Core/Src/oled.c **** }
+ 782              		.loc 1 129 1 view .LVU179
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 18
+
+
+ 783 003c BDE8F087 		pop	{r4, r5, r6, r7, r8, r9, r10, pc}
+ 784              		.loc 1 129 1 view .LVU180
+ 785              		.cfi_endproc
+ 786              	.LFE145:
+ 788              		.section	.rodata.oled_task.str1.4,"aMS",%progbits,1
+ 789              		.align	2
+ 790              	.LC0:
+ 791 0000 52656164 		.ascii	"Ready!\000"
+ 791      792100
+ 792 0007 00       		.align	2
+ 793              	.LC1:
+ 794 0008 636F756E 		.ascii	"counts:%d\000"
+ 794      74733A25 
+ 794      6400
+ 795 0012 0000     		.align	2
+ 796              	.LC2:
+ 797 0014 656C3A25 		.ascii	"el:%d  er:%d\000"
+ 797      64202065 
+ 797      723A2564 
+ 797      00
+ 798 0021 000000   		.align	2
+ 799              	.LC3:
+ 800 0024 6C783A25 		.ascii	"lx:%d  lr:%d\000"
+ 800      6420206C 
+ 800      723A2564 
+ 800      00
+ 801 0031 000000   		.align	2
+ 802              	.LC4:
+ 803 0034 72783A25 		.ascii	"rx:%d  rr:%d\000"
+ 803      64202072 
+ 803      723A2564 
+ 803      00
+ 804              		.section	.text.oled_task,"ax",%progbits
+ 805              		.align	1
+ 806              		.global	oled_task
+ 807              		.syntax unified
+ 808              		.thumb
+ 809              		.thumb_func
+ 811              	oled_task:
+ 812              	.LFB146:
+ 130:Core/Src/oled.c **** 
+ 131:Core/Src/oled.c **** char buf[50];
+ 132:Core/Src/oled.c **** void oled_task()
+ 133:Core/Src/oled.c **** {
+ 813              		.loc 1 133 1 is_stmt 1 view -0
+ 814              		.cfi_startproc
+ 815              		@ args = 0, pretend = 0, frame = 0
+ 816              		@ frame_needed = 0, uses_anonymous_args = 0
+ 817 0000 10B5     		push	{r4, lr}
+ 818              	.LCFI13:
+ 819              		.cfi_def_cfa_offset 8
+ 820              		.cfi_offset 4, -8
+ 821              		.cfi_offset 14, -4
+ 822 0002 82B0     		sub	sp, sp, #8
+ 823              	.LCFI14:
+ 824              		.cfi_def_cfa_offset 16
+ 134:Core/Src/oled.c ****     oled_show_string(0,0,"Ready!",12);
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 19
+
+
+ 825              		.loc 1 134 5 view .LVU182
+ 826 0004 0C23     		movs	r3, #12
+ 827 0006 2B4A     		ldr	r2, .L63
+ 828 0008 0021     		movs	r1, #0
+ 829 000a 0846     		mov	r0, r1
+ 830 000c FFF7FEFF 		bl	oled_show_string
+ 831              	.LVL93:
+ 135:Core/Src/oled.c ****     snprintf(buf, sizeof(buf), "counts:%d",tim8_counter);
+ 832              		.loc 1 135 5 view .LVU183
+ 833 0010 294B     		ldr	r3, .L63+4
+ 834 0012 1B68     		ldr	r3, [r3]
+ 835 0014 294C     		ldr	r4, .L63+8
+ 836 0016 2A4A     		ldr	r2, .L63+12
+ 837 0018 3221     		movs	r1, #50
+ 838 001a 2046     		mov	r0, r4
+ 839 001c FFF7FEFF 		bl	snprintf
+ 840              	.LVL94:
+ 136:Core/Src/oled.c ****     oled_show_string(48,0,buf,12);
+ 841              		.loc 1 136 5 view .LVU184
+ 842 0020 0C23     		movs	r3, #12
+ 843 0022 2246     		mov	r2, r4
+ 844 0024 0021     		movs	r1, #0
+ 845 0026 3020     		movs	r0, #48
+ 846 0028 FFF7FEFF 		bl	oled_show_string
+ 847              	.LVL95:
+ 137:Core/Src/oled.c **** 
+ 138:Core/Src/oled.c ****     snprintf(buf, sizeof(buf), "el:%d  er:%d",encoderl_value,encoderr_value);
+ 848              		.loc 1 138 5 view .LVU185
+ 849 002c 254B     		ldr	r3, .L63+16
+ 850 002e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 851 0030 0093     		str	r3, [sp]
+ 852 0032 254B     		ldr	r3, .L63+20
+ 853 0034 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 854 0036 254A     		ldr	r2, .L63+24
+ 855 0038 3221     		movs	r1, #50
+ 856 003a 2046     		mov	r0, r4
+ 857 003c FFF7FEFF 		bl	snprintf
+ 858              	.LVL96:
+ 139:Core/Src/oled.c ****     oled_show_string(0,2,buf,12);
+ 859              		.loc 1 139 5 view .LVU186
+ 860 0040 0C23     		movs	r3, #12
+ 861 0042 2246     		mov	r2, r4
+ 862 0044 0221     		movs	r1, #2
+ 863 0046 0020     		movs	r0, #0
+ 864 0048 FFF7FEFF 		bl	oled_show_string
+ 865              	.LVL97:
+ 140:Core/Src/oled.c ****     
+ 141:Core/Src/oled.c ****     snprintf(buf, sizeof(buf), "lx:%d  lr:%d",(int)rocker_lx,(int)rocker_ly);
+ 866              		.loc 1 141 5 view .LVU187
+ 867 004c 204B     		ldr	r3, .L63+28
+ 868 004e 93ED007A 		vldr.32	s14, [r3]
+ 869 0052 204B     		ldr	r3, .L63+32
+ 870 0054 D3ED007A 		vldr.32	s15, [r3]
+ 871 0058 FDEEE77A 		vcvt.s32.f32	s15, s15
+ 872 005c CDED007A 		vstr.32	s15, [sp]	@ int
+ 873 0060 FDEEC77A 		vcvt.s32.f32	s15, s14
+ 874 0064 17EE903A 		vmov	r3, s15	@ int
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 20
+
+
+ 875 0068 1B4A     		ldr	r2, .L63+36
+ 876 006a 3221     		movs	r1, #50
+ 877 006c 2046     		mov	r0, r4
+ 878 006e FFF7FEFF 		bl	snprintf
+ 879              	.LVL98:
+ 142:Core/Src/oled.c ****     oled_show_string(0,4,buf,12);
+ 880              		.loc 1 142 5 view .LVU188
+ 881 0072 0C23     		movs	r3, #12
+ 882 0074 2246     		mov	r2, r4
+ 883 0076 0421     		movs	r1, #4
+ 884 0078 0020     		movs	r0, #0
+ 885 007a FFF7FEFF 		bl	oled_show_string
+ 886              	.LVL99:
+ 143:Core/Src/oled.c **** 
+ 144:Core/Src/oled.c ****     snprintf(buf, sizeof(buf), "rx:%d  rr:%d",(int)rocker_rx,(int)rocker_ry);
+ 887              		.loc 1 144 5 view .LVU189
+ 888 007e 174B     		ldr	r3, .L63+40
+ 889 0080 93ED007A 		vldr.32	s14, [r3]
+ 890 0084 164B     		ldr	r3, .L63+44
+ 891 0086 D3ED007A 		vldr.32	s15, [r3]
+ 892 008a FDEEE77A 		vcvt.s32.f32	s15, s15
+ 893 008e CDED007A 		vstr.32	s15, [sp]	@ int
+ 894 0092 FDEEC77A 		vcvt.s32.f32	s15, s14
+ 895 0096 17EE903A 		vmov	r3, s15	@ int
+ 896 009a 124A     		ldr	r2, .L63+48
+ 897 009c 3221     		movs	r1, #50
+ 898 009e 2046     		mov	r0, r4
+ 899 00a0 FFF7FEFF 		bl	snprintf
+ 900              	.LVL100:
+ 145:Core/Src/oled.c ****     oled_show_string(0,6,buf,12);
+ 901              		.loc 1 145 5 view .LVU190
+ 902 00a4 0C23     		movs	r3, #12
+ 903 00a6 2246     		mov	r2, r4
+ 904 00a8 0621     		movs	r1, #6
+ 905 00aa 0020     		movs	r0, #0
+ 906 00ac FFF7FEFF 		bl	oled_show_string
+ 907              	.LVL101:
+ 146:Core/Src/oled.c **** }...
+ 908              		.loc 1 146 1 is_stmt 0 view .LVU191
+ 909 00b0 02B0     		add	sp, sp, #8
+ 910              	.LCFI15:
+ 911              		.cfi_def_cfa_offset 8
+ 912              		@ sp needed
+ 913 00b2 10BD     		pop	{r4, pc}
+ 914              	.L64:
+ 915              		.align	2
+ 916              	.L63:
+ 917 00b4 00000000 		.word	.LC0
+ 918 00b8 00000000 		.word	tim8_counter
+ 919 00bc 00000000 		.word	buf
+ 920 00c0 08000000 		.word	.LC1
+ 921 00c4 00000000 		.word	encoderr_value
+ 922 00c8 00000000 		.word	encoderl_value
+ 923 00cc 14000000 		.word	.LC2
+ 924 00d0 00000000 		.word	rocker_lx
+ 925 00d4 00000000 		.word	rocker_ly
+ 926 00d8 24000000 		.word	.LC3
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 21
+
+
+ 927 00dc 00000000 		.word	rocker_rx
+ 928 00e0 00000000 		.word	rocker_ry
+ 929 00e4 34000000 		.word	.LC4
+ 930              		.cfi_endproc
+ 931              	.LFE146:
+ 933              		.global	buf
+ 934              		.section	.bss.buf,"aw",%nobits
+ 935              		.align	2
+ 938              	buf:
+ 939 0000 00000000 		.space	50
+ 939      00000000 
+ 939      00000000 
+ 939      00000000 
+ 939      00000000 
+ 940              		.global	shuai_data
+ 941              		.section	.rodata.shuai_data,"a"
+ 942              		.align	2
+ 945              	shuai_data:
+ 946 0000 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 946      00000000 
+ 946      00000000 
+ 946      00
+ 947 000d 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 947      00000000 
+ 947      00000000 
+ 947      00
+ 948 001a 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 948      00000000 
+ 948      00000000 
+ 948      00
+ 949 0027 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 949      00000000 
+ 949      00000000 
+ 949      00
+ 950 0034 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 950      00000000 
+ 950      00000000 
+ 950      00
+ 951 0041 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 951      00000000 
+ 951      00000000 
+ 951      00
+ 952 004e 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 952      00000000 
+ 952      00000000 
+ 952      00
+ 953 005b 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 953      00000000 
+ 953      00000000 
+ 953      00
+ 954 0068 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 954      00000000 
+ 954      00000000 
+ 954      00
+ 955 0075 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 955      00000000 
+ 955      00000000 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 22
+
+
+ 955      00
+ 956 0082 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 956      00000000 
+ 956      00000000 
+ 956      00
+ 957 008f 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 957      00000000 
+ 957      00000000 
+ 957      00
+ 958 009c 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 958      00000000 
+ 958      00000000 
+ 958      00
+ 959 00a9 00000000 		.ascii	"\000\000\000\000\200\300\300\340\340\360\360\360\360"
+ 959      80C0C0E0 
+ 959      E0F0F0F0 
+ 959      F0
+ 960 00b6 F0F0E0E0 		.ascii	"\360\360\340\340\300\300\200\000\000\000\000\000\000"
+ 960      C0C08000 
+ 960      00000000 
+ 960      00
+ 961 00c3 0080C0C0 		.ascii	"\000\200\300\300\340\340\360\360\360\360\360\360\340"
+ 961      E0E0F0F0 
+ 961      F0F0F0F0 
+ 961      E0
+ 962 00d0 E0C0C080 		.ascii	"\340\300\300\200\000\000\000\000\000\000\000\000\000"
+ 962      00000000 
+ 962      00000000 
+ 962      00
+ 963 00dd 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 963      00000000 
+ 963      00000000 
+ 963      00
+ 964 00ea 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 964      00000000 
+ 964      00000000 
+ 964      00
+ 965 00f7 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 965      00000000 
+ 965      00000000 
+ 965      00
+ 966 0104 00000000 		.ascii	"\000\000\000\000\000\000\000\000\340\340\340\340\200"
+ 966      00000000 
+ 966      E0E0E0E0 
+ 966      80
+ 967 0111 00000080 		.ascii	"\000\000\000\200\300\340\340\340`\340\340\300\300\200"
+ 967      C0E0E0E0 
+ 967      60E0E0C0 
+ 967      C080
+ 968 011f 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\300\370\376"
+ 968      00000000 
+ 968      0000C0F8 
+ 968      FE
+ 969 012c FFFF7F0F 		.ascii	"\377\377\177\017\007\003\003\001\001\001\001\003\003"
+ 969      07030301 
+ 969      01010103 
+ 969      03
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 23
+
+
+ 970 0139 07070F3F 		.ascii	"\007\007\017?\377\377\376\370\374\377\377?\037\017\007"
+ 970      FFFFFEF8 
+ 970      FCFFFF3F 
+ 970      1F0F07
+ 971 0148 03030101 		.ascii	"\003\003\001\001\001\001\003\003\007\017?\377\377\376"
+ 971      01010303 
+ 971      070F3FFF 
+ 971      FFFE
+ 972 0156 F8E00000 		.ascii	"\370\340\000\000\000\000\000\000\000\000\000\000\000"
+ 972      00000000 
+ 972      00000000 
+ 972      00
+ 973 0163 0000E0E0 		.ascii	"\000\000\340\340\340\340\000\000\000\000\300\300\340"
+ 973      E0E00000 
+ 973      0000C0C0 
+ 973      E0
+ 974 0170 E06060E0 		.ascii	"\340``\340\340\300\000\000\000\000\000\000\000\000\000"
+ 974      E0C00000 
+ 974      00000000 
+ 974      000000
+ 975 017f 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\360\370\377"
+ 975      00000000 
+ 975      0000F0F8 
+ 975      FF
+ 976 018c 7F7F7F7F 		.ascii	"\177\177\177\177\377\376\370\376\377\377\377\341\200"
+ 976      FFFEF8FE 
+ 976      FFFFFFE1 
+ 976      80
+ 977 0199 0080C1FF 		.ascii	"\000\200\301\377\377\377>\000\000\000\000\000\000\000"
+ 977      FFFF3E00 
+ 977      00000000 
+ 977      0000
+ 978 01a7 00000FFF 		.ascii	"\000\000\017\377\377\377\377\360\200\000\000\000\000"
+ 978      FFFFFFF0 
+ 978      80000000 
+ 978      00
+ 979 01b4 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\001\003\003"
+ 979      00000000 
+ 979      00000103 
+ 979      03
+ 980 01c1 03010000 		.ascii	"\003\001\000\000\000\000\000\000\000\000\000\000\000"
+ 980      00000000 
+ 980      00000000 
+ 980      00
+ 981 01ce 00000080 		.ascii	"\000\000\000\200\360\377\377\377\377\037\000\000\000"
+ 981      F0FFFFFF 
+ 981      FF1F0000 
+ 981      00
+ 982 01db 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\377\377\377"
+ 982      00000000 
+ 982      0000FFFF 
+ 982      FF
+ 983 01e8 FF00001C 		.ascii	"\377\000\000\034\177\377\377\343\200\000\200\200\200"
+ 983      7FFFFFE3 
+ 983      80008080 
+ 983      80
+ 984 01f5 80000000 		.ascii	"\200\000\000\000\000\000\000\000\000\000\000\000\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 24
+
+
+ 984      00000000 
+ 984      00000000 
+ 984      00
+ 985 0202 00000000 		.ascii	"\000\000\000\000\000\000\000\003\003\003\000\000\000"
+ 985      00000003 
+ 985      03030000 
+ 985      00
+ 986 020f 00030303 		.ascii	"\000\003\003\003\003\000\001\003\003\003\003\003\007"
+ 986      03000103 
+ 986      03030303 
+ 986      07
+ 987 021c 07070706 		.ascii	"\007\007\007\006\000\000\000\000\000\000\000\000\000"
+ 987      00000000 
+ 987      00000000 
+ 987      00
+ 988 0229 0000070F 		.ascii	"\000\000\007\017?\377\377\376\370\360\300\200\000\000"
+ 988      3FFFFFFE 
+ 988      F8F0C080 
+ 988      0000
+ 989 0237 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 989      00000000 
+ 989      00000000 
+ 989      00
+ 990 0244 00000000 		.ascii	"\000\000\000\000\000\000\000\000\200\300\340\370\376"
+ 990      00000000 
+ 990      80C0E0F8 
+ 990      FE
+ 991 0251 FFFF3F0F 		.ascii	"\377\377?\017\007\000\000\000\000\000\000\000\000\000"
+ 991      07000000 
+ 991      00000000 
+ 991      0000
+ 992 025f 00000000 		.ascii	"\000\000\000\000\000\000\003\003\003\003\003\003\003"
+ 992      00000303 
+ 992      03030303 
+ 992      03
+ 993 026c 03010303 		.ascii	"\003\001\003\003\003\003\003\003\003\001\000\000\000"
+ 993      03030303 
+ 993      03010000 
+ 993      00
+ 994 0279 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 994      00000000 
+ 994      00000000 
+ 994      00
+ 995 0286 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 995      00000000 
+ 995      00000000 
+ 995      00
+ 996 0293 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 996      00000000 
+ 996      00000000 
+ 996      00
+ 997 02a0 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 997      00000000 
+ 997      00000000 
+ 997      00
+ 998 02ad 00000103 		.ascii	"\000\000\001\003\007\017\037?\177~\374\370\370\360\340"
+ 998      070F1F3F 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 25
+
+
+ 998      7F7EFCF8 
+ 998      F8F0E0
+ 999 02bc C0C08080 		.ascii	"\300\300\200\200\000\200\200\300\300\340\360\360\370"
+ 999      008080C0 
+ 999      C0E0F0F0 
+ 999      F8
+ 1000 02c9 FCFE7F3F 		.ascii	"\374\376\177?\037\017\007\003\001\000\000\000\000\000"
+ 1000      1F0F0703 
+ 1000      01000000 
+ 1000      0000
+ 1001 02d7 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1001      00000000 
+ 1001      00000000 
+ 1001      00
+ 1002 02e4 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1002      00000000 
+ 1002      00000000 
+ 1002      00
+ 1003 02f1 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1003      00000000 
+ 1003      00000000 
+ 1003      00
+ 1004 02fe 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1004      00000000 
+ 1004      00000000 
+ 1004      00
+ 1005 030b 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1005      00000000 
+ 1005      00000000 
+ 1005      00
+ 1006 0318 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1006      00000000 
+ 1006      00000000 
+ 1006      00
+ 1007 0325 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1007      00000000 
+ 1007      00000000 
+ 1007      00
+ 1008 0332 00000000 		.ascii	"\000\000\000\000\000\000\001\003\003\007\007\017\017"
+ 1008      00000103 
+ 1008      0307070F 
+ 1008      0F
+ 1009 033f 1F1F1F0F 		.ascii	"\037\037\037\017\017\007\007\003\003\001\000\000\000"
+ 1009      0F070703 
+ 1009      03010000 
+ 1009      00
+ 1010 034c 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1010      00000000 
+ 1010      00000000 
+ 1010      00
+ 1011 0359 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1011      00000000 
+ 1011      00000000 
+ 1011      00
+ 1012 0366 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1012      00000000 
+ 1012      00000000 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 26
+
+
+ 1012      00
+ 1013 0373 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1013      00000000 
+ 1013      00000000 
+ 1013      00
+ 1014 0380 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1014      00000000 
+ 1014      00000000 
+ 1014      00
+ 1015 038d 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1015      00000000 
+ 1015      00000000 
+ 1015      00
+ 1016 039a 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1016      00000000 
+ 1016      00000000 
+ 1016      00
+ 1017 03a7 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1017      00000000 
+ 1017      00000000 
+ 1017      00
+ 1018 03b4 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1018      00000000 
+ 1018      00000000 
+ 1018      00
+ 1019 03c1 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1019      00000000 
+ 1019      00000000 
+ 1019      00
+ 1020 03ce 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1020      00000000 
+ 1020      00000000 
+ 1020      00
+ 1021 03db 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1021      00000000 
+ 1021      00000000 
+ 1021      00
+ 1022 03e8 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1022      00000000 
+ 1022      00000000 
+ 1022      00
+ 1023 03f5 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000"
+ 1023      00000000 
+ 1023      000000
+ 1024              		.global	ascii_12X24
+ 1025              		.section	.rodata.ascii_12X24,"a"
+ 1026              		.align	2
+ 1029              	ascii_12X24:
+ 1030 0000 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1030      00000000 
+ 1030      00000000 
+ 1030      00
+ 1031 000d 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1031      00000000 
+ 1031      00000000 
+ 1031      00
+ 1032 001a 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 27
+
+
+ 1032      00000000 
+ 1032      0000
+ 1033 0024 00000000 		.ascii	"\000\000\000\000\000\360\360\360\000\000\000\000\000"
+ 1033      00F0F0F0 
+ 1033      00000000 
+ 1033      00
+ 1034 0031 00000000 		.ascii	"\000\000\000\000\001\177\001\000\000\000\000\000\000"
+ 1034      017F0100 
+ 1034      00000000 
+ 1034      00
+ 1035 003e 0000001C 		.ascii	"\000\000\000\034\034\034\000\000\000\000"
+ 1035      1C1C0000 
+ 1035      0000
+ 1036 0048 00008060 		.ascii	"\000\000\200`0\034\214`0\034\014\000\000\000\000\000"
+ 1036      301C8C60 
+ 1036      301C0C00 
+ 1036      00000000 
+ 1037 0058 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1037      00000000 
+ 1037      00000000 
+ 1037      00
+ 1038 0065 00000000 		.ascii	"\000\000\000\000\000\000\000"
+ 1038      000000
+ 1039 006c 000000E0 		.ascii	"\000\000\000\340\000\000\000\000\000\340\000\000\000"
+ 1039      00000000 
+ 1039      00E00000 
+ 1039      00
+ 1040 0079 86E69F86 		.ascii	"\206\346\237\206\206\206\206\346\237\206\000\000\001"
+ 1040      868686E6 
+ 1040      9F860000 
+ 1040      01
+ 1041 0086 1F010101 		.ascii	"\037\001\001\001\001\001\037\001\001\000"
+ 1041      01011F01 
+ 1041      0100
+ 1042 0090 000080C0 		.ascii	"\000\000\200\300` \370 \340\300\000\000\000\000\003"
+ 1042      6020F820 
+ 1042      E0C00000 
+ 1042      000003
+ 1043 009f 070C18FF 		.ascii	"\007\014\030\377p\341\201\000\000\000\000\007\017\020"
+ 1043      70E18100 
+ 1043      00000007 
+ 1043      0F10
+ 1044 00ad 107F100F 		.ascii	"\020\177\020\017\007\000\000"
+ 1044      070000
+ 1045 00b4 80602060 		.ascii	"\200` `\200\000\000\000\340 \000\000\0170 0\237p\334"
+ 1045      80000000 
+ 1045      E0200000 
+ 1045      0F302030 
+ 1045      9F70DC
+ 1046 00c7 371030C0 		.ascii	"7\0200\300\000\000\000\020\016\003\000\007\030\020\030"
+ 1046      00000010 
+ 1046      0E030007 
+ 1046      181018
+ 1047 00d6 0700     		.ascii	"\007\000"
+ 1048 00d8 0000C020 		.ascii	"\000\000\300  \340\300\000\000\000\000\000\200\340\037"
+ 1048      20E0C000 
+ 1048      00000000 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 28
+
+
+ 1048      80E01F
+ 1049 00e7 38E88703 		.ascii	"8\350\207\003\304<\004\000\000\007\017\030\020\020\013"
+ 1049      C43C0400 
+ 1049      00070F18 
+ 1049      10100B
+ 1050 00f6 070D1010 		.ascii	"\007\015\020\020\010\000"
+ 1050      0800
+ 1051 00fc 00808C4C 		.ascii	"\000\200\214L8\000\000\000\000\000\000\000\000\000\000"
+ 1051      38000000 
+ 1051      00000000 
+ 1051      000000
+ 1052 010b 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1052      00000000 
+ 1052      00000000 
+ 1052      00
+ 1053 0118 00000000 		.ascii	"\000\000\000\000\000\000\000\000"
+ 1053      00000000 
+ 1054 0120 00000000 		.ascii	"\000\000\000\000\000\000\200\3400\010\004\000\000\000"
+ 1054      000080E0 
+ 1054      30080400 
+ 1054      0000
+ 1055 012e 000000FE 		.ascii	"\000\000\000\376\377\001\000\000\000\000\000\000\000"
+ 1055      FF010000 
+ 1055      00000000 
+ 1055      00
+ 1056 013b 00000003 		.ascii	"\000\000\000\003\017\030 @\000"
+ 1056      0F182040 
+ 1056      00
+ 1057 0144 00040830 		.ascii	"\000\004\0100\340\200\000\000\000\000\000\000\000\000"
+ 1057      E0800000 
+ 1057      00000000 
+ 1057      0000
+ 1058 0152 000001FF 		.ascii	"\000\000\001\377\376\000\000\000\000\000\000@ \030\017"
+ 1058      FE000000 
+ 1058      00000040 
+ 1058      20180F
+ 1059 0161 03000000 		.ascii	"\003\000\000\000\000\000\000"
+ 1059      000000
+ 1060 0168 00000000 		.ascii	"\000\000\000\000\000\000\300\000\000\000\000\000\000"
+ 1060      0000C000 
+ 1060      00000000 
+ 1060      00
+ 1061 0175 4266663C 		.ascii	"Bff<\030\377\030<ffB\000\000\000\000\000\000\003\000"
+ 1061      18FF183C 
+ 1061      66664200 
+ 1061      00000000 
+ 1061      000300
+ 1062 0188 00000000 		.ascii	"\000\000\000\000"
+ 1063 018c 00000000 		.ascii	"\000\000\000\000\000\000\200\000\000\000\000\000\000"
+ 1063      00008000 
+ 1063      00000000 
+ 1063      00
+ 1064 0199 10101010 		.ascii	"\020\020\020\020\020\377\020\020\020\020\020\000\000"
+ 1064      10FF1010 
+ 1064      10101000 
+ 1064      00
+ 1065 01a6 00000000 		.ascii	"\000\000\000\000\003\000\000\000\000\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 29
+
+
+ 1065      03000000 
+ 1065      0000
+ 1066 01b0 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1066      00000000 
+ 1066      00000000 
+ 1066      00
+ 1067 01bd 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\200"
+ 1067      00000000 
+ 1067      00000000 
+ 1067      80
+ 1068 01ca 8C4C3800 		.ascii	"\214L8\000\000\000\000\000\000\000"
+ 1068      00000000 
+ 1068      0000
+ 1069 01d4 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1069      00000000 
+ 1069      00000000 
+ 1069      00
+ 1070 01e1 10101010 		.ascii	"\020\020\020\020\020\020\020\020\020\020\000\000\000"
+ 1070      10101010 
+ 1070      10100000 
+ 1070      00
+ 1071 01ee 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000"
+ 1071      00000000 
+ 1071      0000
+ 1072 01f8 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1072      00000000 
+ 1072      00000000 
+ 1072      00
+ 1073 0205 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1073      00000000 
+ 1073      00000000 
+ 1073      00
+ 1074 0212 1C1C1C00 		.ascii	"\034\034\034\000\000\000\000\000\000\000"
+ 1074      00000000 
+ 1074      0000
+ 1075 021c 00000000 		.ascii	"\000\000\000\000\000\000\000\000\3408\014\000\000\000"
+ 1075      00000000 
+ 1075      E0380C00 
+ 1075      0000
+ 1076 022a 00008070 		.ascii	"\000\000\200p\034\003\000\000\000\000\000`8\016\001"
+ 1076      1C030000 
+ 1076      00000060 
+ 1076      380E01
+ 1077 0239 00000000 		.ascii	"\000\000\000\000\000\000\000"
+ 1077      000000
+ 1078 0240 000080C0 		.ascii	"\000\000\200\300`  `\300\200\000\000\000\376\377\001"
+ 1078      60202060 
+ 1078      C0800000 
+ 1078      00FEFF01 
+ 1079 0250 00000000 		.ascii	"\000\000\000\000\001\377\376\000\000\001\007\016\030"
+ 1079      01FFFE00 
+ 1079      0001070E 
+ 1079      18
+ 1080 025d 1010180E 		.ascii	"\020\020\030\016\007\001\000"
+ 1080      070100
+ 1081 0264 00008080 		.ascii	"\000\000\200\200\200\300\340\000\000\000\000\000\000"
+ 1081      80C0E000 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 30
+
+
+ 1081      00000000 
+ 1081      00
+ 1082 0271 00000000 		.ascii	"\000\000\000\000\377\377\000\000\000\000\000\000\000"
+ 1082      FFFF0000 
+ 1082      00000000 
+ 1082      00
+ 1083 027e 1010101F 		.ascii	"\020\020\020\037\037\020\020\020\000\000"
+ 1083      1F101010 
+ 1083      0000
+ 1084 0288 00804020 		.ascii	"\000\200@    `\300\200\000\000\000\003\003\000\200@"
+ 1084      20202060 
+ 1084      C0800000 
+ 1084      00030300 
+ 1084      8040
+ 1085 029a 20381F07 		.ascii	" 8\037\007\000\000\000\034\032\031\030\030\030\030\030"
+ 1085      0000001C 
+ 1085      1A191818 
+ 1085      181818
+ 1086 02a9 1F0000   		.ascii	"\037\000\000"
+ 1087 02ac 0080C020 		.ascii	"\000\200\300   `\300\200\000\000\000\000\003\003\000"
+ 1087      202060C0 
+ 1087      80000000 
+ 1087      00030300 
+ 1088 02bc 1010182F 		.ascii	"\020\020\030/\347\200\000\000\000\007\017\020\020\020"
+ 1088      E7800000 
+ 1088      00070F10 
+ 1088      1010
+ 1089 02ca 10180F07 		.ascii	"\020\030\017\007\000\000"
+ 1089      0000
+ 1090 02d0 00000000 		.ascii	"\000\000\000\000\000\000\300\340\360\000\000\000\000"
+ 1090      0000C0E0 
+ 1090      F0000000 
+ 1090      00
+ 1091 02dd C0B08886 		.ascii	"\300\260\210\206\201\200\377\377\200\200\000\000\000"
+ 1091      8180FFFF 
+ 1091      80800000 
+ 1091      00
+ 1092 02ea 00000010 		.ascii	"\000\000\000\020\020\037\037\020\020\000"
+ 1092      101F1F10 
+ 1092      1000
+ 1093 02f4 0000E060 		.ascii	"\000\000\340```````\000\000\000\000?\020\010\010\010"
+ 1093      60606060 
+ 1093      60600000 
+ 1093      00003F10 
+ 1093      080808
+ 1094 0307 18F0E000 		.ascii	"\030\360\340\000\000\000\007\013\020\020\020\020\034"
+ 1094      0000070B 
+ 1094      10101010 
+ 1094      1C
+ 1095 0314 0F030000 		.ascii	"\017\003\000\000"
+ 1096 0318 000080C0 		.ascii	"\000\000\200\300@   \340\300\000\000\000\374\377!\020"
+ 1096      40202020 
+ 1096      E0C00000 
+ 1096      00FCFF21 
+ 1096      10
+ 1097 0329 08080818 		.ascii	"\010\010\010\030\360\340\000\000\001\007\014\030\020"
+ 1097      F0E00000 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 31
+
+
+ 1097      01070C18 
+ 1097      10
+ 1098 0336 1010080F 		.ascii	"\020\020\010\017\003\000"
+ 1098      0300
+ 1099 033c 0000C0E0 		.ascii	"\000\000\300\340`````\340`\000\000\000\003\000\000\000"
+ 1099      60606060 
+ 1099      60E06000 
+ 1099      00000300 
+ 1099      0000
+ 1100 034e E0180700 		.ascii	"\340\030\007\000\000\000\000\000\000\000\000\037\037"
+ 1100      00000000 
+ 1100      0000001F 
+ 1100      1F
+ 1101 035b 00000000 		.ascii	"\000\000\000\000\000"
+ 1101      00
+ 1102 0360 0080C060 		.ascii	"\000\200\300`    `\300\200\000\000\207\357,\030\030"
+ 1102      20202020 
+ 1102      60C08000 
+ 1102      0087EF2C 
+ 1102      1818
+ 1103 0372 303068CF 		.ascii	"00h\317\203\000\000\007\017\010\020\020\020\020\030"
+ 1103      83000007 
+ 1103      0F081010 
+ 1103      101018
+ 1104 0381 0F0700   		.ascii	"\017\007\000"
+ 1105 0384 0000C0C0 		.ascii	"\000\000\300\300    \300\200\000\000\000\037?`@@@ \020"
+ 1105      20202020 
+ 1105      C0800000 
+ 1105      001F3F60 
+ 1105      40404020 
+ 1106 0399 FFFE0000 		.ascii	"\377\376\000\000\000\014\034\020\020\020\010\017\003"
+ 1106      000C1C10 
+ 1106      1010080F 
+ 1106      03
+ 1107 03a6 0000     		.ascii	"\000\000"
+ 1108 03a8 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1108      00000000 
+ 1108      00000000 
+ 1108      00
+ 1109 03b5 00000000 		.ascii	"\000\000\000\000\016\016\016\000\000\000\000\000\000"
+ 1109      0E0E0E00 
+ 1109      00000000 
+ 1109      00
+ 1110 03c2 0000001C 		.ascii	"\000\000\000\034\034\034\000\000\000\000"
+ 1110      1C1C0000 
+ 1110      0000
+ 1111 03cc 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1111      00000000 
+ 1111      00000000 
+ 1111      00
+ 1112 03d9 00000000 		.ascii	"\000\000\000\000\014\014\000\000\000\000\000\000\000"
+ 1112      0C0C0000 
+ 1112      00000000 
+ 1112      00
+ 1113 03e6 00000058 		.ascii	"\000\000\000X8\000\000\000\000\000"
+ 1113      38000000 
+ 1113      0000
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 32
+
+
+ 1114 03f0 00000000 		.ascii	"\000\000\000\000\000\000\000\200@ \020\000\000\000\020"
+ 1114      00000080 
+ 1114      40201000 
+ 1114      000010
+ 1115 03ff 28448201 		.ascii	"(D\202\001\000\000\000\000\000\000\000\000\000\000\000"
+ 1115      00000000 
+ 1115      00000000 
+ 1115      000000
+ 1116 040e 01020408 		.ascii	"\001\002\004\010\020\000"
+ 1116      1000
+ 1117 0414 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1117      00000000 
+ 1117      00000000 
+ 1117      00
+ 1118 0421 84848484 		.ascii	"\204\204\204\204\204\204\204\204\204\204\000\000\000"
+ 1118      84848484 
+ 1118      84840000 
+ 1118      00
+ 1119 042e 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000"
+ 1119      00000000 
+ 1119      0000
+ 1120 0438 00001020 		.ascii	"\000\000\020 @\200\000\000\000\000\000\000\000\000\000"
+ 1120      40800000 
+ 1120      00000000 
+ 1120      000000
+ 1121 0447 00000001 		.ascii	"\000\000\000\001\202D(\020\000\000\000\020\010\004\002"
+ 1121      82442810 
+ 1121      00000010 
+ 1121      080402
+ 1122 0456 01000000 		.ascii	"\001\000\000\000\000\000"
+ 1122      0000
+ 1123 045c 00C02020 		.ascii	"\000\300  \020\020\020\0200\340\300\000\000\003\003"
+ 1123      10101010 
+ 1123      30E0C000 
+ 1123      000303
+ 1124 046b 0000F010 		.ascii	"\000\000\360\020\010\014\007\003\000\000\000\000\000"
+ 1124      080C0703 
+ 1124      00000000 
+ 1124      00
+ 1125 0478 1C1C1C00 		.ascii	"\034\034\034\000\000\000\000\000"
+ 1125      00000000 
+ 1126 0480 000000C0 		.ascii	"\000\000\000\300@`   @\300\000\000\374\377\001\360\016"
+ 1126      40602020 
+ 1126      2040C000 
+ 1126      00FCFF01 
+ 1126      F00E
+ 1127 0492 03C1FE03 		.ascii	"\003\301\376\003\200\177\000\001\007\016\010\021\021"
+ 1127      807F0001 
+ 1127      070E0811 
+ 1127      11
+ 1128 049f 10110904 		.ascii	"\020\021\011\004\002"
+ 1128      02
+ 1129 04a4 00000000 		.ascii	"\000\000\000\000\200\340\340\000\000\000\000\000\000"
+ 1129      80E0E000 
+ 1129      00000000 
+ 1129      00
+ 1130 04b1 00807C43 		.ascii	"\000\200|C@G\177\370\200\000\000\020\030\037\020\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 33
+
+
+ 1130      40477FF8 
+ 1130      80000010 
+ 1130      181F1000 
+ 1131 04c1 00000013 		.ascii	"\000\000\000\023\037\034\020"
+ 1131      1F1C10
+ 1132 04c8 20E0E020 		.ascii	" \340\340    `\300\200\000\000\000\377\377\020\020\020"
+ 1132      20202060 
+ 1132      C0800000 
+ 1132      00FFFF10 
+ 1132      1010
+ 1133 04da 10182FE7 		.ascii	"\020\030/\347\200\000\020\037\037\020\020\020\020\020"
+ 1133      8000101F 
+ 1133      1F101010 
+ 1133      1010
+ 1134 04e8 180F0700 		.ascii	"\030\017\007\000"
+ 1135 04ec 000080C0 		.ascii	"\000\000\200\300@    `\340\000\000\374\377\001\000\000"
+ 1135      40202020 
+ 1135      2060E000 
+ 1135      00FCFF01 
+ 1135      0000
+ 1136 04fe 00000000 		.ascii	"\000\000\000\000\001\000\000\001\007\016\030\020\020"
+ 1136      01000001 
+ 1136      070E1810 
+ 1136      10
+ 1137 050b 10080403 		.ascii	"\020\010\004\003\000"
+ 1137      00
+ 1138 0510 20E0E020 		.ascii	" \340\340    @\300\200\000\000\000\377\377\000\000\000"
+ 1138      20202040 
+ 1138      C0800000 
+ 1138      00FFFF00 
+ 1138      0000
+ 1139 0522 000001FF 		.ascii	"\000\000\001\377\376\000\020\037\037\020\020\020\030"
+ 1139      FE00101F 
+ 1139      1F101010 
+ 1139      18
+ 1140 052f 080E0701 		.ascii	"\010\016\007\001\000"
+ 1140      00
+ 1141 0534 20E0E020 		.ascii	" \340\340      `\200\000\000\377\377\020\020\020\020"
+ 1141      20202020 
+ 1141      20608000 
+ 1141      00FFFF10 
+ 1141      101010
+ 1142 0547 7C000000 		.ascii	"|\000\000\000\000\020\037\037\020\020\020\020\020\020"
+ 1142      00101F1F 
+ 1142      10101010 
+ 1142      1010
+ 1143 0555 180600   		.ascii	"\030\006\000"
+ 1144 0558 20E0E020 		.ascii	" \340\340     ``\200\000\000\377\377\020\020\020\020"
+ 1144      20202020 
+ 1144      60608000 
+ 1144      00FFFF10 
+ 1144      101010
+ 1145 056b 7C000001 		.ascii	"|\000\000\001\000\020\037\037\020\000\000\000\000\000"
+ 1145      00101F1F 
+ 1145      10000000 
+ 1145      0000
+ 1146 0579 000000   		.ascii	"\000\000\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 34
+
+
+ 1147 057c 000080C0 		.ascii	"\000\000\200\300`   @\340\000\000\000\374\377\001\000"
+ 1147      60202020 
+ 1147      40E00000 
+ 1147      00FCFF01 
+ 1147      00
+ 1148 058d 004040C0 		.ascii	"\000@@\300\301@@\000\001\007\016\030\020\020\020\017"
+ 1148      C1404000 
+ 1148      01070E18 
+ 1148      1010100F 
+ 1149 059d 0F0000   		.ascii	"\017\000\000"
+ 1150 05a0 20E0E020 		.ascii	" \340\340 \000\000\000\000 \340\340 \000\377\377\020"
+ 1150      00000000 
+ 1150      20E0E020 
+ 1150      00FFFF10 
+ 1151 05b0 10101010 		.ascii	"\020\020\020\020\020\377\377\000\020\037\037\020\000"
+ 1151      10FFFF00 
+ 1151      101F1F10 
+ 1151      00
+ 1152 05bd 00000010 		.ascii	"\000\000\000\020\037\037\020"
+ 1152      1F1F10
+ 1153 05c4 00002020 		.ascii	"\000\000   \340\340   \000\000\000\000\000\000\000\377"
+ 1153      20E0E020 
+ 1153      20200000 
+ 1153      00000000 
+ 1153      00FF
+ 1154 05d6 FF000000 		.ascii	"\377\000\000\000\000\000\000\000\020\020\020\037\037"
+ 1154      00000000 
+ 1154      1010101F 
+ 1154      1F
+ 1155 05e3 10101000 		.ascii	"\020\020\020\000\000"
+ 1155      00
+ 1156 05e8 00000000 		.ascii	"\000\000\000\000   \340\340   \000\000\000\000\000\000"
+ 1156      202020E0 
+ 1156      E0202020 
+ 1156      00000000 
+ 1156      0000
+ 1157 05fa 00FFFF00 		.ascii	"\000\377\377\000\000\000\000`\340\200\200\200\300\177"
+ 1157      00000060 
+ 1157      E0808080 
+ 1157      C07F
+ 1158 0608 3F000000 		.ascii	"?\000\000\000"
+ 1159 060c 20E0E020 		.ascii	" \340\340 \000\000 \240`  \000\000\377\3770\030|\343"
+ 1159      000020A0 
+ 1159      60202000 
+ 1159      00FFFF30 
+ 1159      187CE3
+ 1160 061f C0000000 		.ascii	"\300\000\000\000\000\020\037\037\020\000\000\001\023"
+ 1160      00101F1F 
+ 1160      10000001 
+ 1160      13
+ 1161 062c 1F1C1810 		.ascii	"\037\034\030\020"
+ 1162 0630 20E0E020 		.ascii	" \340\340 \000\000\000\000\000\000\000\000\000\377\377"
+ 1162      00000000 
+ 1162      00000000 
+ 1162      00FFFF
+ 1163 063f 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\020\037\037\020"
+ 1163      00000000 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 35
+
+
+ 1163      00101F1F 
+ 1163      10
+ 1164 064c 10101010 		.ascii	"\020\020\020\020\020\030\006\000"
+ 1164      10180600 
+ 1165 0654 20E0E0E0 		.ascii	" \340\340\340\000\000\000\000\340\340\340 \000\377\001"
+ 1165      00000000 
+ 1165      E0E0E020 
+ 1165      00FF01
+ 1166 0663 3FFEC0E0 		.ascii	"?\376\300\340\036\001\377\377\000\020\037\020\000\003"
+ 1166      1E01FFFF 
+ 1166      00101F10 
+ 1166      0003
+ 1167 0671 1F030010 		.ascii	"\037\003\000\020\037\037\020"
+ 1167      1F1F10
+ 1168 0678 20E0E0C0 		.ascii	" \340\340\300\000\000\000\000\000 \340 \000\377\000"
+ 1168      00000000 
+ 1168      0020E020 
+ 1168      00FF00
+ 1169 0687 03071C78 		.ascii	"\003\007\034x\340\200\000\377\000\020\037\020\000\000"
+ 1169      E08000FF 
+ 1169      00101F10 
+ 1169      0000
+ 1170 0695 00000003 		.ascii	"\000\000\000\003\017\037\000"
+ 1170      0F1F00
+ 1171 069c 000080C0 		.ascii	"\000\000\200\300`  `\300\200\000\000\000\376\377\001"
+ 1171      60202060 
+ 1171      C0800000 
+ 1171      00FEFF01 
+ 1172 06ac 00000000 		.ascii	"\000\000\000\000\000\377\376\000\000\001\007\016\030"
+ 1172      00FFFE00 
+ 1172      0001070E 
+ 1172      18
+ 1173 06b9 1010180C 		.ascii	"\020\020\030\014\007\001\000"
+ 1173      070100
+ 1174 06c0 20E0E020 		.ascii	" \340\340     `\300\200\000\000\377\377     0\037\017"
+ 1174      20202020 
+ 1174      60C08000 
+ 1174      00FFFF20 
+ 1174      20202020 
+ 1175 06d7 00101F1F 		.ascii	"\000\020\037\037\020\000\000\000\000\000\000\000\000"
+ 1175      10000000 
+ 1175      00000000 
+ 1175      00
+ 1176 06e4 000080C0 		.ascii	"\000\000\200\300`  `\300\200\000\000\000\376\377\001"
+ 1176      60202060 
+ 1176      C0800000 
+ 1176      00FEFF01 
+ 1177 06f4 00000000 		.ascii	"\000\000\000\000\000\377\376\000\000\001\007\016\021"
+ 1177      00FFFE00 
+ 1177      0001070E 
+ 1177      11
+ 1178 0701 11133C7C 		.ascii	"\021\023<|g!\000"
+ 1178      672100
+ 1179 0708 20E0E020 		.ascii	" \340\340     `\300\200\000\000\377\377\020\0200\360"
+ 1179      20202020 
+ 1179      60C08000 
+ 1179      00FFFF10 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 36
+
+
+ 1179      1030F0
+ 1180 071b D0080F07 		.ascii	"\320\010\017\007\000\020\037\037\020\000\000\000\003"
+ 1180      00101F1F 
+ 1180      10000000 
+ 1180      03
+ 1181 0728 0F1C1010 		.ascii	"\017\034\020\020"
+ 1182 072c 0080C060 		.ascii	"\000\200\300`    @@\340\000\000\007\017\014\030\030"
+ 1182      20202020 
+ 1182      4040E000 
+ 1182      00070F0C 
+ 1182      1818
+ 1183 073e 303060E0 		.ascii	"00`\340\201\000\000\037\014\010\020\020\020\020\030"
+ 1183      8100001F 
+ 1183      0C081010 
+ 1183      101018
+ 1184 074d 0F0700   		.ascii	"\017\007\000"
+ 1185 0750 80602020 		.ascii	"\200`   \340\340   `\200\001\000\000\000\000\377\377"
+ 1185      20E0E020 
+ 1185      20206080 
+ 1185      01000000 
+ 1185      00FFFF
+ 1186 0763 00000000 		.ascii	"\000\000\000\000\001\000\000\000\000\020\037\037\020"
+ 1186      01000000 
+ 1186      00101F1F 
+ 1186      10
+ 1187 0770 00000000 		.ascii	"\000\000\000\000"
+ 1188 0774 20E0E020 		.ascii	" \340\340 \000\000\000\000\000 \340 \000\377\377\000"
+ 1188      00000000 
+ 1188      0020E020 
+ 1188      00FFFF00 
+ 1189 0784 00000000 		.ascii	"\000\000\000\000\000\000\377\000\000\007\017\030\020"
+ 1189      0000FF00 
+ 1189      00070F18 
+ 1189      10
+ 1190 0791 10101010 		.ascii	"\020\020\020\020\010\007\000"
+ 1190      080700
+ 1191 0798 2060E0E0 		.ascii	" `\340\340 \000\000\000 \340` \000\000\007\177\370\200"
+ 1191      20000000 
+ 1191      20E06020 
+ 1191      0000077F 
+ 1191      F880
+ 1192 07aa 00807C03 		.ascii	"\000\200|\003\000\000\000\000\000\000\007\037\034\007"
+ 1192      00000000 
+ 1192      0000071F 
+ 1192      1C07
+ 1193 07b8 00000000 		.ascii	"\000\000\000\000"
+ 1194 07bc 20E0E020 		.ascii	" \340\340 \000\340\340 \000 \340 \000\007\377\370\340"
+ 1194      00E0E020 
+ 1194      0020E020 
+ 1194      0007FFF8 
+ 1194      E0
+ 1195 07cd 1FFFFCE0 		.ascii	"\037\377\374\340\037\000\000\000\000\003\037\003\000"
+ 1195      1F000000 
+ 1195      00031F03 
+ 1195      00
+ 1196 07da 011F0300 		.ascii	"\001\037\003\000\000\000"
+ 1196      0000
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 37
+
+
+ 1197 07e0 002060E0 		.ascii	"\000 `\340\240\000\000 \340` \000\000\000\000\003\217"
+ 1197      A0000020 
+ 1197      E0602000 
+ 1197      00000003 
+ 1197      8F
+ 1198 07f1 7CF8C601 		.ascii	"|\370\306\001\000\000\000\000\020\030\036\023\000\001"
+ 1198      00000000 
+ 1198      10181E13 
+ 1198      0001
+ 1199 07ff 171F1810 		.ascii	"\027\037\030\020\000"
+ 1199      00
+ 1200 0804 2060E0E0 		.ascii	" `\340\340 \000\000\000 \340` \000\000\001\007>\370"
+ 1200      20000000 
+ 1200      20E06020 
+ 1200      00000107 
+ 1200      3EF8
+ 1201 0816 E0180700 		.ascii	"\340\030\007\000\000\000\000\000\000\020\020\037\037"
+ 1201      00000000 
+ 1201      0010101F 
+ 1201      1F
+ 1202 0823 10100000 		.ascii	"\020\020\000\000\000"
+ 1202      00
+ 1203 0828 00806020 		.ascii	"\000\200`    \240\340\340 \000\000\000\000\000\300\360"
+ 1203      202020A0 
+ 1203      E0E02000 
+ 1203      00000000 
+ 1203      C0F0
+ 1204 083a 3E0F0300 		.ascii	">\017\003\000\000\000\000\020\034\037\027\020\020\020"
+ 1204      00000010 
+ 1204      1C1F1710 
+ 1204      1010
+ 1205 0848 10180600 		.ascii	"\020\030\006\000"
+ 1206 084c 00000000 		.ascii	"\000\000\000\000\000\374\004\004\004\004\004\000\000"
+ 1206      00FC0404 
+ 1206      04040400 
+ 1206      00
+ 1207 0859 00000000 		.ascii	"\000\000\000\000\377\000\000\000\000\000\000\000\000"
+ 1207      FF000000 
+ 1207      00000000 
+ 1207      00
+ 1208 0866 0000007F 		.ascii	"\000\000\000\177@@@@@\000"
+ 1208      40404040 
+ 1208      4000
+ 1209 0870 000010E0 		.ascii	"\000\000\020\340\000\000\000\000\000\000\000\000\000"
+ 1209      00000000 
+ 1209      00000000 
+ 1209      00
+ 1210 087d 00000003 		.ascii	"\000\000\000\003\034`\200\000\000\000\000\000\000\000"
+ 1210      1C608000 
+ 1210      00000000 
+ 1210      0000
+ 1211 088b 00000000 		.ascii	"\000\000\000\000\003\014p\200\000"
+ 1211      030C7080 
+ 1211      00
+ 1212 0894 00000404 		.ascii	"\000\000\004\004\004\004\004\374\000\000\000\000\000"
+ 1212      040404FC 
+ 1212      00000000 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 38
+
+
+ 1212      00
+ 1213 08a1 00000000 		.ascii	"\000\000\000\000\000\000\377\000\000\000\000\000\000"
+ 1213      0000FF00 
+ 1213      00000000 
+ 1213      00
+ 1214 08ae 40404040 		.ascii	"@@@@@\177\000\000\000\000"
+ 1214      407F0000 
+ 1214      0000
+ 1215 08b8 00000010 		.ascii	"\000\000\000\020\010\014\004\014\010\020\000\000\000"
+ 1215      080C040C 
+ 1215      08100000 
+ 1215      00
+ 1216 08c5 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1216      00000000 
+ 1216      00000000 
+ 1216      00
+ 1217 08d2 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000"
+ 1217      00000000 
+ 1217      0000
+ 1218 08dc 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1218      00000000 
+ 1218      00000000 
+ 1218      00
+ 1219 08e9 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\200\200"
+ 1219      00000000 
+ 1219      00000080 
+ 1219      80
+ 1220 08f6 80808080 		.ascii	"\200\200\200\200\200\200\200\200\200\200"
+ 1220      80808080 
+ 1220      8080
+ 1221 0900 00000004 		.ascii	"\000\000\000\004\004\010\010\000\000\000\000\000\000"
+ 1221      04080800 
+ 1221      00000000 
+ 1221      00
+ 1222 090d 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1222      00000000 
+ 1222      00000000 
+ 1222      00
+ 1223 091a 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000"
+ 1223      00000000 
+ 1223      0000
+ 1224 0924 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1224      00000000 
+ 1224      00000000 
+ 1224      00
+ 1225 0931 0098D844 		.ascii	"\000\230\330Dd$$\374\370\000\000\000\017\037\030\020"
+ 1225      642424FC 
+ 1225      F8000000 
+ 1225      0F1F1810 
+ 1226 0941 1010081F 		.ascii	"\020\020\010\037\037\020\030"
+ 1226      1F1018
+ 1227 0948 0020E0F0 		.ascii	"\000 \340\360\000\000\000\000\000\000\000\000\000\000"
+ 1227      00000000 
+ 1227      00000000 
+ 1227      0000
+ 1228 0956 FFFF1808 		.ascii	"\377\377\030\010\004\004\014\370\360\000\000\000\037"
+ 1228      04040CF8 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 39
+
+
+ 1228      F0000000 
+ 1228      1F
+ 1229 0963 0F181010 		.ascii	"\017\030\020\020\020\030\017\003\000"
+ 1229      10180F03 
+ 1229      00
+ 1230 096c 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1230      00000000 
+ 1230      00000000 
+ 1230      00
+ 1231 0979 E0F81804 		.ascii	"\340\370\030\004\004\004<8\000\000\000\000\003\017\014"
+ 1231      04043C38 
+ 1231      00000000 
+ 1231      030F0C
+ 1232 0988 10101010 		.ascii	"\020\020\020\020\010\006\000\000"
+ 1232      08060000 
+ 1233 0990 00000000 		.ascii	"\000\000\000\000\000\000\000 \340\360\000\000\000\340"
+ 1233      00000020 
+ 1233      E0F00000 
+ 1233      00E0
+ 1234 099e F81C0404 		.ascii	"\370\034\004\004\004\010\377\377\000\000\000\003\017"
+ 1234      0408FFFF 
+ 1234      00000003 
+ 1234      0F
+ 1235 09ab 18101010 		.ascii	"\030\020\020\020\010\037\017\010\000"
+ 1235      081F0F08 
+ 1235      00
+ 1236 09b4 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1236      00000000 
+ 1236      00000000 
+ 1236      00
+ 1237 09c1 00E0F848 		.ascii	"\000\340\370HDDDLxp\000\000\000\003\017\014\030\020"
+ 1237      4444444C 
+ 1237      78700000 
+ 1237      00030F0C 
+ 1237      1810
+ 1238 09d3 10100804 		.ascii	"\020\020\010\004\000"
+ 1238      00
+ 1239 09d8 00000000 		.ascii	"\000\000\000\000\200\300`  \340\300\000\000\004\004"
+ 1239      80C06020 
+ 1239      20E0C000 
+ 1239      000404
+ 1240 09e7 04FFFF04 		.ascii	"\004\377\377\004\004\004\004\000\000\000\000\020\020"
+ 1240      04040400 
+ 1240      00000010 
+ 1240      10
+ 1241 09f4 1F1F1010 		.ascii	"\037\037\020\020\020\000\000\000"
+ 1241      10000000 
+ 1242 09fc 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1242      00000000 
+ 1242      00000000 
+ 1242      00
+ 1243 0a09 0070F88C 		.ascii	"\000p\370\214\004\004\214\370t\004\014\000pv\317\215"
+ 1243      04048CF8 
+ 1243      74040C00 
+ 1243      7076CF8D 
+ 1244 0a19 8D8D89C8 		.ascii	"\215\215\211\310xp\000"
+ 1244      787000
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 40
+
+
+ 1245 0a20 0020E0F0 		.ascii	"\000 \340\360\000\000\000\000\000\000\000\000\000\000"
+ 1245      00000000 
+ 1245      00000000 
+ 1245      0000
+ 1246 0a2e FFFF0804 		.ascii	"\377\377\010\004\004\004\374\370\000\000\000\020\037"
+ 1246      0404FCF8 
+ 1246      00000010 
+ 1246      1F
+ 1247 0a3b 1F100000 		.ascii	"\037\020\000\000\020\037\037\020\000"
+ 1247      101F1F10 
+ 1247      00
+ 1248 0a44 00000000 		.ascii	"\000\000\000\000\000``\000\000\000\000\000\000\000\004"
+ 1248      00606000 
+ 1248      00000000 
+ 1248      000004
+ 1249 0a53 0404FCFC 		.ascii	"\004\004\374\374\000\000\000\000\000\000\000\020\020"
+ 1249      00000000 
+ 1249      00000010 
+ 1249      10
+ 1250 0a60 101F1F10 		.ascii	"\020\037\037\020\020\020\000\000"
+ 1250      10100000 
+ 1251 0a68 00000000 		.ascii	"\000\000\000\000\000\000\000``\000\000\000\000\000\000"
+ 1251      00000060 
+ 1251      60000000 
+ 1251      000000
+ 1252 0a77 00040404 		.ascii	"\000\004\004\004\374\374\000\000\000\000\000\300\300"
+ 1252      FCFC0000 
+ 1252      000000C0 
+ 1252      C0
+ 1253 0a84 8080C07F 		.ascii	"\200\200\300\177?\000\000\000"
+ 1253      3F000000 
+ 1254 0a8c 0020E0F0 		.ascii	"\000 \340\360\000\000\000\000\000\000\000\000\000\000"
+ 1254      00000000 
+ 1254      00000000 
+ 1254      0000
+ 1255 0a9a FFFF80C0 		.ascii	"\377\377\200\300\364\034\004\004\000\000\000\020\037"
+ 1255      F41C0404 
+ 1255      00000010 
+ 1255      1F
+ 1256 0aa7 1F110003 		.ascii	"\037\021\000\003\037\034\020\020\000"
+ 1256      1F1C1010 
+ 1256      00
+ 1257 0ab0 00002020 		.ascii	"\000\000   \340\360\000\000\000\000\000\000\000\000"
+ 1257      20E0F000 
+ 1257      00000000 
+ 1257      000000
+ 1258 0abf 0000FFFF 		.ascii	"\000\000\377\377\000\000\000\000\000\000\000\020\020"
+ 1258      00000000 
+ 1258      00000010 
+ 1258      10
+ 1259 0acc 101F1F10 		.ascii	"\020\037\037\020\020\020\000\000"
+ 1259      10100000 
+ 1260 0ad4 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\004"
+ 1260      00000000 
+ 1260      00000000 
+ 1260      04
+ 1261 0ae1 FCFC0804 		.ascii	"\374\374\010\004\374\374\010\004\374\374\000\020\037"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 41
+
+
+ 1261      FCFC0804 
+ 1261      FCFC0010 
+ 1261      1F
+ 1262 0aee 1F10001F 		.ascii	"\037\020\000\037\037\020\000\037\037\020"
+ 1262      1F10001F 
+ 1262      1F10
+ 1263 0af8 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1263      00000000 
+ 1263      00000000 
+ 1263      00
+ 1264 0b05 04FCFC08 		.ascii	"\004\374\374\010\010\004\004\374\370\000\000\000\020"
+ 1264      080404FC 
+ 1264      F8000000 
+ 1264      10
+ 1265 0b12 1F1F1000 		.ascii	"\037\037\020\000\000\020\037\037\020\000"
+ 1265      00101F1F 
+ 1265      1000
+ 1266 0b1c 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1266      00000000 
+ 1266      00000000 
+ 1266      00
+ 1267 0b29 E0F0180C 		.ascii	"\340\360\030\014\004\004\014\030\360\340\000\000\003"
+ 1267      04040C18 
+ 1267      F0E00000 
+ 1267      03
+ 1268 0b36 0F0C1010 		.ascii	"\017\014\020\020\020\020\014\017\003\000"
+ 1268      10100C0F 
+ 1268      0300
+ 1269 0b40 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1269      00000000 
+ 1269      00000000 
+ 1269      00
+ 1270 0b4d 04FCFC08 		.ascii	"\004\374\374\010\004\004\004\014\370\360\000\000\200"
+ 1270      0404040C 
+ 1270      F8F00000 
+ 1270      80
+ 1271 0b5a FFFF8890 		.ascii	"\377\377\210\220\020\020\034\017\003\000"
+ 1271      10101C0F 
+ 1271      0300
+ 1272 0b64 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1272      00000000 
+ 1272      00000000 
+ 1272      00
+ 1273 0b71 E0F81C04 		.ascii	"\340\370\034\004\004\004\010\370\374\000\000\000\003"
+ 1273      040408F8 
+ 1273      FC000000 
+ 1273      03
+ 1274 0b7e 0F181010 		.ascii	"\017\030\020\020\220\210\377\377\200\000"
+ 1274      9088FFFF 
+ 1274      8000
+ 1275 0b88 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\004"
+ 1275      00000000 
+ 1275      00000000 
+ 1275      04
+ 1276 0b95 0404FCFC 		.ascii	"\004\004\374\374\020\010\004\004\014\014\000\020\020"
+ 1276      10080404 
+ 1276      0C0C0010 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 42
+
+
+ 1276      10
+ 1277 0ba2 101F1F10 		.ascii	"\020\037\037\020\020\020\000\000\000\000"
+ 1277      10100000 
+ 1277      0000
+ 1278 0bac 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1278      00000000 
+ 1278      00000000 
+ 1278      00
+ 1279 0bb9 003078CC 		.ascii	"\0000x\314\304\204\204\204\014\034\000\000\000\036\030"
+ 1279      C4848484 
+ 1279      0C1C0000 
+ 1279      001E18
+ 1280 0bc8 10101011 		.ascii	"\020\020\020\021\031\017\006\000"
+ 1280      190F0600 
+ 1281 0bd0 00000000 		.ascii	"\000\000\000\000\000\300\000\000\000\000\000\000\000"
+ 1281      00C00000 
+ 1281      00000000 
+ 1281      00
+ 1282 0bdd 040404FF 		.ascii	"\004\004\004\377\377\004\004\004\000\000\000\000\000"
+ 1282      FF040404 
+ 1282      00000000 
+ 1282      00
+ 1283 0bea 00000F1F 		.ascii	"\000\000\017\037\020\020\020\014\000\000"
+ 1283      1010100C 
+ 1283      0000
+ 1284 0bf4 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1284      00000000 
+ 1284      00000000 
+ 1284      00
+ 1285 0c01 04FCFE00 		.ascii	"\004\374\376\000\000\000\004\374\376\000\000\000\000"
+ 1285      000004FC 
+ 1285      FE000000 
+ 1285      00
+ 1286 0c0e 0F1F1810 		.ascii	"\017\037\030\020\020\010\037\017\010\000"
+ 1286      10081F0F 
+ 1286      0800
+ 1287 0c18 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1287      00000000 
+ 1287      00000000 
+ 1287      00
+ 1288 0c25 040C3CFC 		.ascii	"\004\014<\374\304\000\000\304<\014\004\000\000\000\000"
+ 1288      C40000C4 
+ 1288      3C0C0400 
+ 1288      000000
+ 1289 0c34 010F1E0E 		.ascii	"\001\017\036\016\001\000\000\000"
+ 1289      01000000 
+ 1290 0c3c 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\004"
+ 1290      00000000 
+ 1290      00000000 
+ 1290      04
+ 1291 0c49 3CFCC400 		.ascii	"<\374\304\000\344|\374\204\200|\004\000\000\007\037"
+ 1291      E47CFC84 
+ 1291      807C0400 
+ 1291      00071F
+ 1292 0c58 07000007 		.ascii	"\007\000\000\007\037\007\000\000"
+ 1292      1F070000 
+ 1293 0c60 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 43
+
+
+ 1293      00000000 
+ 1293      00000000 
+ 1293      00
+ 1294 0c6d 04041C7C 		.ascii	"\004\004\034|\344\3004\034\004\004\000\000\020\020\034"
+ 1294      E4C0341C 
+ 1294      04040000 
+ 1294      10101C
+ 1295 0c7c 1601131F 		.ascii	"\026\001\023\037\034\030\020\000"
+ 1295      1C181000 
+ 1296 0c84 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1296      00000000 
+ 1296      00000000 
+ 1296      00
+ 1297 0c91 040C3CFC 		.ascii	"\004\014<\374\304\000\304<\004\004\000\000\000\300\200"
+ 1297      C400C43C 
+ 1297      04040000 
+ 1297      00C080
+ 1298 0ca0 C1370E01 		.ascii	"\3017\016\001\000\000\000\000"
+ 1298      00000000 
+ 1299 0ca8 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1299      00000000 
+ 1299      00000000 
+ 1299      00
+ 1300 0cb5 001C0404 		.ascii	"\000\034\004\004\304\364|\034\004\000\000\000\000\020"
+ 1300      C4F47C1C 
+ 1300      04000000 
+ 1300      0010
+ 1301 0cc3 1C1F1711 		.ascii	"\034\037\027\021\020\020\030\016\000"
+ 1301      1010180E 
+ 1301      00
+ 1302 0ccc 00000000 		.ascii	"\000\000\000\000\000\000\000\370\014\004\000\000\000"
+ 1302      000000F8 
+ 1302      0C040000 
+ 1302      00
+ 1303 0cd9 00000000 		.ascii	"\000\000\000\000\020(\357\000\000\000\000\000\000\000"
+ 1303      1028EF00 
+ 1303      00000000 
+ 1303      0000
+ 1304 0ce7 00000000 		.ascii	"\000\000\000\000?`@\000\000"
+ 1304      3F604000 
+ 1304      00
+ 1305 0cf0 00000000 		.ascii	"\000\000\000\000\000\000\377\000\000\000\000\000\000"
+ 1305      0000FF00 
+ 1305      00000000 
+ 1305      00
+ 1306 0cfd 00000000 		.ascii	"\000\000\000\000\000\377\000\000\000\000\000\000\000"
+ 1306      00FF0000 
+ 1306      00000000 
+ 1306      00
+ 1307 0d0a 00000000 		.ascii	"\000\000\000\000\377\000\000\000\000\000"
+ 1307      FF000000 
+ 1307      0000
+ 1308 0d14 0000040C 		.ascii	"\000\000\004\014\370\000\000\000\000\000\000\000\000"
+ 1308      F8000000 
+ 1308      00000000 
+ 1308      00
+ 1309 0d21 000000EF 		.ascii	"\000\000\000\357(\020\000\000\000\000\000\000\000@`"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 44
+
+
+ 1309      28100000 
+ 1309      00000000 
+ 1309      004060
+ 1310 0d30 3F000000 		.ascii	"?\000\000\000\000\000\000\000"
+ 1310      00000000 
+ 1311 0d38 00180602 		.ascii	"\000\030\006\002\002\004\010\020  0\010\000\000\000"
+ 1311      02040810 
+ 1311      20203008 
+ 1311      000000
+ 1312 0d47 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1312      00000000 
+ 1312      00000000 
+ 1312      00
+ 1313 0d54 00000000 		.ascii	"\000\000\000\000\000\000\000\000"
+ 1313      00000000 
+ 1314              		.global	ascii_8X16
+ 1315              		.section	.rodata.ascii_8X16,"a"
+ 1316              		.align	2
+ 1319              	ascii_8X16:
+ 1320 0000 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1320      00000000 
+ 1320      00000000 
+ 1320      00
+ 1321 000d 000000   		.ascii	"\000\000\000"
+ 1322 0010 000000F8 		.ascii	"\000\000\000\370\000\000\000\000\000\000\00030\000\000"
+ 1322      00000000 
+ 1322      00000033 
+ 1322      300000
+ 1323 001f 00       		.ascii	"\000"
+ 1324 0020 00100C06 		.ascii	"\000\020\014\006\020\014\006\000\000\000\000\000\000"
+ 1324      100C0600 
+ 1324      00000000 
+ 1324      00
+ 1325 002d 000000   		.ascii	"\000\000\000"
+ 1326 0030 40C07840 		.ascii	"@\300x@\300x@\000\004?\004\004?\004\004\000"
+ 1326      C0784000 
+ 1326      043F0404 
+ 1326      3F040400 
+ 1327 0040 007088FC 		.ascii	"\000p\210\374\0100\000\000\000\030 \377!\036\000\000"
+ 1327      08300000 
+ 1327      001820FF 
+ 1327      211E0000 
+ 1328 0050 F008F000 		.ascii	"\360\010\360\000\340\030\000\000\000!\034\003\036!\036"
+ 1328      E0180000 
+ 1328      00211C03 
+ 1328      1E211E
+ 1329 005f 00       		.ascii	"\000"
+ 1330 0060 00F00888 		.ascii	"\000\360\010\210p\000\000\000\036!#$\031'!\020"
+ 1330      70000000 
+ 1330      1E212324 
+ 1330      19272110 
+ 1331 0070 10160E00 		.ascii	"\020\026\016\000\000\000\000\000\000\000\000\000\000"
+ 1331      00000000 
+ 1331      00000000 
+ 1331      00
+ 1332 007d 000000   		.ascii	"\000\000\000"
+ 1333 0080 000000E0 		.ascii	"\000\000\000\340\030\004\002\000\000\000\000\007\030"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 45
+
+
+ 1333      18040200 
+ 1333      00000007 
+ 1333      18
+ 1334 008d 204000   		.ascii	" @\000"
+ 1335 0090 00020418 		.ascii	"\000\002\004\030\340\000\000\000\000@ \030\007\000\000"
+ 1335      E0000000 
+ 1335      00402018 
+ 1335      070000
+ 1336 009f 00       		.ascii	"\000"
+ 1337 00a0 404080F0 		.ascii	"@@\200\360\200@@\000\002\002\001\017\001\002\002\000"
+ 1337      80404000 
+ 1337      0202010F 
+ 1337      01020200 
+ 1338 00b0 000000F0 		.ascii	"\000\000\000\360\000\000\000\000\001\001\001\037\001"
+ 1338      00000000 
+ 1338      0101011F 
+ 1338      01
+ 1339 00bd 010100   		.ascii	"\001\001\000"
+ 1340 00c0 00000000 		.ascii	"\000\000\000\000\000\000\000\000\200\260p\000\000\000"
+ 1340      00000000 
+ 1340      80B07000 
+ 1340      0000
+ 1341 00ce 0000     		.ascii	"\000\000"
+ 1342 00d0 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\001\001\001\001"
+ 1342      00000000 
+ 1342      00010101 
+ 1342      01
+ 1343 00dd 010101   		.ascii	"\001\001\001"
+ 1344 00e0 00000000 		.ascii	"\000\000\000\000\000\000\000\000\00000\000\000\000\000"
+ 1344      00000000 
+ 1344      00303000 
+ 1344      000000
+ 1345 00ef 00       		.ascii	"\000"
+ 1346 00f0 00000000 		.ascii	"\000\000\000\000\200`\030\004\000`\030\006\001\000\000"
+ 1346      80601804 
+ 1346      00601806 
+ 1346      010000
+ 1347 00ff 00       		.ascii	"\000"
+ 1348 0100 00E01008 		.ascii	"\000\340\020\010\010\020\340\000\000\017\020  \020\017"
+ 1348      0810E000 
+ 1348      000F1020 
+ 1348      20100F
+ 1349 010f 00       		.ascii	"\000"
+ 1350 0110 001010F8 		.ascii	"\000\020\020\370\000\000\000\000\000  ?  \000\000"
+ 1350      00000000 
+ 1350      0020203F 
+ 1350      20200000 
+ 1351 0120 00700808 		.ascii	"\000p\010\010\010\210p\000\0000($\"!0\000"
+ 1351      08887000 
+ 1351      00302824 
+ 1351      22213000 
+ 1352 0130 00300888 		.ascii	"\0000\010\210\210H0\000\000\030   \021\016\000"
+ 1352      88483000 
+ 1352      00182020 
+ 1352      20110E00 
+ 1353 0140 0000C020 		.ascii	"\000\000\300 \020\370\000\000\000\007\004$$?$\000"
+ 1353      10F80000 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 46
+
+
+ 1353      00070424 
+ 1353      243F2400 
+ 1354 0150 00F80888 		.ascii	"\000\370\010\210\210\010\010\000\000\031!  \021\016"
+ 1354      88080800 
+ 1354      00192120 
+ 1354      20110E
+ 1355 015f 00       		.ascii	"\000"
+ 1356 0160 00E01088 		.ascii	"\000\340\020\210\210\030\000\000\000\017\021  \021\016"
+ 1356      88180000 
+ 1356      000F1120 
+ 1356      20110E
+ 1357 016f 00       		.ascii	"\000"
+ 1358 0170 00380808 		.ascii	"\0008\010\010\3108\010\000\000\000\000?\000\000\000"
+ 1358      C8380800 
+ 1358      0000003F 
+ 1358      000000
+ 1359 017f 00       		.ascii	"\000"
+ 1360 0180 00708808 		.ascii	"\000p\210\010\010\210p\000\000\034\"!!\"\034\000"
+ 1360      08887000 
+ 1360      001C2221 
+ 1360      21221C00 
+ 1361 0190 00E01008 		.ascii	"\000\340\020\010\010\020\340\000\000\0001\"\"\021\017"
+ 1361      0810E000 
+ 1361      00003122 
+ 1361      22110F
+ 1362 019f 00       		.ascii	"\000"
+ 1363 01a0 000000C0 		.ascii	"\000\000\000\300\300\000\000\000\000\000\00000\000\000"
+ 1363      C0000000 
+ 1363      00000030 
+ 1363      300000
+ 1364 01af 00       		.ascii	"\000"
+ 1365 01b0 00000080 		.ascii	"\000\000\000\200\000\000\000\000\000\000\200`\000\000"
+ 1365      00000000 
+ 1365      00008060 
+ 1365      0000
+ 1366 01be 0000     		.ascii	"\000\000"
+ 1367 01c0 00008040 		.ascii	"\000\000\200@ \020\010\000\000\001\002\004\010\020 "
+ 1367      20100800 
+ 1367      00010204 
+ 1367      081020
+ 1368 01cf 00       		.ascii	"\000"
+ 1369 01d0 40404040 		.ascii	"@@@@@@@\000\004\004\004\004\004\004\004\000"
+ 1369      40404000 
+ 1369      04040404 
+ 1369      04040400 
+ 1370 01e0 00081020 		.ascii	"\000\010\020 @\200\000\000\000 \020\010\004\002\001"
+ 1370      40800000 
+ 1370      00201008 
+ 1370      040201
+ 1371 01ef 00       		.ascii	"\000"
+ 1372 01f0 00704808 		.ascii	"\000pH\010\010\010\360\000\000\000\00006\001\000\000"
+ 1372      0808F000 
+ 1372      00000030 
+ 1372      36010000 
+ 1373 0200 C030C828 		.ascii	"\3000\310(\350\020\340\000\007\030'$#\024\013\000"
+ 1373      E810E000 
+ 1373      07182724 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 47
+
+
+ 1373      23140B00 
+ 1374 0210 0000C038 		.ascii	"\000\000\3008\340\000\000\000 <#\002\002'8 "
+ 1374      E0000000 
+ 1374      203C2302 
+ 1374      02273820 
+ 1375 0220 08F88888 		.ascii	"\010\370\210\210\210p\000\000 ?   \021\016\000"
+ 1375      88700000 
+ 1375      203F2020 
+ 1375      20110E00 
+ 1376 0230 C0300808 		.ascii	"\3000\010\010\010\0108\000\007\030   \020\010\000"
+ 1376      08083800 
+ 1376      07182020 
+ 1376      20100800 
+ 1377 0240 08F80808 		.ascii	"\010\370\010\010\010\020\340\000 ?   \020\017\000"
+ 1377      0810E000 
+ 1377      203F2020 
+ 1377      20100F00 
+ 1378 0250 08F88888 		.ascii	"\010\370\210\210\350\010\020\000 ?  # \030\000"
+ 1378      E8081000 
+ 1378      203F2020 
+ 1378      23201800 
+ 1379 0260 08F88888 		.ascii	"\010\370\210\210\350\010\020\000 ? \000\003\000\000"
+ 1379      E8081000 
+ 1379      203F2000 
+ 1379      030000
+ 1380 026f 00       		.ascii	"\000"
+ 1381 0270 C0300808 		.ascii	"\3000\010\010\0108\000\000\007\030  \"\036\002\000"
+ 1381      08380000 
+ 1381      07182020 
+ 1381      221E0200 
+ 1382 0280 08F80800 		.ascii	"\010\370\010\000\000\010\370\010 ?!\001\001!? "
+ 1382      0008F808 
+ 1382      203F2101 
+ 1382      01213F20 
+ 1383 0290 000808F8 		.ascii	"\000\010\010\370\010\010\000\000\000  ?  \000\000"
+ 1383      08080000 
+ 1383      0020203F 
+ 1383      20200000 
+ 1384 02a0 00000808 		.ascii	"\000\000\010\010\370\010\010\000\300\200\200\200\177"
+ 1384      F8080800 
+ 1384      C0808080 
+ 1384      7F
+ 1385 02ad 000000   		.ascii	"\000\000\000"
+ 1386 02b0 08F888C0 		.ascii	"\010\370\210\300(\030\010\000 ? \001&8 \000"
+ 1386      28180800 
+ 1386      203F2001 
+ 1386      26382000 
+ 1387 02c0 08F80800 		.ascii	"\010\370\010\000\000\000\000\000 ?    0\000"
+ 1387      00000000 
+ 1387      203F2020 
+ 1387      20203000 
+ 1388 02d0 08F8F800 		.ascii	"\010\370\370\000\370\370\010\000 ?\000?\000? \000"
+ 1388      F8F80800 
+ 1388      203F003F 
+ 1388      003F2000 
+ 1389 02e0 08F830C0 		.ascii	"\010\3700\300\000\010\370\010 ? \000\007\030?\000"
+ 1389      0008F808 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 48
+
+
+ 1389      203F2000 
+ 1389      07183F00 
+ 1390 02f0 E0100808 		.ascii	"\340\020\010\010\010\020\340\000\017\020   \020\017"
+ 1390      0810E000 
+ 1390      0F102020 
+ 1390      20100F
+ 1391 02ff 00       		.ascii	"\000"
+ 1392 0300 08F80808 		.ascii	"\010\370\010\010\010\010\360\000 ?!\001\001\001\000"
+ 1392      0808F000 
+ 1392      203F2101 
+ 1392      010100
+ 1393 030f 00       		.ascii	"\000"
+ 1394 0310 E0100808 		.ascii	"\340\020\010\010\010\020\340\000\017\030$$8PO\000"
+ 1394      0810E000 
+ 1394      0F182424 
+ 1394      38504F00 
+ 1395 0320 08F88888 		.ascii	"\010\370\210\210\210\210p\000 ? \000\003\0140 "
+ 1395      88887000 
+ 1395      203F2000 
+ 1395      030C3020 
+ 1396 0330 00708808 		.ascii	"\000p\210\010\010\0108\000\0008 !!\"\034\000"
+ 1396      08083800 
+ 1396      00382021 
+ 1396      21221C00 
+ 1397 0340 180808F8 		.ascii	"\030\010\010\370\010\010\030\000\000\000 ? \000\000"
+ 1397      08081800 
+ 1397      0000203F 
+ 1397      200000
+ 1398 034f 00       		.ascii	"\000"
+ 1399 0350 08F80800 		.ascii	"\010\370\010\000\000\010\370\010\000\037    \037\000"
+ 1399      0008F808 
+ 1399      001F2020 
+ 1399      20201F00 
+ 1400 0360 08788800 		.ascii	"\010x\210\000\000\3108\010\000\000\0078\016\001\000"
+ 1400      00C83808 
+ 1400      00000738 
+ 1400      0E0100
+ 1401 036f 00       		.ascii	"\000"
+ 1402 0370 F80800F8 		.ascii	"\370\010\000\370\000\010\370\000\003<\007\000\007<\003"
+ 1402      0008F800 
+ 1402      033C0700 
+ 1402      073C03
+ 1403 037f 00       		.ascii	"\000"
+ 1404 0380 08186880 		.ascii	"\010\030h\200\200h\030\010 0,\003\003,0 "
+ 1404      80681808 
+ 1404      20302C03 
+ 1404      032C3020 
+ 1405 0390 0838C800 		.ascii	"\0108\310\000\3108\010\000\000\000 ? \000\000\000"
+ 1405      C8380800 
+ 1405      0000203F 
+ 1405      20000000 
+ 1406 03a0 10080808 		.ascii	"\020\010\010\010\3108\010\000 8&!  \030\000"
+ 1406      C8380800 
+ 1406      20382621 
+ 1406      20201800 
+ 1407 03b0 000000FE 		.ascii	"\000\000\000\376\002\002\002\000\000\000\000\177@@@"
+ 1407      02020200 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 49
+
+
+ 1407      0000007F 
+ 1407      404040
+ 1408 03bf 00       		.ascii	"\000"
+ 1409 03c0 000C30C0 		.ascii	"\000\0140\300\000\000\000\000\000\000\000\001\0068\300"
+ 1409      00000000 
+ 1409      00000001 
+ 1409      0638C0
+ 1410 03cf 00       		.ascii	"\000"
+ 1411 03d0 00020202 		.ascii	"\000\002\002\002\376\000\000\000\000@@@\177\000\000"
+ 1411      FE000000 
+ 1411      00404040 
+ 1411      7F0000
+ 1412 03df 00       		.ascii	"\000"
+ 1413 03e0 00000402 		.ascii	"\000\000\004\002\002\002\004\000\000\000\000\000\000"
+ 1413      02020400 
+ 1413      00000000 
+ 1413      00
+ 1414 03ed 000000   		.ascii	"\000\000\000"
+ 1415 03f0 00000000 		.ascii	"\000\000\000\000\000\000\000\000\200\200\200\200\200"
+ 1415      00000000 
+ 1415      80808080 
+ 1415      80
+ 1416 03fd 808080   		.ascii	"\200\200\200"
+ 1417 0400 00020204 		.ascii	"\000\002\002\004\000\000\000\000\000\000\000\000\000"
+ 1417      00000000 
+ 1417      00000000 
+ 1417      00
+ 1418 040d 000000   		.ascii	"\000\000\000"
+ 1419 0410 00008080 		.ascii	"\000\000\200\200\200\200\000\000\000\031$\"\"\"? "
+ 1419      80800000 
+ 1419      00192422 
+ 1419      22223F20 
+ 1420 0420 08F80080 		.ascii	"\010\370\000\200\200\000\000\000\000?\021  \021\016"
+ 1420      80000000 
+ 1420      003F1120 
+ 1420      20110E
+ 1421 042f 00       		.ascii	"\000"
+ 1422 0430 00000080 		.ascii	"\000\000\000\200\200\200\000\000\000\016\021   \021"
+ 1422      80800000 
+ 1422      000E1120 
+ 1422      202011
+ 1423 043f 00       		.ascii	"\000"
+ 1424 0440 00000080 		.ascii	"\000\000\000\200\200\210\370\000\000\016\021  \020?"
+ 1424      8088F800 
+ 1424      000E1120 
+ 1424      20103F
+ 1425 044f 20       		.ascii	" "
+ 1426 0450 00008080 		.ascii	"\000\000\200\200\200\200\000\000\000\037\"\"\"\"\023"
+ 1426      80800000 
+ 1426      001F2222 
+ 1426      222213
+ 1427 045f 00       		.ascii	"\000"
+ 1428 0460 008080F0 		.ascii	"\000\200\200\360\210\210\210\030\000  ?  \000\000"
+ 1428      88888818 
+ 1428      0020203F 
+ 1428      20200000 
+ 1429 0470 00008080 		.ascii	"\000\000\200\200\200\200\200\000\000k\224\224\224\223"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 50
+
+
+ 1429      80808000 
+ 1429      006B9494 
+ 1429      9493
+ 1430 047e 6000     		.ascii	"`\000"
+ 1431 0480 08F80080 		.ascii	"\010\370\000\200\200\200\000\000 ?!\000\000 ? "
+ 1431      80800000 
+ 1431      203F2100 
+ 1431      00203F20 
+ 1432 0490 00809898 		.ascii	"\000\200\230\230\000\000\000\000\000  ?  \000\000"
+ 1432      00000000 
+ 1432      0020203F 
+ 1432      20200000 
+ 1433 04a0 00000080 		.ascii	"\000\000\000\200\230\230\000\000\000\300\200\200\200"
+ 1433      98980000 
+ 1433      00C08080 
+ 1433      80
+ 1434 04ad 7F0000   		.ascii	"\177\000\000"
+ 1435 04b0 08F80000 		.ascii	"\010\370\000\000\200\200\200\000 ?$\002-0 \000"
+ 1435      80808000 
+ 1435      203F2402 
+ 1435      2D302000 
+ 1436 04c0 000808F8 		.ascii	"\000\010\010\370\000\000\000\000\000  ?  \000\000"
+ 1436      00000000 
+ 1436      0020203F 
+ 1436      20200000 
+ 1437 04d0 80808080 		.ascii	"\200\200\200\200\200\200\200\000 ? \000? \000?"
+ 1437      80808000 
+ 1437      203F2000 
+ 1437      3F20003F 
+ 1438 04e0 80800080 		.ascii	"\200\200\000\200\200\200\000\000 ?!\000\000 ? "
+ 1438      80800000 
+ 1438      203F2100 
+ 1438      00203F20 
+ 1439 04f0 00008080 		.ascii	"\000\000\200\200\200\200\000\000\000\037    \037\000"
+ 1439      80800000 
+ 1439      001F2020 
+ 1439      20201F00 
+ 1440 0500 80800080 		.ascii	"\200\200\000\200\200\000\000\000\200\377\241  \021\016"
+ 1440      80000000 
+ 1440      80FFA120 
+ 1440      20110E
+ 1441 050f 00       		.ascii	"\000"
+ 1442 0510 00000080 		.ascii	"\000\000\000\200\200\200\200\000\000\016\021  \240\377"
+ 1442      80808000 
+ 1442      000E1120 
+ 1442      20A0FF
+ 1443 051f 80       		.ascii	"\200"
+ 1444 0520 80808000 		.ascii	"\200\200\200\000\200\200\200\000  ?! \000\001\000"
+ 1444      80808000 
+ 1444      20203F21 
+ 1444      20000100 
+ 1445 0530 00008080 		.ascii	"\000\000\200\200\200\200\200\000\0003$$$$\031\000"
+ 1445      80808000 
+ 1445      00332424 
+ 1445      24241900 
+ 1446 0540 008080E0 		.ascii	"\000\200\200\340\200\200\000\000\000\000\000\037  \000"
+ 1446      80800000 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 51
+
+
+ 1446      0000001F 
+ 1446      202000
+ 1447 054f 00       		.ascii	"\000"
+ 1448 0550 80800000 		.ascii	"\200\200\000\000\000\200\200\000\000\037   \020? "
+ 1448      00808000 
+ 1448      001F2020 
+ 1448      20103F20 
+ 1449 0560 80808000 		.ascii	"\200\200\200\000\000\200\200\200\000\001\0160\010\006"
+ 1449      00808080 
+ 1449      00010E30 
+ 1449      0806
+ 1450 056e 0100     		.ascii	"\001\000"
+ 1451 0570 80800080 		.ascii	"\200\200\000\200\000\200\200\200\0170\014\003\0140\017"
+ 1451      00808080 
+ 1451      0F300C03 
+ 1451      0C300F
+ 1452 057f 00       		.ascii	"\000"
+ 1453 0580 00808000 		.ascii	"\000\200\200\000\200\200\200\000\000 1.\0161 \000"
+ 1453      80808000 
+ 1453      0020312E 
+ 1453      0E312000 
+ 1454 0590 80808000 		.ascii	"\200\200\200\000\000\200\200\200\200\201\216p\030\006"
+ 1454      00808080 
+ 1454      80818E70 
+ 1454      1806
+ 1455 059e 0100     		.ascii	"\001\000"
+ 1456 05a0 00808080 		.ascii	"\000\200\200\200\200\200\200\000\000!0,\"!0\000"
+ 1456      80808000 
+ 1456      0021302C 
+ 1456      22213000 
+ 1457 05b0 00000000 		.ascii	"\000\000\000\000\200|\002\002\000\000\000\000\000?@"
+ 1457      807C0202 
+ 1457      00000000 
+ 1457      003F40
+ 1458 05bf 40       		.ascii	"@"
+ 1459 05c0 00000000 		.ascii	"\000\000\000\000\377\000\000\000\000\000\000\000\377"
+ 1459      FF000000 
+ 1459      00000000 
+ 1459      FF
+ 1460 05cd 000000   		.ascii	"\000\000\000"
+ 1461 05d0 0002027C 		.ascii	"\000\002\002|\200\000\000\000\000@@?\000\000\000\000"
+ 1461      80000000 
+ 1461      0040403F 
+ 1461      00000000 
+ 1462 05e0 00060101 		.ascii	"\000\006\001\001\002\002\004\004\000\000\000\000\000"
+ 1462      02020404 
+ 1462      00000000 
+ 1462      00
+ 1463 05ed 000000   		.ascii	"\000\000\000"
+ 1464              		.global	ascii_6X12
+ 1465              		.section	.rodata.ascii_6X12,"a"
+ 1466              		.align	2
+ 1469              	ascii_6X12:
+ 1470 0000 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1470      00000000 
+ 1470      00000000 
+ 1471 000c 0000FC00 		.ascii	"\000\000\374\000\000\000\000\000\002\000\000\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 52
+
+
+ 1471      00000000 
+ 1471      02000000 
+ 1472 0018 000C020C 		.ascii	"\000\014\002\014\002\000\000\000\000\000\000\000"
+ 1472      02000000 
+ 1472      00000000 
+ 1473 0024 90D0BCD0 		.ascii	"\220\320\274\320\274\220\000\003\000\003\000\000"
+ 1473      BC900003 
+ 1473      00030000 
+ 1474 0030 1824FE44 		.ascii	"\030$\376D\214\000\003\002\007\002\001\000"
+ 1474      8C000302 
+ 1474      07020100 
+ 1475 003c 1824D8B0 		.ascii	"\030$\330\260L\200\000\003\000\001\002\001"
+ 1475      4C800003 
+ 1475      00010201 
+ 1476 0048 C038E438 		.ascii	"\3008\3448\340\000\001\002\002\001\002\002"
+ 1476      E0000102 
+ 1476      02010202 
+ 1477 0054 08060000 		.ascii	"\010\006\000\000\000\000\000\000\000\000\000\000"
+ 1477      00000000 
+ 1477      00000000 
+ 1478 0060 000000F8 		.ascii	"\000\000\000\370\004\002\000\000\000\001\002\004"
+ 1478      04020000 
+ 1478      00010204 
+ 1479 006c 000204F8 		.ascii	"\000\002\004\370\000\000\000\004\002\001\000\000"
+ 1479      00000004 
+ 1479      02010000 
+ 1480 0078 9060F860 		.ascii	"\220`\370`\220\000\000\000\001\000\000\000"
+ 1480      90000000 
+ 1480      01000000 
+ 1481 0084 2020FC20 		.ascii	"  \374  \000\000\000\001\000\000\000"
+ 1481      20000000 
+ 1481      01000000 
+ 1482 0090 00000000 		.ascii	"\000\000\000\000\000\000\010\006\000\000\000\000"
+ 1482      00000806 
+ 1482      00000000 
+ 1483 009c 20202020 		.ascii	"     \000\000\000\000\000\000\000"
+ 1483      20000000 
+ 1483      00000000 
+ 1484 00a8 00000000 		.ascii	"\000\000\000\000\000\000\000\002\000\000\000\000"
+ 1484      00000002 
+ 1484      00000000 
+ 1485 00b4 0080601C 		.ascii	"\000\200`\034\002\000\004\003\000\000\000\000"
+ 1485      02000403 
+ 1485      00000000 
+ 1486 00c0 F8040404 		.ascii	"\370\004\004\004\370\000\001\002\002\002\001\000"
+ 1486      F8000102 
+ 1486      02020100 
+ 1487 00cc 0008FC00 		.ascii	"\000\010\374\000\000\000\000\002\003\002\000\000"
+ 1487      00000002 
+ 1487      03020000 
+ 1488 00d8 18844424 		.ascii	"\030\204D$\030\000\003\002\002\002\002\000"
+ 1488      18000302 
+ 1488      02020200 
+ 1489 00e4 08042424 		.ascii	"\010\004$$\330\000\001\002\002\002\001\000"
+ 1489      D8000102 
+ 1489      02020100 
+ 1490 00f0 40B088FC 		.ascii	"@\260\210\374\200\000\000\000\000\003\002\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 53
+
+
+ 1490      80000000 
+ 1490      00030200 
+ 1491 00fc 3C242424 		.ascii	"<$$$\304\000\001\002\002\002\001\000"
+ 1491      C4000102 
+ 1491      02020100 
+ 1492 0108 F824242C 		.ascii	"\370$$,\300\000\001\002\002\002\001\000"
+ 1492      C0000102 
+ 1492      02020100 
+ 1493 0114 0C04E41C 		.ascii	"\014\004\344\034\004\000\000\000\003\000\000\000"
+ 1493      04000000 
+ 1493      03000000 
+ 1494 0120 D8242424 		.ascii	"\330$$$\330\000\001\002\002\002\001\000"
+ 1494      D8000102 
+ 1494      02020100 
+ 1495 012c 38444444 		.ascii	"8DDD\370\000\000\003\002\002\001\000"
+ 1495      F8000003 
+ 1495      02020100 
+ 1496 0138 00001000 		.ascii	"\000\000\020\000\000\000\000\000\002\000\000\000"
+ 1496      00000000 
+ 1496      02000000 
+ 1497 0144 00002000 		.ascii	"\000\000 \000\000\000\000\000\006\000\000\000"
+ 1497      00000000 
+ 1497      06000000 
+ 1498 0150 00205088 		.ascii	"\000 P\210\004\002\000\000\000\000\001\002"
+ 1498      04020000 
+ 1498      00000102 
+ 1499 015c 90909090 		.ascii	"\220\220\220\220\220\000\000\000\000\000\000\000"
+ 1499      90000000 
+ 1499      00000000 
+ 1500 0168 00020488 		.ascii	"\000\002\004\210P \000\002\001\000\000\000"
+ 1500      50200002 
+ 1500      01000000 
+ 1501 0174 1804C424 		.ascii	"\030\004\304$\030\000\000\000\002\000\000\000"
+ 1501      18000000 
+ 1501      02000000 
+ 1502 0180 F804E494 		.ascii	"\370\004\344\224\370\000\001\002\002\002\002\000"
+ 1502      F8000102 
+ 1502      02020200 
+ 1503 018c 00E09CF0 		.ascii	"\000\340\234\360\200\000\002\003\000\000\003\002"
+ 1503      80000203 
+ 1503      00000302 
+ 1504 0198 04FC2424 		.ascii	"\004\374$$\330\000\002\003\002\002\001\000"
+ 1504      D8000203 
+ 1504      02020100 
+ 1505 01a4 F8040404 		.ascii	"\370\004\004\004\014\000\001\002\002\002\001\000"
+ 1505      0C000102 
+ 1505      02020100 
+ 1506 01b0 04FC0404 		.ascii	"\004\374\004\004\370\000\002\003\002\002\001\000"
+ 1506      F8000203 
+ 1506      02020100 
+ 1507 01bc 04FC2474 		.ascii	"\004\374$t\014\000\002\003\002\002\003\000"
+ 1507      0C000203 
+ 1507      02020300 
+ 1508 01c8 04FC2474 		.ascii	"\004\374$t\014\000\002\003\002\000\000\000"
+ 1508      0C000203 
+ 1508      02000000 
+ 1509 01d4 F0080444 		.ascii	"\360\010\004D\314@\000\001\002\002\001\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 54
+
+
+ 1509      CC400001 
+ 1509      02020100 
+ 1510 01e0 04FC2020 		.ascii	"\004\374  \374\004\002\003\000\000\003\002"
+ 1510      FC040203 
+ 1510      00000302 
+ 1511 01ec 0404FC04 		.ascii	"\004\004\374\004\004\000\002\002\003\002\002\000"
+ 1511      04000202 
+ 1511      03020200 
+ 1512 01f8 000404FC 		.ascii	"\000\004\004\374\004\004\006\004\004\003\000\000"
+ 1512      04040604 
+ 1512      04030000 
+ 1513 0204 04FC24D0 		.ascii	"\004\374$\320\014\004\002\003\002\000\003\002"
+ 1513      0C040203 
+ 1513      02000302 
+ 1514 0210 04FC0400 		.ascii	"\004\374\004\000\000\000\002\003\002\002\002\003"
+ 1514      00000203 
+ 1514      02020203 
+ 1515 021c FC3CC03C 		.ascii	"\374<\300<\374\000\003\000\003\000\003\000"
+ 1515      FC000300 
+ 1515      03000300 
+ 1516 0228 04FC30C4 		.ascii	"\004\3740\304\374\004\002\003\002\000\003\000"
+ 1516      FC040203 
+ 1516      02000300 
+ 1517 0234 F8040404 		.ascii	"\370\004\004\004\370\000\001\002\002\002\001\000"
+ 1517      F8000102 
+ 1517      02020100 
+ 1518 0240 04FC2424 		.ascii	"\004\374$$\030\000\002\003\002\000\000\000"
+ 1518      18000203 
+ 1518      02000000 
+ 1519 024c F8848404 		.ascii	"\370\204\204\004\370\000\001\002\002\007\005\000"
+ 1519      F8000102 
+ 1519      02070500 
+ 1520 0258 04FC2464 		.ascii	"\004\374$d\230\000\002\003\002\000\003\002"
+ 1520      98000203 
+ 1520      02000302 
+ 1521 0264 18242444 		.ascii	"\030$$D\214\000\003\002\002\002\001\000"
+ 1521      8C000302 
+ 1521      02020100 
+ 1522 0270 0C04FC04 		.ascii	"\014\004\374\004\014\000\000\002\003\002\000\000"
+ 1522      0C000002 
+ 1522      03020000 
+ 1523 027c 04FC0000 		.ascii	"\004\374\000\000\374\004\000\001\002\002\001\000"
+ 1523      FC040001 
+ 1523      02020100 
+ 1524 0288 047C80E0 		.ascii	"\004|\200\340\034\004\000\000\003\000\000\000"
+ 1524      1C040000 
+ 1524      03000000 
+ 1525 0294 1CE03CE0 		.ascii	"\034\340<\340\034\000\000\003\000\003\000\000"
+ 1525      1C000003 
+ 1525      00030000 
+ 1526 02a0 049C609C 		.ascii	"\004\234`\234\004\000\002\003\000\003\002\000"
+ 1526      04000203 
+ 1526      00030200 
+ 1527 02ac 041CE01C 		.ascii	"\004\034\340\034\004\000\000\002\003\002\000\000"
+ 1527      04000002 
+ 1527      03020000 
+ 1528 02b8 0C84641C 		.ascii	"\014\204d\034\004\000\002\003\002\002\003\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 55
+
+
+ 1528      04000203 
+ 1528      02020300 
+ 1529 02c4 0000FE02 		.ascii	"\000\000\376\002\002\000\000\000\007\004\004\000"
+ 1529      02000000 
+ 1529      07040400 
+ 1530 02d0 000E30C0 		.ascii	"\000\0160\300\000\000\000\000\000\001\002\000"
+ 1530      00000000 
+ 1530      00010200 
+ 1531 02dc 000202FE 		.ascii	"\000\002\002\376\000\000\000\004\004\007\000\000"
+ 1531      00000004 
+ 1531      04070000 
+ 1532 02e8 00040204 		.ascii	"\000\004\002\004\000\000\000\000\000\000\000\000"
+ 1532      00000000 
+ 1532      00000000 
+ 1533 02f4 00000000 		.ascii	"\000\000\000\000\000\000\010\010\010\010\010\010"
+ 1533      00000808 
+ 1533      08080808 
+ 1534 0300 00000200 		.ascii	"\000\000\002\000\000\000\000\000\000\000\000\000"
+ 1534      00000000 
+ 1534      00000000 
+ 1535 030c 0040A0A0 		.ascii	"\000@\240\240\300\000\000\001\002\002\003\002"
+ 1535      C0000001 
+ 1535      02020302 
+ 1536 0318 04FC2020 		.ascii	"\004\374  \300\000\000\003\002\002\001\000"
+ 1536      C0000003 
+ 1536      02020100 
+ 1537 0324 00C02020 		.ascii	"\000\300  `\000\000\001\002\002\002\000"
+ 1537      60000001 
+ 1537      02020200 
+ 1538 0330 00C02024 		.ascii	"\000\300 $\374\000\000\001\002\002\003\002"
+ 1538      FC000001 
+ 1538      02020302 
+ 1539 033c 00C0A0A0 		.ascii	"\000\300\240\240\300\000\000\001\002\002\002\000"
+ 1539      C0000001 
+ 1539      02020200 
+ 1540 0348 0020F824 		.ascii	"\000 \370$$\004\000\002\003\002\002\000"
+ 1540      24040002 
+ 1540      03020200 
+ 1541 0354 0040A0A0 		.ascii	"\000@\240\240` \000\007\012\012\012\004"
+ 1541      60200007 
+ 1541      0A0A0A04 
+ 1542 0360 04FC2020 		.ascii	"\004\374  \300\000\002\003\002\000\003\002"
+ 1542      C0000203 
+ 1542      02000302 
+ 1543 036c 0020E400 		.ascii	"\000 \344\000\000\000\000\002\003\002\000\000"
+ 1543      00000002 
+ 1543      03020000 
+ 1544 0378 000020E4 		.ascii	"\000\000 \344\000\000\010\010\010\007\000\000"
+ 1544      00000808 
+ 1544      08070000 
+ 1545 0384 04FC80E0 		.ascii	"\004\374\200\340  \002\003\002\000\003\002"
+ 1545      20200203 
+ 1545      02000302 
+ 1546 0390 0404FC00 		.ascii	"\004\004\374\000\000\000\002\002\003\002\002\000"
+ 1546      00000202 
+ 1546      03020200 
+ 1547 039c E020E020 		.ascii	"\340 \340 \300\000\003\000\003\000\003\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 56
+
+
+ 1547      C0000300 
+ 1547      03000300 
+ 1548 03a8 20E02020 		.ascii	" \340  \300\000\002\003\002\000\003\002"
+ 1548      C0000203 
+ 1548      02000302 
+ 1549 03b4 00C02020 		.ascii	"\000\300  \300\000\000\001\002\002\001\000"
+ 1549      C0000001 
+ 1549      02020100 
+ 1550 03c0 20E02020 		.ascii	" \340  \300\000\010\017\012\002\001\000"
+ 1550      C000080F 
+ 1550      0A020100 
+ 1551 03cc 00C02020 		.ascii	"\000\300  \340\000\000\001\002\012\017\010"
+ 1551      E0000001 
+ 1551      020A0F08 
+ 1552 03d8 20E04020 		.ascii	" \340@  \000\002\003\002\000\000\000"
+ 1552      20000203 
+ 1552      02000000 
+ 1553 03e4 0060A0A0 		.ascii	"\000`\240\240 \000\000\002\002\002\003\000"
+ 1553      20000002 
+ 1553      02020300 
+ 1554 03f0 0020F820 		.ascii	"\000 \370 \000\000\000\000\001\002\002\000"
+ 1554      00000000 
+ 1554      01020200 
+ 1555 03fc 20E00020 		.ascii	" \340\000 \340\000\000\001\002\002\003\002"
+ 1555      E0000001 
+ 1555      02020302 
+ 1556 0408 20E02080 		.ascii	" \340 \200` \000\000\003\001\000\000"
+ 1556      60200000 
+ 1556      03010000 
+ 1557 0414 6080E080 		.ascii	"`\200\340\200`\000\000\003\000\003\000\000"
+ 1557      60000003 
+ 1557      00030000 
+ 1558 0420 20608060 		.ascii	" `\200` \000\002\003\000\003\002\000"
+ 1558      20000203 
+ 1558      00030200 
+ 1559 042c 20E02080 		.ascii	" \340 \200` \010\010\007\001\000\000"
+ 1559      60200808 
+ 1559      07010000 
+ 1560 0438 0020A060 		.ascii	"\000 \240` \000\000\002\003\002\002\000"
+ 1560      20000002 
+ 1560      03020200 
+ 1561 0444 000020DE 		.ascii	"\000\000 \336\002\000\000\000\000\007\004\000"
+ 1561      02000000 
+ 1561      00070400 
+ 1562 0450 000000FF 		.ascii	"\000\000\000\377\000\000\000\000\000\017\000\000"
+ 1562      00000000 
+ 1562      000F0000 
+ 1563 045c 0002DE20 		.ascii	"\000\002\336 \000\000\000\004\007\000\000\000"
+ 1563      00000004 
+ 1563      07000000 
+ 1564 0468 02010204 		.ascii	"\002\001\002\004\004\002\000\000\000\000\000\000"
+ 1564      04020000 
+ 1564      00000000 
+ 1565              		.global	chinese_24x24
+ 1566              		.section	.rodata.chinese_24x24,"a"
+ 1567              		.align	2
+ 1570              	chinese_24x24:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 57
+
+
+ 1571 0000 00000000 		.ascii	"\000\000\000\000\000\360\360\020\020\020\022\034\030"
+ 1571      00F0F010 
+ 1571      1010121C 
+ 1571      18
+ 1572 000d 101010F0 		.ascii	"\020\020\020\360\360\000\000\000\000\000\000\000\000"
+ 1572      F0000000 
+ 1572      00000000 
+ 1572      00
+ 1573 001a 000000FF 		.ascii	"\000\000\000\377\377\021\0211\321\021\021\021\021\021"
+ 1573      FF111131 
+ 1573      D1111111 
+ 1573      1111
+ 1574 0028 BFDF6000 		.ascii	"\277\337`\000\000\000\000\000\000\000\000\000\000?\177"
+ 1574      00000000 
+ 1574      00000000 
+ 1574      003F7F
+ 1575 0037 30100808 		.ascii	"0\020\010\010\005\006\016\011\031\02000` \000\000\000"
+ 1575      05060E09 
+ 1575      19103030 
+ 1575      60200000 
+ 1575      00
+ 1576 0048 00000000 		.ascii	"\000\000\000\000\0148\020\000\000\000\300x>$ \340  "
+ 1576      0C381000 
+ 1576      0000C078 
+ 1576      3E2420E0 
+ 1576      2020
+ 1577 005a 20203000 		.ascii	"  0\000\000\000\000\002\002\002\002\376\002\000\024"
+ 1577      00000002 
+ 1577      020202FE 
+ 1577      020014
+ 1578 0069 13101010 		.ascii	"\023\020\020\020\020\020\377\020\020\020\020\020\030"
+ 1578      1010FF10 
+ 1578      10101010 
+ 1578      18
+ 1579 0076 10000000 		.ascii	"\020\000\000\000\000\000\000\037\014\004\002\001\000"
+ 1579      0000001F 
+ 1579      0C040201 
+ 1579      00
+ 1580 0083 00000000 		.ascii	"\000\000\000\000\177\000\000\000\000\000\000\000\000"
+ 1580      7F000000 
+ 1580      00000000 
+ 1580      00
+ 1581 0090 00000000 		.ascii	"\000\000\000\000\370H@@\300@@~D@@\300@@\374x\000\000"
+ 1581      F8484040 
+ 1581      C040407E 
+ 1581      444040C0 
+ 1581      4040FC78 
+ 1582 00a6 00000000 		.ascii	"\000\000\000\000\010\010\377\211\210\210\210\377\011"
+ 1582      0808FF89 
+ 1582      888888FF 
+ 1582      09
+ 1583 00b3 0444300E 		.ascii	"\004D0\016\353\351(\010(\034\014\000\000\000\000\000"
+ 1583      EBE92808 
+ 1583      281C0C00 
+ 1583      00000000 
+ 1584 00c3 003F1010 		.ascii	"\000?\020\020\020\020?@@ \020\014\007\000\003\014\030"
+ 1584      10103F40 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 58
+
+
+ 1584      4020100C 
+ 1584      0700030C 
+ 1584      18
+ 1585 00d4 30602000 		.ascii	"0` \000"
+ 1586 00d8 00000000 		.ascii	"\000\000\000\000\000\000\000\004\010\010\020\360\300"
+ 1586      00000004 
+ 1586      080810F0 
+ 1586      C0
+ 1587 00e5 00000000 		.ascii	"\000\000\000\000\000\000\000\000\000\000\000\000\000"
+ 1587      00000000 
+ 1587      00000000 
+ 1587      00
+ 1588 00f2 00000000 		.ascii	"\000\000\000\000\000\200\3008\036\003\001\016p\340\200"
+ 1588      0080C038 
+ 1588      1E03010E 
+ 1588      70E080
+ 1589 0101 00000000 		.ascii	"\000\000\000\000\000\000\000\000@ \020\010\004\002\001"
+ 1589      00000000 
+ 1589      40201008 
+ 1589      040201
+ 1590 0110 00000000 		.ascii	"\000\000\000\000\000\000\000\000\003\007\016\0348\020"
+ 1590      00000000 
+ 1590      03070E1C 
+ 1590      3810
+ 1591 011e 1000     		.ascii	"\020\000"
+ 1592 0120 00000080 		.ascii	"\000\000\000\200\200\200\200\200\200\200\200\200\200"
+ 1592      80808080 
+ 1592      80808080 
+ 1592      80
+ 1593 012d FCFC8084 		.ascii	"\374\374\200\204\210\230p`@\000\000\000\000\010\010"
+ 1593      88987060 
+ 1593      40000000 
+ 1593      000808
+ 1594 013c 080808F8 		.ascii	"\010\010\010\370\010\010\010\010\000\003\177\340\000"
+ 1594      08080808 
+ 1594      00037FE0 
+ 1594      00
+ 1595 0149 00000000 		.ascii	"\000\000\000\000\000\000\000\000\00000\020\020\010\017"
+ 1595      00000000 
+ 1595      00303010 
+ 1595      10080F
+ 1596 0158 08080404 		.ascii	"\010\010\004\004\004\000\000\003\007\034\0300`~@\000"
+ 1596      04000003 
+ 1596      071C1830 
+ 1596      607E4000 
+ 1597              		.global	chinese_16x16
+ 1598              		.section	.rodata.chinese_16x16,"a"
+ 1599              		.align	2
+ 1602              	chinese_16x16:
+ 1603 0000 807000FF 		.ascii	"\200p\000\377 \020\000\360\000\000\377\000\000\360\000"
+ 1603      201000F0 
+ 1603      0000FF00 
+ 1603      00F000
+ 1604 000f 00806018 		.ascii	"\000\200`\030\007\0100\000?  ?  \177\000\000"
+ 1604      07083000 
+ 1604      3F20203F 
+ 1604      20207F00 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 59
+
+
+ 1604      00
+ 1605 0020 807000FF 		.ascii	"\200p\000\377 \020\000\360\000\000\377\000\000\360\000"
+ 1605      201000F0 
+ 1605      0000FF00 
+ 1605      00F000
+ 1606 002f 00806018 		.ascii	"\000\200`\030\007\0100\000?  ?  \177\000\000"
+ 1606      07083000 
+ 1606      3F20203F 
+ 1606      20207F00 
+ 1606      00
+ 1607 0040 00804020 		.ascii	"\000\200@ \030\006\200\000\007\030 @\200\000\000\000"
+ 1607      18068000 
+ 1607      07182040 
+ 1607      80000000 
+ 1608 0050 01002070 		.ascii	"\001\000 p(&!  $8`\000\001\001\000"
+ 1608      28262120 
+ 1608      20243860 
+ 1608      00010100 
+ 1609 0060 00080808 		.ascii	"\000\010\010\010\010\010\011\372\010\010\010\010\010"
+ 1609      080809FA 
+ 1609      08080808 
+ 1609      08
+ 1610 006d 08000040 		.ascii	"\010\000\000@@AAAAA\177AAAAA@@\000"
+ 1610      40414141 
+ 1610      41417F41 
+ 1610      41414141 
+ 1610      404000
+ 1611 0080 80804020 		.ascii	"\200\200@ PHD\303DHP @\200\200\000\000@@DDDD\177DDD"
+ 1611      504844C3 
+ 1611      44485020 
+ 1611      40808000 
+ 1611      00404044 
+ 1612 009b 44404000 		.ascii	"D@@\000\000"
+ 1612      00
+ 1613 00a0 202020FE 		.ascii	"   \376  \377   \377    \000\000\000\000\177@@GDDDG"
+ 1613      2020FF20 
+ 1613      2020FF20 
+ 1613      20202000 
+ 1613      0000007F 
+ 1614 00bb 40404000 		.ascii	"@@@\000\000"
+ 1614      00
+ 1615 00c0 000000FE 		.ascii	"\000\000\000\376\222\222\222\376\222\222\222\376\000"
+ 1615      929292FE 
+ 1615      929292FE 
+ 1615      00
+ 1616 00cd 00000008 		.ascii	"\000\000\000\010\010\004\204b\036\001\000\001\376\002"
+ 1616      08048462 
+ 1616      1E010001 
+ 1616      FE02
+ 1617 00db 04040808 		.ascii	"\004\004\010\010\000"
+ 1617      00
+ 1618 00e0 4040C05F 		.ascii	"@@\300_UU\325UUUU_@@@\000 `?%\025\025\377\220G)\021"
+ 1618      5555D555 
+ 1618      5555555F 
+ 1618      40404000 
+ 1618      20603F25 
+ 1619 00fb 2D438080 		.ascii	"-C\200\200\000"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 60
+
+
+ 1619      00
+ 1620 0100 20C20C80 		.ascii	" \302\014\200\002zJJ~J~JJz\002\000\004\004~\001D%\025"
+ 1620      027A4A4A 
+ 1620      7E4A7E4A 
+ 1620      4A7A0200 
+ 1620      04047E01 
+ 1621 0117 45857D05 		.ascii	"E\205}\005\005\025%D\000"
+ 1621      05152544 
+ 1621      00
+ 1622 0120 00040474 		.ascii	"\000\004\004tTTUVTTTt\004\004\000\000\204\203A!\035"
+ 1622      54545556 
+ 1622      54545474 
+ 1622      04040000 
+ 1622      84834121 
+ 1623 0135 05050505 		.ascii	"\005\005\005\005\005}\201\201\205\343\000"
+ 1623      057D8181 
+ 1623      85E300
+ 1624              		.text
+ 1625              	.Letext0:
+ 1626              		.file 2 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ 1627              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/sy
+ 1628              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 1629              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 1630              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 1631              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h"
+ 1632              		.file 8 "Core/Inc/i2c.h"
+ 1633              		.file 9 "Core/Inc/stm32f4xx_it.h"
+ 1634              		.file 10 "Core/Inc/nrf24l01.h"
+ 1635              		.file 11 "Core/Inc/font.h"
+ 1636              		.file 12 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/s
+ 1637              		.file 13 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccLXJguI.s 			page 61
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 oled.c
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:21     .text.oled_write_cmd:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:27     .text.oled_write_cmd:00000000 oled_write_cmd
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:67     .text.oled_write_cmd:00000024 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:72     .text.oled_write_data:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:78     .text.oled_write_data:00000000 oled_write_data
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:118    .text.oled_write_data:00000024 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:123    .text.oled_set_cursor:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:129    .text.oled_set_cursor:00000000 oled_set_cursor
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:168    .text.oled_fill:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:174    .text.oled_fill:00000000 oled_fill
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:243    .text.oled_init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:249    .text.oled_init:00000000 oled_init
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:366    .text.oled_show_char:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:372    .text.oled_show_char:00000000 oled_show_char
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:515    .text.oled_show_char:00000090 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1469   .rodata.ascii_6X12:00000000 ascii_6X12
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1029   .rodata.ascii_12X24:00000000 ascii_12X24
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1319   .rodata.ascii_8X16:00000000 ascii_8X16
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:522    .text.oled_show_string:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:528    .text.oled_show_string:00000000 oled_show_string
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:585    .text.oled_show_chinese:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:591    .text.oled_show_chinese:00000000 oled_show_chinese
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:697    .text.oled_show_chinese:00000068 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1602   .rodata.chinese_16x16:00000000 chinese_16x16
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1570   .rodata.chinese_24x24:00000000 chinese_24x24
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:703    .text.oled_show_image:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:709    .text.oled_show_image:00000000 oled_show_image
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:789    .rodata.oled_task.str1.4:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:805    .text.oled_task:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:811    .text.oled_task:00000000 oled_task
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:917    .text.oled_task:000000b4 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:938    .bss.buf:00000000 buf
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:935    .bss.buf:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:945    .rodata.shuai_data:00000000 shuai_data
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:942    .rodata.shuai_data:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1026   .rodata.ascii_12X24:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1316   .rodata.ascii_8X16:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1466   .rodata.ascii_6X12:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1567   .rodata.chinese_24x24:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccLXJguI.s:1599   .rodata.chinese_16x16:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_I2C_Master_Transmit
+hi2c2
+HAL_Delay
+snprintf
+tim8_counter
+encoderr_value
+encoderl_value
+rocker_lx
+rocker_ly
+rocker_rx
+rocker_ry

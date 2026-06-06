@@ -1,0 +1,492 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"MPU6050.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/MPU6050.c"
+  20              		.section	.text.MPU6050_WriteReg,"ax",%progbits
+  21              		.align	1
+  22              		.global	MPU6050_WriteReg
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	MPU6050_WriteReg:
+  28              	.LVL0:
+  29              	.LFB134:
+   1:Core/Src/MPU6050.c **** #include "main.h"
+   2:Core/Src/MPU6050.c **** #include "i2c.h"
+   3:Core/Src/MPU6050.c **** #include "MPU6050.h"
+   4:Core/Src/MPU6050.c **** 
+   5:Core/Src/MPU6050.c **** /**
+   6:Core/Src/MPU6050.c ****   * 函    数：MPU6050写寄存器
+   7:Core/Src/MPU6050.c ****   * 参    数：RegAddress 寄存器地址
+   8:Core/Src/MPU6050.c ****   * 参    数：Data 要写入寄存器的数据，范围：0x00~0xFF
+   9:Core/Src/MPU6050.c ****   * 返 回 值：无
+  10:Core/Src/MPU6050.c ****   */
+  11:Core/Src/MPU6050.c **** void MPU6050_WriteReg(uint8_t RegAddress, uint8_t Data)
+  12:Core/Src/MPU6050.c **** {
+  30              		.loc 1 12 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 8
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 12 1 is_stmt 0 view .LVU1
+  35 0000 00B5     		push	{lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 4
+  38              		.cfi_offset 14, -4
+  39 0002 87B0     		sub	sp, sp, #28
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 32
+  42 0004 0246     		mov	r2, r0
+  43 0006 8DF81710 		strb	r1, [sp, #23]
+  13:Core/Src/MPU6050.c ****     HAL_I2C_Mem_Write(&hi2c2, MPU6050_ADDRESS, RegAddress,
+  44              		.loc 1 13 5 is_stmt 1 view .LVU2
+  45 000a 4FF0FF33 		mov	r3, #-1
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s 			page 2
+
+
+  46 000e 0293     		str	r3, [sp, #8]
+  47 0010 0123     		movs	r3, #1
+  48 0012 0193     		str	r3, [sp, #4]
+  49 0014 0DF11701 		add	r1, sp, #23
+  50              	.LVL1:
+  51              		.loc 1 13 5 is_stmt 0 view .LVU3
+  52 0018 0091     		str	r1, [sp]
+  53 001a D021     		movs	r1, #208
+  54              	.LVL2:
+  55              		.loc 1 13 5 view .LVU4
+  56 001c 0248     		ldr	r0, .L3
+  57              	.LVL3:
+  58              		.loc 1 13 5 view .LVU5
+  59 001e FFF7FEFF 		bl	HAL_I2C_Mem_Write
+  60              	.LVL4:
+  14:Core/Src/MPU6050.c ****                       I2C_MEMADD_SIZE_8BIT, &Data, 1, HAL_MAX_DELAY);
+  15:Core/Src/MPU6050.c **** }
+  61              		.loc 1 15 1 view .LVU6
+  62 0022 07B0     		add	sp, sp, #28
+  63              	.LCFI2:
+  64              		.cfi_def_cfa_offset 4
+  65              		@ sp needed
+  66 0024 5DF804FB 		ldr	pc, [sp], #4
+  67              	.L4:
+  68              		.align	2
+  69              	.L3:
+  70 0028 00000000 		.word	hi2c2
+  71              		.cfi_endproc
+  72              	.LFE134:
+  74              		.section	.text.MPU6050_ReadReg,"ax",%progbits
+  75              		.align	1
+  76              		.global	MPU6050_ReadReg
+  77              		.syntax unified
+  78              		.thumb
+  79              		.thumb_func
+  81              	MPU6050_ReadReg:
+  82              	.LVL5:
+  83              	.LFB135:
+  16:Core/Src/MPU6050.c **** 
+  17:Core/Src/MPU6050.c **** /**
+  18:Core/Src/MPU6050.c ****   * 函    数：MPU6050读寄存器
+  19:Core/Src/MPU6050.c ****   * 参    数：RegAddress 寄存器地址
+  20:Core/Src/MPU6050.c ****   * 返 回 值：读取寄存器的数据，范围：0x00~0xFF
+  21:Core/Src/MPU6050.c ****   */
+  22:Core/Src/MPU6050.c **** uint8_t MPU6050_ReadReg(uint8_t RegAddress)
+  23:Core/Src/MPU6050.c **** {
+  84              		.loc 1 23 1 is_stmt 1 view -0
+  85              		.cfi_startproc
+  86              		@ args = 0, pretend = 0, frame = 8
+  87              		@ frame_needed = 0, uses_anonymous_args = 0
+  88              		.loc 1 23 1 is_stmt 0 view .LVU8
+  89 0000 00B5     		push	{lr}
+  90              	.LCFI3:
+  91              		.cfi_def_cfa_offset 4
+  92              		.cfi_offset 14, -4
+  93 0002 87B0     		sub	sp, sp, #28
+  94              	.LCFI4:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s 			page 3
+
+
+  95              		.cfi_def_cfa_offset 32
+  96 0004 0246     		mov	r2, r0
+  24:Core/Src/MPU6050.c ****     uint8_t Data;
+  97              		.loc 1 24 5 is_stmt 1 view .LVU9
+  25:Core/Src/MPU6050.c **** 
+  26:Core/Src/MPU6050.c ****     HAL_I2C_Mem_Read(&hi2c2, MPU6050_ADDRESS, RegAddress,
+  98              		.loc 1 26 5 view .LVU10
+  99 0006 4FF0FF33 		mov	r3, #-1
+ 100 000a 0293     		str	r3, [sp, #8]
+ 101 000c 0123     		movs	r3, #1
+ 102 000e 0193     		str	r3, [sp, #4]
+ 103 0010 0DF11701 		add	r1, sp, #23
+ 104 0014 0091     		str	r1, [sp]
+ 105 0016 D021     		movs	r1, #208
+ 106 0018 0348     		ldr	r0, .L7
+ 107              	.LVL6:
+ 108              		.loc 1 26 5 is_stmt 0 view .LVU11
+ 109 001a FFF7FEFF 		bl	HAL_I2C_Mem_Read
+ 110              	.LVL7:
+  27:Core/Src/MPU6050.c ****                      I2C_MEMADD_SIZE_8BIT, &Data, 1, HAL_MAX_DELAY);
+  28:Core/Src/MPU6050.c **** 
+  29:Core/Src/MPU6050.c ****     return Data;
+ 111              		.loc 1 29 5 is_stmt 1 view .LVU12
+  30:Core/Src/MPU6050.c **** }
+ 112              		.loc 1 30 1 is_stmt 0 view .LVU13
+ 113 001e 9DF81700 		ldrb	r0, [sp, #23]	@ zero_extendqisi2
+ 114 0022 07B0     		add	sp, sp, #28
+ 115              	.LCFI5:
+ 116              		.cfi_def_cfa_offset 4
+ 117              		@ sp needed
+ 118 0024 5DF804FB 		ldr	pc, [sp], #4
+ 119              	.L8:
+ 120              		.align	2
+ 121              	.L7:
+ 122 0028 00000000 		.word	hi2c2
+ 123              		.cfi_endproc
+ 124              	.LFE135:
+ 126              		.section	.text.MPU6050_Init,"ax",%progbits
+ 127              		.align	1
+ 128              		.global	MPU6050_Init
+ 129              		.syntax unified
+ 130              		.thumb
+ 131              		.thumb_func
+ 133              	MPU6050_Init:
+ 134              	.LFB136:
+  31:Core/Src/MPU6050.c **** 
+  32:Core/Src/MPU6050.c **** /**
+  33:Core/Src/MPU6050.c ****   * 函    数：MPU6050初始化
+  34:Core/Src/MPU6050.c ****   * 参    数：无
+  35:Core/Src/MPU6050.c ****   * 返 回 值：无
+  36:Core/Src/MPU6050.c ****   * 说    明：I2C2和GPIO已在i2c.c中初始化，此处仅配置MPU6050寄存器
+  37:Core/Src/MPU6050.c ****   */
+  38:Core/Src/MPU6050.c **** void MPU6050_Init(void)
+  39:Core/Src/MPU6050.c **** {
+ 135              		.loc 1 39 1 is_stmt 1 view -0
+ 136              		.cfi_startproc
+ 137              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s 			page 4
+
+
+ 138              		@ frame_needed = 0, uses_anonymous_args = 0
+ 139 0000 08B5     		push	{r3, lr}
+ 140              	.LCFI6:
+ 141              		.cfi_def_cfa_offset 8
+ 142              		.cfi_offset 3, -8
+ 143              		.cfi_offset 14, -4
+  40:Core/Src/MPU6050.c ****     /* MPU6050寄存器初始化，需要对照MPU6050手册的寄存器描述配置 */
+  41:Core/Src/MPU6050.c ****     MPU6050_WriteReg(MPU6050_PWR_MGMT_1, 0x01);     /* 电源管理寄存器1，取消睡眠模式�
+ 144              		.loc 1 41 5 view .LVU15
+ 145 0002 0121     		movs	r1, #1
+ 146 0004 6B20     		movs	r0, #107
+ 147 0006 FFF7FEFF 		bl	MPU6050_WriteReg
+ 148              	.LVL8:
+  42:Core/Src/MPU6050.c ****     MPU6050_WriteReg(MPU6050_PWR_MGMT_2, 0x00);     /* 电源管理寄存器2，保持默认值0，
+ 149              		.loc 1 42 5 view .LVU16
+ 150 000a 0021     		movs	r1, #0
+ 151 000c 6C20     		movs	r0, #108
+ 152 000e FFF7FEFF 		bl	MPU6050_WriteReg
+ 153              	.LVL9:
+  43:Core/Src/MPU6050.c ****     MPU6050_WriteReg(MPU6050_SMPLRT_DIV, 0x09);     /* 采样率分频寄存器，配置采样率 *
+ 154              		.loc 1 43 5 view .LVU17
+ 155 0012 0921     		movs	r1, #9
+ 156 0014 1920     		movs	r0, #25
+ 157 0016 FFF7FEFF 		bl	MPU6050_WriteReg
+ 158              	.LVL10:
+  44:Core/Src/MPU6050.c ****     MPU6050_WriteReg(MPU6050_CONFIG, 0x06);         /* 配置寄存器，配置DLPF */
+ 159              		.loc 1 44 5 view .LVU18
+ 160 001a 0621     		movs	r1, #6
+ 161 001c 1A20     		movs	r0, #26
+ 162 001e FFF7FEFF 		bl	MPU6050_WriteReg
+ 163              	.LVL11:
+  45:Core/Src/MPU6050.c ****     MPU6050_WriteReg(MPU6050_GYRO_CONFIG, 0x18);    /* 陀螺仪配置寄存器，选择满量程�
+ 164              		.loc 1 45 5 view .LVU19
+ 165 0022 1821     		movs	r1, #24
+ 166 0024 1B20     		movs	r0, #27
+ 167 0026 FFF7FEFF 		bl	MPU6050_WriteReg
+ 168              	.LVL12:
+  46:Core/Src/MPU6050.c ****     MPU6050_WriteReg(MPU6050_ACCEL_CONFIG, 0x18);   /* 加速度计配置寄存器，选择满量�
+ 169              		.loc 1 46 5 view .LVU20
+ 170 002a 1821     		movs	r1, #24
+ 171 002c 1C20     		movs	r0, #28
+ 172 002e FFF7FEFF 		bl	MPU6050_WriteReg
+ 173              	.LVL13:
+  47:Core/Src/MPU6050.c **** }
+ 174              		.loc 1 47 1 is_stmt 0 view .LVU21
+ 175 0032 08BD     		pop	{r3, pc}
+ 176              		.cfi_endproc
+ 177              	.LFE136:
+ 179              		.section	.text.MPU6050_GetID,"ax",%progbits
+ 180              		.align	1
+ 181              		.global	MPU6050_GetID
+ 182              		.syntax unified
+ 183              		.thumb
+ 184              		.thumb_func
+ 186              	MPU6050_GetID:
+ 187              	.LFB137:
+  48:Core/Src/MPU6050.c **** 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s 			page 5
+
+
+  49:Core/Src/MPU6050.c **** /**
+  50:Core/Src/MPU6050.c ****   * 函    数：MPU6050获取ID号
+  51:Core/Src/MPU6050.c ****   * 参    数：无
+  52:Core/Src/MPU6050.c ****   * 返 回 值：MPU6050的ID号
+  53:Core/Src/MPU6050.c ****   */
+  54:Core/Src/MPU6050.c **** uint8_t MPU6050_GetID(void)
+  55:Core/Src/MPU6050.c **** {
+ 188              		.loc 1 55 1 is_stmt 1 view -0
+ 189              		.cfi_startproc
+ 190              		@ args = 0, pretend = 0, frame = 0
+ 191              		@ frame_needed = 0, uses_anonymous_args = 0
+ 192 0000 08B5     		push	{r3, lr}
+ 193              	.LCFI7:
+ 194              		.cfi_def_cfa_offset 8
+ 195              		.cfi_offset 3, -8
+ 196              		.cfi_offset 14, -4
+  56:Core/Src/MPU6050.c ****     return MPU6050_ReadReg(MPU6050_WHO_AM_I);        /* 返回WHO_AM_I寄存器的值 */
+ 197              		.loc 1 56 5 view .LVU23
+ 198              		.loc 1 56 12 is_stmt 0 view .LVU24
+ 199 0002 7520     		movs	r0, #117
+ 200 0004 FFF7FEFF 		bl	MPU6050_ReadReg
+ 201              	.LVL14:
+  57:Core/Src/MPU6050.c **** }
+ 202              		.loc 1 57 1 view .LVU25
+ 203 0008 08BD     		pop	{r3, pc}
+ 204              		.cfi_endproc
+ 205              	.LFE137:
+ 207              		.section	.text.MPU6050_GetData,"ax",%progbits
+ 208              		.align	1
+ 209              		.global	MPU6050_GetData
+ 210              		.syntax unified
+ 211              		.thumb
+ 212              		.thumb_func
+ 214              	MPU6050_GetData:
+ 215              	.LVL15:
+ 216              	.LFB138:
+  58:Core/Src/MPU6050.c **** 
+  59:Core/Src/MPU6050.c **** /**
+  60:Core/Src/MPU6050.c ****   * 函    数：MPU6050获取数据
+  61:Core/Src/MPU6050.c ****   * 参    数：AccX AccY AccZ 加速度计X、Y、Z轴的数据，输出参数，范围：-32768~
+  62:Core/Src/MPU6050.c ****   * 参    数：GyroX GyroY GyroZ 陀螺仪X、Y、Z轴的数据，输出参数，范围：-32768~
+  63:Core/Src/MPU6050.c ****   * 返 回 值：无
+  64:Core/Src/MPU6050.c ****   */
+  65:Core/Src/MPU6050.c **** void MPU6050_GetData(int16_t *AccX, int16_t *AccY, int16_t *AccZ,
+  66:Core/Src/MPU6050.c ****                      int16_t *GyroX, int16_t *GyroY, int16_t *GyroZ)
+  67:Core/Src/MPU6050.c **** {
+ 217              		.loc 1 67 1 is_stmt 1 view -0
+ 218              		.cfi_startproc
+ 219              		@ args = 8, pretend = 0, frame = 0
+ 220              		@ frame_needed = 0, uses_anonymous_args = 0
+ 221              		.loc 1 67 1 is_stmt 0 view .LVU27
+ 222 0000 2DE9F041 		push	{r4, r5, r6, r7, r8, lr}
+ 223              	.LCFI8:
+ 224              		.cfi_def_cfa_offset 24
+ 225              		.cfi_offset 4, -24
+ 226              		.cfi_offset 5, -20
+ 227              		.cfi_offset 6, -16
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s 			page 6
+
+
+ 228              		.cfi_offset 7, -12
+ 229              		.cfi_offset 8, -8
+ 230              		.cfi_offset 14, -4
+ 231 0004 0746     		mov	r7, r0
+ 232 0006 0E46     		mov	r6, r1
+ 233 0008 1546     		mov	r5, r2
+ 234 000a 1C46     		mov	r4, r3
+  68:Core/Src/MPU6050.c ****     uint8_t DataH, DataL;                            /* 定义数据高8位和低8位的变量 */
+ 235              		.loc 1 68 5 is_stmt 1 view .LVU28
+  69:Core/Src/MPU6050.c **** 
+  70:Core/Src/MPU6050.c ****     DataH = MPU6050_ReadReg(MPU6050_ACCEL_XOUT_H);   /* 读取加速度计X轴的高8位数据 */
+ 236              		.loc 1 70 5 view .LVU29
+ 237              		.loc 1 70 13 is_stmt 0 view .LVU30
+ 238 000c 3B20     		movs	r0, #59
+ 239              	.LVL16:
+ 240              		.loc 1 70 13 view .LVU31
+ 241 000e FFF7FEFF 		bl	MPU6050_ReadReg
+ 242              	.LVL17:
+ 243              		.loc 1 70 13 view .LVU32
+ 244 0012 8046     		mov	r8, r0
+ 245              	.LVL18:
+  71:Core/Src/MPU6050.c ****     DataL = MPU6050_ReadReg(MPU6050_ACCEL_XOUT_L);   /* 读取加速度计X轴的低8位数据 */
+ 246              		.loc 1 71 5 is_stmt 1 view .LVU33
+ 247              		.loc 1 71 13 is_stmt 0 view .LVU34
+ 248 0014 3C20     		movs	r0, #60
+ 249 0016 FFF7FEFF 		bl	MPU6050_ReadReg
+ 250              	.LVL19:
+  72:Core/Src/MPU6050.c ****     *AccX = (DataH << 8) | DataL;                    /* 数据拼接，通过输出参数返回 */
+ 251              		.loc 1 72 5 is_stmt 1 view .LVU35
+ 252              		.loc 1 72 26 is_stmt 0 view .LVU36
+ 253 001a 40EA0820 		orr	r0, r0, r8, lsl #8
+ 254              	.LVL20:
+ 255              		.loc 1 72 11 view .LVU37
+ 256 001e 3880     		strh	r0, [r7]	@ movhi
+  73:Core/Src/MPU6050.c **** 
+  74:Core/Src/MPU6050.c ****     DataH = MPU6050_ReadReg(MPU6050_ACCEL_YOUT_H);   /* 读取加速度计Y轴的高8位数据 */
+ 257              		.loc 1 74 5 is_stmt 1 view .LVU38
+ 258              		.loc 1 74 13 is_stmt 0 view .LVU39
+ 259 0020 3D20     		movs	r0, #61
+ 260 0022 FFF7FEFF 		bl	MPU6050_ReadReg
+ 261              	.LVL21:
+ 262 0026 0746     		mov	r7, r0
+ 263              	.LVL22:
+  75:Core/Src/MPU6050.c ****     DataL = MPU6050_ReadReg(MPU6050_ACCEL_YOUT_L);   /* 读取加速度计Y轴的低8位数据 */
+ 264              		.loc 1 75 5 is_stmt 1 view .LVU40
+ 265              		.loc 1 75 13 is_stmt 0 view .LVU41
+ 266 0028 3E20     		movs	r0, #62
+ 267 002a FFF7FEFF 		bl	MPU6050_ReadReg
+ 268              	.LVL23:
+  76:Core/Src/MPU6050.c ****     *AccY = (DataH << 8) | DataL;                    /* 数据拼接，通过输出参数返回 */
+ 269              		.loc 1 76 5 is_stmt 1 view .LVU42
+ 270              		.loc 1 76 26 is_stmt 0 view .LVU43
+ 271 002e 40EA0720 		orr	r0, r0, r7, lsl #8
+ 272              	.LVL24:
+ 273              		.loc 1 76 11 view .LVU44
+ 274 0032 3080     		strh	r0, [r6]	@ movhi
+  77:Core/Src/MPU6050.c **** 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s 			page 7
+
+
+  78:Core/Src/MPU6050.c ****     DataH = MPU6050_ReadReg(MPU6050_ACCEL_ZOUT_H);   /* 读取加速度计Z轴的高8位数据 */
+ 275              		.loc 1 78 5 is_stmt 1 view .LVU45
+ 276              		.loc 1 78 13 is_stmt 0 view .LVU46
+ 277 0034 3F20     		movs	r0, #63
+ 278 0036 FFF7FEFF 		bl	MPU6050_ReadReg
+ 279              	.LVL25:
+ 280 003a 0646     		mov	r6, r0
+ 281              	.LVL26:
+  79:Core/Src/MPU6050.c ****     DataL = MPU6050_ReadReg(MPU6050_ACCEL_ZOUT_L);   /* 读取加速度计Z轴的低8位数据 */
+ 282              		.loc 1 79 5 is_stmt 1 view .LVU47
+ 283              		.loc 1 79 13 is_stmt 0 view .LVU48
+ 284 003c 4020     		movs	r0, #64
+ 285 003e FFF7FEFF 		bl	MPU6050_ReadReg
+ 286              	.LVL27:
+  80:Core/Src/MPU6050.c ****     *AccZ = (DataH << 8) | DataL;                    /* 数据拼接，通过输出参数返回 */
+ 287              		.loc 1 80 5 is_stmt 1 view .LVU49
+ 288              		.loc 1 80 26 is_stmt 0 view .LVU50
+ 289 0042 40EA0620 		orr	r0, r0, r6, lsl #8
+ 290              	.LVL28:
+ 291              		.loc 1 80 11 view .LVU51
+ 292 0046 2880     		strh	r0, [r5]	@ movhi
+  81:Core/Src/MPU6050.c **** 
+  82:Core/Src/MPU6050.c ****     DataH = MPU6050_ReadReg(MPU6050_GYRO_XOUT_H);    /* 读取陀螺仪X轴的高8位数据 */
+ 293              		.loc 1 82 5 is_stmt 1 view .LVU52
+ 294              		.loc 1 82 13 is_stmt 0 view .LVU53
+ 295 0048 4320     		movs	r0, #67
+ 296 004a FFF7FEFF 		bl	MPU6050_ReadReg
+ 297              	.LVL29:
+ 298 004e 0546     		mov	r5, r0
+ 299              	.LVL30:
+  83:Core/Src/MPU6050.c ****     DataL = MPU6050_ReadReg(MPU6050_GYRO_XOUT_L);    /* 读取陀螺仪X轴的低8位数据 */
+ 300              		.loc 1 83 5 is_stmt 1 view .LVU54
+ 301              		.loc 1 83 13 is_stmt 0 view .LVU55
+ 302 0050 4420     		movs	r0, #68
+ 303 0052 FFF7FEFF 		bl	MPU6050_ReadReg
+ 304              	.LVL31:
+  84:Core/Src/MPU6050.c ****     *GyroX = (DataH << 8) | DataL;                   /* 数据拼接，通过输出参数返回 */
+ 305              		.loc 1 84 5 is_stmt 1 view .LVU56
+ 306              		.loc 1 84 27 is_stmt 0 view .LVU57
+ 307 0056 40EA0520 		orr	r0, r0, r5, lsl #8
+ 308              	.LVL32:
+ 309              		.loc 1 84 12 view .LVU58
+ 310 005a 2080     		strh	r0, [r4]	@ movhi
+  85:Core/Src/MPU6050.c **** 
+  86:Core/Src/MPU6050.c ****     DataH = MPU6050_ReadReg(MPU6050_GYRO_YOUT_H);    /* 读取陀螺仪Y轴的高8位数据 */
+ 311              		.loc 1 86 5 is_stmt 1 view .LVU59
+ 312              		.loc 1 86 13 is_stmt 0 view .LVU60
+ 313 005c 4520     		movs	r0, #69
+ 314 005e FFF7FEFF 		bl	MPU6050_ReadReg
+ 315              	.LVL33:
+ 316 0062 0446     		mov	r4, r0
+ 317              	.LVL34:
+  87:Core/Src/MPU6050.c ****     DataL = MPU6050_ReadReg(MPU6050_GYRO_YOUT_L);    /* 读取陀螺仪Y轴的低8位数据 */
+ 318              		.loc 1 87 5 is_stmt 1 view .LVU61
+ 319              		.loc 1 87 13 is_stmt 0 view .LVU62
+ 320 0064 4620     		movs	r0, #70
+ 321 0066 FFF7FEFF 		bl	MPU6050_ReadReg
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s 			page 8
+
+
+ 322              	.LVL35:
+  88:Core/Src/MPU6050.c ****     *GyroY = (DataH << 8) | DataL;                   /* 数据拼接，通过输出参数返回 */
+ 323              		.loc 1 88 5 is_stmt 1 view .LVU63
+ 324              		.loc 1 88 27 is_stmt 0 view .LVU64
+ 325 006a 40EA0420 		orr	r0, r0, r4, lsl #8
+ 326              	.LVL36:
+ 327              		.loc 1 88 12 view .LVU65
+ 328 006e 069B     		ldr	r3, [sp, #24]
+ 329 0070 1880     		strh	r0, [r3]	@ movhi
+  89:Core/Src/MPU6050.c **** 
+  90:Core/Src/MPU6050.c ****     DataH = MPU6050_ReadReg(MPU6050_GYRO_ZOUT_H);    /* 读取陀螺仪Z轴的高8位数据 */
+ 330              		.loc 1 90 5 is_stmt 1 view .LVU66
+ 331              		.loc 1 90 13 is_stmt 0 view .LVU67
+ 332 0072 4720     		movs	r0, #71
+ 333 0074 FFF7FEFF 		bl	MPU6050_ReadReg
+ 334              	.LVL37:
+ 335 0078 0446     		mov	r4, r0
+ 336              	.LVL38:
+  91:Core/Src/MPU6050.c ****     DataL = MPU6050_ReadReg(MPU6050_GYRO_ZOUT_L);    /* 读取陀螺仪Z轴的低8位数据 */
+ 337              		.loc 1 91 5 is_stmt 1 view .LVU68
+ 338              		.loc 1 91 13 is_stmt 0 view .LVU69
+ 339 007a 4820     		movs	r0, #72
+ 340 007c FFF7FEFF 		bl	MPU6050_ReadReg
+ 341              	.LVL39:
+  92:Core/Src/MPU6050.c ****     *GyroZ = (DataH << 8) | DataL;                   /* 数据拼接，通过输出参数返回 */
+ 342              		.loc 1 92 5 is_stmt 1 view .LVU70
+ 343              		.loc 1 92 27 is_stmt 0 view .LVU71
+ 344 0080 40EA0420 		orr	r0, r0, r4, lsl #8
+ 345              	.LVL40:
+ 346              		.loc 1 92 12 view .LVU72
+ 347 0084 079B     		ldr	r3, [sp, #28]
+ 348 0086 1880     		strh	r0, [r3]	@ movhi
+  93:Core/Src/MPU6050.c **** }
+ 349              		.loc 1 93 1 view .LVU73
+ 350 0088 BDE8F081 		pop	{r4, r5, r6, r7, r8, pc}
+ 351              		.loc 1 93 1 view .LVU74
+ 352              		.cfi_endproc
+ 353              	.LFE138:
+ 355              		.text
+ 356              	.Letext0:
+ 357              		.file 2 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ 358              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/sy
+ 359              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 360              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 361              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 362              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_i2c.h"
+ 363              		.file 8 "Core/Inc/i2c.h"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s 			page 9
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 MPU6050.c
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:21     .text.MPU6050_WriteReg:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:27     .text.MPU6050_WriteReg:00000000 MPU6050_WriteReg
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:70     .text.MPU6050_WriteReg:00000028 $d
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:75     .text.MPU6050_ReadReg:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:81     .text.MPU6050_ReadReg:00000000 MPU6050_ReadReg
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:122    .text.MPU6050_ReadReg:00000028 $d
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:127    .text.MPU6050_Init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:133    .text.MPU6050_Init:00000000 MPU6050_Init
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:180    .text.MPU6050_GetID:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:186    .text.MPU6050_GetID:00000000 MPU6050_GetID
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:208    .text.MPU6050_GetData:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccFlgK4I.s:214    .text.MPU6050_GetData:00000000 MPU6050_GetData
+
+UNDEFINED SYMBOLS
+HAL_I2C_Mem_Write
+hi2c2
+HAL_I2C_Mem_Read

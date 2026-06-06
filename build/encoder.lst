@@ -1,0 +1,222 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccvy89rF.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"encoder.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/encoder.c"
+  20              		.section	.text.Encoder_Init,"ax",%progbits
+  21              		.align	1
+  22              		.global	Encoder_Init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	Encoder_Init:
+  28              	.LVL0:
+  29              	.LFB134:
+   1:Core/Src/encoder.c **** #include "encoder.h"
+   2:Core/Src/encoder.c **** 
+   3:Core/Src/encoder.c **** /* 编码器 4 倍频：每个脉冲产生 4 个计数边沿 */
+   4:Core/Src/encoder.c **** #define ENCODER_CPR (ENCODER_PPR * 4)
+   5:Core/Src/encoder.c **** 
+   6:Core/Src/encoder.c **** void Encoder_Init(Encoder_t *enc, TIM_HandleTypeDef *htim)
+   7:Core/Src/encoder.c **** {
+  30              		.loc 1 7 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 7 1 is_stmt 0 view .LVU1
+  35 0000 08B5     		push	{r3, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 8
+  38              		.cfi_offset 3, -8
+  39              		.cfi_offset 14, -4
+  40 0002 0346     		mov	r3, r0
+  41 0004 0846     		mov	r0, r1
+  42              	.LVL1:
+   8:Core/Src/encoder.c ****     enc->htim = htim;
+  43              		.loc 1 8 5 is_stmt 1 view .LVU2
+  44              		.loc 1 8 15 is_stmt 0 view .LVU3
+  45 0006 1960     		str	r1, [r3]
+   9:Core/Src/encoder.c ****     enc->accum = 0;
+  46              		.loc 1 9 5 is_stmt 1 view .LVU4
+  47              		.loc 1 9 16 is_stmt 0 view .LVU5
+  48 0008 0022     		movs	r2, #0
+  49 000a 5A60     		str	r2, [r3, #4]
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccvy89rF.s 			page 2
+
+
+  10:Core/Src/encoder.c ****     enc->last_raw = 0;
+  50              		.loc 1 10 5 is_stmt 1 view .LVU6
+  51              		.loc 1 10 19 is_stmt 0 view .LVU7
+  52 000c 1A81     		strh	r2, [r3, #8]	@ movhi
+  11:Core/Src/encoder.c ****     enc->speed_rpm = 0.0f;
+  53              		.loc 1 11 5 is_stmt 1 view .LVU8
+  54              		.loc 1 11 20 is_stmt 0 view .LVU9
+  55 000e 0022     		movs	r2, #0
+  56 0010 DA60     		str	r2, [r3, #12]	@ float
+  12:Core/Src/encoder.c **** 
+  13:Core/Src/encoder.c ****     /* 启动编码器模式 */
+  14:Core/Src/encoder.c ****     HAL_TIM_Encoder_Start(htim, TIM_CHANNEL_ALL);
+  57              		.loc 1 14 5 is_stmt 1 view .LVU10
+  58 0012 3C21     		movs	r1, #60
+  59              	.LVL2:
+  60              		.loc 1 14 5 is_stmt 0 view .LVU11
+  61 0014 FFF7FEFF 		bl	HAL_TIM_Encoder_Start
+  62              	.LVL3:
+  15:Core/Src/encoder.c **** }
+  63              		.loc 1 15 1 view .LVU12
+  64 0018 08BD     		pop	{r3, pc}
+  65              		.cfi_endproc
+  66              	.LFE134:
+  68              		.section	.text.Encoder_Update,"ax",%progbits
+  69              		.align	1
+  70              		.global	Encoder_Update
+  71              		.syntax unified
+  72              		.thumb
+  73              		.thumb_func
+  75              	Encoder_Update:
+  76              	.LVL4:
+  77              	.LFB135:
+  16:Core/Src/encoder.c **** 
+  17:Core/Src/encoder.c **** void Encoder_Update(Encoder_t *enc)
+  18:Core/Src/encoder.c **** {
+  78              		.loc 1 18 1 is_stmt 1 view -0
+  79              		.cfi_startproc
+  80              		@ args = 0, pretend = 0, frame = 0
+  81              		@ frame_needed = 0, uses_anonymous_args = 0
+  82              		@ link register save eliminated.
+  19:Core/Src/encoder.c ****     /* 读取当前16位计数值 */
+  20:Core/Src/encoder.c ****     int16_t raw = (int16_t)__HAL_TIM_GET_COUNTER(enc->htim);
+  83              		.loc 1 20 5 view .LVU14
+  84              		.loc 1 20 28 is_stmt 0 view .LVU15
+  85 0000 0368     		ldr	r3, [r0]
+  86 0002 1B68     		ldr	r3, [r3]
+  87 0004 5A6A     		ldr	r2, [r3, #36]
+  88              	.LVL5:
+  21:Core/Src/encoder.c **** 
+  22:Core/Src/encoder.c ****     /* 处理16位溢出（差值法，自动处理周期性回绕） */
+  23:Core/Src/encoder.c ****     int16_t delta = raw - enc->last_raw;
+  89              		.loc 1 23 5 is_stmt 1 view .LVU16
+  90              		.loc 1 23 30 is_stmt 0 view .LVU17
+  91 0006 0389     		ldrh	r3, [r0, #8]
+  92              		.loc 1 23 25 view .LVU18
+  93 0008 D31A     		subs	r3, r2, r3
+  94              	.LVL6:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccvy89rF.s 			page 3
+
+
+  24:Core/Src/encoder.c ****     enc->accum += delta;
+  95              		.loc 1 24 5 is_stmt 1 view .LVU19
+  96              		.loc 1 24 8 is_stmt 0 view .LVU20
+  97 000a 4168     		ldr	r1, [r0, #4]
+  98              		.loc 1 24 16 view .LVU21
+  99 000c 01FA83F3 		sxtah	r3, r1, r3
+ 100              	.LVL7:
+ 101              		.loc 1 24 16 view .LVU22
+ 102 0010 4360     		str	r3, [r0, #4]
+  25:Core/Src/encoder.c ****     enc->last_raw = raw;
+ 103              		.loc 1 25 5 is_stmt 1 view .LVU23
+ 104              		.loc 1 25 19 is_stmt 0 view .LVU24
+ 105 0012 0281     		strh	r2, [r0, #8]	@ movhi
+ 106              	.LVL8:
+  26:Core/Src/encoder.c **** }
+ 107              		.loc 1 26 1 view .LVU25
+ 108 0014 7047     		bx	lr
+ 109              		.cfi_endproc
+ 110              	.LFE135:
+ 112              		.section	.text.Encoder_GetCount,"ax",%progbits
+ 113              		.align	1
+ 114              		.global	Encoder_GetCount
+ 115              		.syntax unified
+ 116              		.thumb
+ 117              		.thumb_func
+ 119              	Encoder_GetCount:
+ 120              	.LVL9:
+ 121              	.LFB136:
+  27:Core/Src/encoder.c **** 
+  28:Core/Src/encoder.c **** int32_t Encoder_GetCount(Encoder_t *enc)
+  29:Core/Src/encoder.c **** {
+ 122              		.loc 1 29 1 is_stmt 1 view -0
+ 123              		.cfi_startproc
+ 124              		@ args = 0, pretend = 0, frame = 0
+ 125              		@ frame_needed = 0, uses_anonymous_args = 0
+ 126              		@ link register save eliminated.
+  30:Core/Src/encoder.c ****     return enc->accum;
+ 127              		.loc 1 30 5 view .LVU27
+  31:Core/Src/encoder.c **** }
+ 128              		.loc 1 31 1 is_stmt 0 view .LVU28
+ 129 0000 4068     		ldr	r0, [r0, #4]
+ 130              	.LVL10:
+ 131              		.loc 1 31 1 view .LVU29
+ 132 0002 7047     		bx	lr
+ 133              		.cfi_endproc
+ 134              	.LFE136:
+ 136              		.section	.text.Encoder_GetSpeed,"ax",%progbits
+ 137              		.align	1
+ 138              		.global	Encoder_GetSpeed
+ 139              		.syntax unified
+ 140              		.thumb
+ 141              		.thumb_func
+ 143              	Encoder_GetSpeed:
+ 144              	.LVL11:
+ 145              	.LFB137:
+  32:Core/Src/encoder.c **** 
+  33:Core/Src/encoder.c **** float Encoder_GetSpeed(Encoder_t *enc)
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccvy89rF.s 			page 4
+
+
+  34:Core/Src/encoder.c **** {
+ 146              		.loc 1 34 1 is_stmt 1 view -0
+ 147              		.cfi_startproc
+ 148              		@ args = 0, pretend = 0, frame = 0
+ 149              		@ frame_needed = 0, uses_anonymous_args = 0
+ 150              		@ link register save eliminated.
+  35:Core/Src/encoder.c ****     return enc->speed_rpm;
+ 151              		.loc 1 35 5 view .LVU31
+  36:Core/Src/encoder.c **** }
+ 152              		.loc 1 36 1 is_stmt 0 view .LVU32
+ 153 0000 90ED030A 		vldr.32	s0, [r0, #12]
+ 154 0004 7047     		bx	lr
+ 155              		.cfi_endproc
+ 156              	.LFE137:
+ 158              		.text
+ 159              	.Letext0:
+ 160              		.file 2 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ 161              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/sy
+ 162              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 163              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 164              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 165              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h"
+ 166              		.file 8 "Core/Inc/encoder.h"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccvy89rF.s 			page 5
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 encoder.c
+C:\Users\10369\AppData\Local\Temp\ccvy89rF.s:21     .text.Encoder_Init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccvy89rF.s:27     .text.Encoder_Init:00000000 Encoder_Init
+C:\Users\10369\AppData\Local\Temp\ccvy89rF.s:69     .text.Encoder_Update:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccvy89rF.s:75     .text.Encoder_Update:00000000 Encoder_Update
+C:\Users\10369\AppData\Local\Temp\ccvy89rF.s:113    .text.Encoder_GetCount:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccvy89rF.s:119    .text.Encoder_GetCount:00000000 Encoder_GetCount
+C:\Users\10369\AppData\Local\Temp\ccvy89rF.s:137    .text.Encoder_GetSpeed:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccvy89rF.s:143    .text.Encoder_GetSpeed:00000000 Encoder_GetSpeed
+
+UNDEFINED SYMBOLS
+HAL_TIM_Encoder_Start

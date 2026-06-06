@@ -1,0 +1,2589 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"nrf24l01.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/nrf24l01.c"
+  20              		.section	.text.spi2_set_speed,"ax",%progbits
+  21              		.align	1
+  22              		.syntax unified
+  23              		.thumb
+  24              		.thumb_func
+  26              	spi2_set_speed:
+  27              	.LVL0:
+  28              	.LFB135:
+   1:Core/Src/nrf24l01.c **** #include "spi.h"
+   2:Core/Src/nrf24l01.c **** #include "nrf24l01.h"
+   3:Core/Src/nrf24l01.c **** #include <math.h>
+   4:Core/Src/nrf24l01.c **** 
+   5:Core/Src/nrf24l01.c **** #define ADDR_AB_LEN    5   // 与宏定义TX_ADR_WIDTH=5一致
+   6:Core/Src/nrf24l01.c **** #define ADDR_BC_LEN    5   // 与宏定义TX_ADR_WIDTH=5一致
+   7:Core/Src/nrf24l01.c **** #define DATA_WIDTH     32  // 与宏定义TX_PLOAD_WIDTH=32一致
+   8:Core/Src/nrf24l01.c **** 
+   9:Core/Src/nrf24l01.c **** // A与B 通信参数(A与B模块共用)
+  10:Core/Src/nrf24l01.c **** uint8_t ADDR_AB[ADDR_AB_LEN] = {0x11, 0x22, 0x33, 0x44, 0x55};
+  11:Core/Src/nrf24l01.c **** #define CH_AB          30  // A-B通道频率
+  12:Core/Src/nrf24l01.c **** 
+  13:Core/Src/nrf24l01.c **** // B与C 通信参数(B与C模块共用)
+  14:Core/Src/nrf24l01.c **** uint8_t ADDR_BC[ADDR_BC_LEN] = {0xAA, 0xBB, 0xCC, 0xDD, 0xEE};
+  15:Core/Src/nrf24l01.c **** #define CH_BC          40  // B-C通道频率
+  16:Core/Src/nrf24l01.c **** 
+  17:Core/Src/nrf24l01.c **** /* SPI句柄 — 来自spi.c */
+  18:Core/Src/nrf24l01.c **** extern SPI_HandleTypeDef hspi2;
+  19:Core/Src/nrf24l01.c **** 
+  20:Core/Src/nrf24l01.c **** const uint8_t TX_ADDRESS[TX_ADR_WIDTH] = {0x34, 0x43, 0x10, 0x10, 0x01};    /* 接收地址 */
+  21:Core/Src/nrf24l01.c **** const uint8_t RX_ADDRESS[RX_ADR_WIDTH] = {0x34, 0x43, 0x10, 0x10, 0x01};    /* 发送地址 */
+  22:Core/Src/nrf24l01.c **** 
+  23:Core/Src/nrf24l01.c **** /* ---- 内部函数前向声明 ---- */
+  24:Core/Src/nrf24l01.c **** static uint8_t nrf24l01_read_buf(uint8_t reg, uint8_t *pbuf, uint8_t len);
+  25:Core/Src/nrf24l01.c **** static uint8_t nrf24l01_write_buf(uint8_t reg, uint8_t *pbuf, uint8_t len);
+  26:Core/Src/nrf24l01.c **** 
+  27:Core/Src/nrf24l01.c **** uint8_t nrf_rx_buf[32];
+  28:Core/Src/nrf24l01.c **** 
+  29:Core/Src/nrf24l01.c **** /* ---- 移植层：SPI 底层操作 (用 HAL 实现) ---- */
+  30:Core/Src/nrf24l01.c **** 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 2
+
+
+  31:Core/Src/nrf24l01.c **** /**
+  32:Core/Src/nrf24l01.c ****  * @brief       SPI读写一个字节
+  33:Core/Src/nrf24l01.c ****  * @param       tx_data : 发送的数据
+  34:Core/Src/nrf24l01.c ****  * @retval      接收到的数据
+  35:Core/Src/nrf24l01.c ****  */
+  36:Core/Src/nrf24l01.c **** static uint8_t spi2_read_write_byte(uint8_t tx_data)
+  37:Core/Src/nrf24l01.c **** {
+  38:Core/Src/nrf24l01.c ****     uint8_t rx_data;
+  39:Core/Src/nrf24l01.c ****     HAL_SPI_TransmitReceive(&hspi2, &tx_data, &rx_data, 1, 100);
+  40:Core/Src/nrf24l01.c ****     return rx_data;
+  41:Core/Src/nrf24l01.c **** }
+  42:Core/Src/nrf24l01.c **** 
+  43:Core/Src/nrf24l01.c **** /**
+  44:Core/Src/nrf24l01.c ****  * @brief       设置SPI2速度(修改分频系数)
+  45:Core/Src/nrf24l01.c ****  * @param       prescaler : SPI分频系数(SPI_BAUDRATEPRESCALER_xx)
+  46:Core/Src/nrf24l01.c ****  * @retval      无
+  47:Core/Src/nrf24l01.c ****  */
+  48:Core/Src/nrf24l01.c **** static void spi2_set_speed(uint32_t prescaler)
+  49:Core/Src/nrf24l01.c **** {
+  29              		.loc 1 49 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33              		.loc 1 49 1 is_stmt 0 view .LVU1
+  34 0000 08B5     		push	{r3, lr}
+  35              	.LCFI0:
+  36              		.cfi_def_cfa_offset 8
+  37              		.cfi_offset 3, -8
+  38              		.cfi_offset 14, -4
+  50:Core/Src/nrf24l01.c ****     hspi2.Init.BaudRatePrescaler = prescaler;
+  39              		.loc 1 50 5 is_stmt 1 view .LVU2
+  40              		.loc 1 50 34 is_stmt 0 view .LVU3
+  41 0002 034B     		ldr	r3, .L3
+  42 0004 D861     		str	r0, [r3, #28]
+  51:Core/Src/nrf24l01.c ****     HAL_SPI_Init(&hspi2);
+  43              		.loc 1 51 5 is_stmt 1 view .LVU4
+  44 0006 1846     		mov	r0, r3
+  45              	.LVL1:
+  46              		.loc 1 51 5 is_stmt 0 view .LVU5
+  47 0008 FFF7FEFF 		bl	HAL_SPI_Init
+  48              	.LVL2:
+  52:Core/Src/nrf24l01.c **** }
+  49              		.loc 1 52 1 view .LVU6
+  50 000c 08BD     		pop	{r3, pc}
+  51              	.L4:
+  52 000e 00BF     		.align	2
+  53              	.L3:
+  54 0010 00000000 		.word	hspi2
+  55              		.cfi_endproc
+  56              	.LFE135:
+  58              		.section	.text.spi2_read_write_byte,"ax",%progbits
+  59              		.align	1
+  60              		.syntax unified
+  61              		.thumb
+  62              		.thumb_func
+  64              	spi2_read_write_byte:
+  65              	.LVL3:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 3
+
+
+  66              	.LFB134:
+  37:Core/Src/nrf24l01.c ****     uint8_t rx_data;
+  67              		.loc 1 37 1 is_stmt 1 view -0
+  68              		.cfi_startproc
+  69              		@ args = 0, pretend = 0, frame = 16
+  70              		@ frame_needed = 0, uses_anonymous_args = 0
+  37:Core/Src/nrf24l01.c ****     uint8_t rx_data;
+  71              		.loc 1 37 1 is_stmt 0 view .LVU8
+  72 0000 00B5     		push	{lr}
+  73              	.LCFI1:
+  74              		.cfi_def_cfa_offset 4
+  75              		.cfi_offset 14, -4
+  76 0002 87B0     		sub	sp, sp, #28
+  77              	.LCFI2:
+  78              		.cfi_def_cfa_offset 32
+  79 0004 8DF80F00 		strb	r0, [sp, #15]
+  38:Core/Src/nrf24l01.c ****     HAL_SPI_TransmitReceive(&hspi2, &tx_data, &rx_data, 1, 100);
+  80              		.loc 1 38 5 is_stmt 1 view .LVU9
+  39:Core/Src/nrf24l01.c ****     return rx_data;
+  81              		.loc 1 39 5 view .LVU10
+  82 0008 6423     		movs	r3, #100
+  83 000a 0093     		str	r3, [sp]
+  84 000c 0123     		movs	r3, #1
+  85 000e 0DF11702 		add	r2, sp, #23
+  86 0012 0DF10F01 		add	r1, sp, #15
+  87 0016 0448     		ldr	r0, .L7
+  88              	.LVL4:
+  39:Core/Src/nrf24l01.c ****     return rx_data;
+  89              		.loc 1 39 5 is_stmt 0 view .LVU11
+  90 0018 FFF7FEFF 		bl	HAL_SPI_TransmitReceive
+  91              	.LVL5:
+  40:Core/Src/nrf24l01.c **** }
+  92              		.loc 1 40 5 is_stmt 1 view .LVU12
+  41:Core/Src/nrf24l01.c **** 
+  93              		.loc 1 41 1 is_stmt 0 view .LVU13
+  94 001c 9DF81700 		ldrb	r0, [sp, #23]	@ zero_extendqisi2
+  95 0020 07B0     		add	sp, sp, #28
+  96              	.LCFI3:
+  97              		.cfi_def_cfa_offset 4
+  98              		@ sp needed
+  99 0022 5DF804FB 		ldr	pc, [sp], #4
+ 100              	.L8:
+ 101 0026 00BF     		.align	2
+ 102              	.L7:
+ 103 0028 00000000 		.word	hspi2
+ 104              		.cfi_endproc
+ 105              	.LFE134:
+ 107              		.section	.text.nrf24l01_write_buf,"ax",%progbits
+ 108              		.align	1
+ 109              		.syntax unified
+ 110              		.thumb
+ 111              		.thumb_func
+ 113              	nrf24l01_write_buf:
+ 114              	.LVL6:
+ 115              	.LFB142:
+  53:Core/Src/nrf24l01.c **** /* ---- 移植层结束 ---- */
+  54:Core/Src/nrf24l01.c **** 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 4
+
+
+  55:Core/Src/nrf24l01.c **** 
+  56:Core/Src/nrf24l01.c **** /**
+  57:Core/Src/nrf24l01.c ****  * @brief       针对NRF24L01修改SPI1设置
+  58:Core/Src/nrf24l01.c ****  * @param       无
+  59:Core/Src/nrf24l01.c ****  * @retval      无
+  60:Core/Src/nrf24l01.c ****  */
+  61:Core/Src/nrf24l01.c **** void nrf24l01_spi_init(void)
+  62:Core/Src/nrf24l01.c **** {
+  63:Core/Src/nrf24l01.c ****     /* NRF24L01 要求 SPI Mode 0: CPOL=0, CPHA=0 (第1个边沿采样).
+  64:Core/Src/nrf24l01.c ****      * 项目的 MX_SPI2_Init() 已配置 CPOL=LOW, CPHA=1EDGE,
+  65:Core/Src/nrf24l01.c ****      * 只需确保速度不超过 10MHz 即可. 使用8分频: 42MHz/8 = 5.25MHz */
+  66:Core/Src/nrf24l01.c ****     spi2_set_speed(SPI_BAUDRATEPRESCALER_8);
+  67:Core/Src/nrf24l01.c **** }
+  68:Core/Src/nrf24l01.c **** 
+  69:Core/Src/nrf24l01.c **** /**
+  70:Core/Src/nrf24l01.c ****  * @brief       初始化24L01的IO口
+  71:Core/Src/nrf24l01.c ****  *   @note      将SPI1模式的改成SCK空闲低电平,即SPI 模式0
+  72:Core/Src/nrf24l01.c ****  * @param       无
+  73:Core/Src/nrf24l01.c ****  * @retval      无
+  74:Core/Src/nrf24l01.c ****  */
+  75:Core/Src/nrf24l01.c **** void nrf24l01_init(void)
+  76:Core/Src/nrf24l01.c **** {
+  77:Core/Src/nrf24l01.c ****     GPIO_InitTypeDef gpio_init_struct;
+  78:Core/Src/nrf24l01.c **** 
+  79:Core/Src/nrf24l01.c ****     NRF24L01_CE_GPIO_CLK_ENABLE();  /* CE口时钟使能 */
+  80:Core/Src/nrf24l01.c ****     NRF24L01_CSN_GPIO_CLK_ENABLE(); /* CSN口时钟使能 */
+  81:Core/Src/nrf24l01.c ****     NRF24L01_IRQ_GPIO_CLK_ENABLE(); /* IRQ口时钟使能 */
+  82:Core/Src/nrf24l01.c **** 
+  83:Core/Src/nrf24l01.c ****     gpio_init_struct.Pin = NRF24L01_CE_GPIO_PIN;
+  84:Core/Src/nrf24l01.c ****     gpio_init_struct.Mode = GPIO_MODE_OUTPUT_PP;             /* 推挽输出 */
+  85:Core/Src/nrf24l01.c ****     gpio_init_struct.Pull = GPIO_PULLUP;                     /* 上拉 */
+  86:Core/Src/nrf24l01.c ****     gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;           /* 高速 */
+  87:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_CE_GPIO_PORT, &gpio_init_struct); /* 初始化CE引脚 */
+  88:Core/Src/nrf24l01.c **** 
+  89:Core/Src/nrf24l01.c ****     gpio_init_struct.Pin = NRF24L01_CSN_GPIO_PIN;
+  90:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_CSN_GPIO_PORT, &gpio_init_struct);/* 初始化CSN引脚 */
+  91:Core/Src/nrf24l01.c **** 
+  92:Core/Src/nrf24l01.c ****     gpio_init_struct.Pin = NRF24L01_IRQ_GPIO_PIN;
+  93:Core/Src/nrf24l01.c ****     gpio_init_struct.Mode = GPIO_MODE_INPUT;                 /* 输入 */
+  94:Core/Src/nrf24l01.c ****     gpio_init_struct.Pull = GPIO_PULLUP;                     /* 上拉 */
+  95:Core/Src/nrf24l01.c ****     gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;           /* 高速 */
+  96:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_IRQ_GPIO_PORT, &gpio_init_struct);/* 初始化IRQ引脚 */
+  97:Core/Src/nrf24l01.c **** 
+  98:Core/Src/nrf24l01.c ****     /* SPI2 已在 MX_SPI2_Init() 中初始化, 这里只需针对 NRF 调整设置 */
+  99:Core/Src/nrf24l01.c ****     nrf24l01_spi_init();        /* 针对NRF特点修改SPI设置 */
+ 100:Core/Src/nrf24l01.c ****     NRF24L01_CE(0);             /* 使能24L01 */
+ 101:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);            /* SPI片选取消 */
+ 102:Core/Src/nrf24l01.c **** }
+ 103:Core/Src/nrf24l01.c **** 
+ 104:Core/Src/nrf24l01.c **** /**
+ 105:Core/Src/nrf24l01.c ****  * @brief       检测24L01是否存在
+ 106:Core/Src/nrf24l01.c ****  * @param       无
+ 107:Core/Src/nrf24l01.c ****  * @retval      0, 成功; 1, 失败;
+ 108:Core/Src/nrf24l01.c ****  */
+ 109:Core/Src/nrf24l01.c **** uint8_t nrf24l01_check(void)
+ 110:Core/Src/nrf24l01.c **** {
+ 111:Core/Src/nrf24l01.c ****     uint8_t buf[5] = {0XA5, 0XA5, 0XA5, 0XA5, 0XA5};
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 5
+
+
+ 112:Core/Src/nrf24l01.c ****     uint8_t i;
+ 113:Core/Src/nrf24l01.c **** 
+ 114:Core/Src/nrf24l01.c ****     spi2_set_speed(SPI_BAUDRATEPRESCALER_32);                /* spi速度为7.5Mhz(24L01的最大SP
+ 115:Core/Src/nrf24l01.c ****     nrf24l01_write_buf(NRF_WRITE_REG + TX_ADDR, buf, 5);  /* 写入5个字节的地址. */
+ 116:Core/Src/nrf24l01.c ****     nrf24l01_read_buf(TX_ADDR, buf, 5);                   /* 读出写入的地址 */
+ 117:Core/Src/nrf24l01.c **** 
+ 118:Core/Src/nrf24l01.c ****     for (i = 0; i < 5; i++)
+ 119:Core/Src/nrf24l01.c ****     {
+ 120:Core/Src/nrf24l01.c ****         if (buf[i] != 0XA5) break;
+ 121:Core/Src/nrf24l01.c ****     }
+ 122:Core/Src/nrf24l01.c **** 
+ 123:Core/Src/nrf24l01.c ****     if (i != 5) return 1;   /* 检测24L01错误 */
+ 124:Core/Src/nrf24l01.c **** 
+ 125:Core/Src/nrf24l01.c ****     return 0;               /* 检测到24L01 */
+ 126:Core/Src/nrf24l01.c **** }
+ 127:Core/Src/nrf24l01.c **** 
+ 128:Core/Src/nrf24l01.c **** /**
+ 129:Core/Src/nrf24l01.c ****  * @brief       NRF24L01写寄存器
+ 130:Core/Src/nrf24l01.c ****  * @param       reg   : 寄存器地址
+ 131:Core/Src/nrf24l01.c ****  * @param       value : 写入寄存器的值
+ 132:Core/Src/nrf24l01.c ****  * @retval      状态寄存器值
+ 133:Core/Src/nrf24l01.c ****  */
+ 134:Core/Src/nrf24l01.c **** static uint8_t nrf24l01_write_reg(uint8_t reg, uint8_t value)
+ 135:Core/Src/nrf24l01.c **** {
+ 136:Core/Src/nrf24l01.c ****     uint8_t status;
+ 137:Core/Src/nrf24l01.c **** 
+ 138:Core/Src/nrf24l01.c ****     NRF24L01_CSN(0);                    /* 使能SPI传输 */
+ 139:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg); /* 发送寄存器号 */
+ 140:Core/Src/nrf24l01.c ****     spi2_read_write_byte(value);        /* 写入寄存器的值 */
+ 141:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);                    /* 禁止SPI传输 */
+ 142:Core/Src/nrf24l01.c **** 
+ 143:Core/Src/nrf24l01.c ****     return status;                      /* 返回状态值 */
+ 144:Core/Src/nrf24l01.c **** }
+ 145:Core/Src/nrf24l01.c **** 
+ 146:Core/Src/nrf24l01.c **** /**
+ 147:Core/Src/nrf24l01.c ****  * @brief       NRF24L01读寄存器
+ 148:Core/Src/nrf24l01.c ****  * @param       reg   : 寄存器地址
+ 149:Core/Src/nrf24l01.c ****  * @retval      读取到的寄存器值;
+ 150:Core/Src/nrf24l01.c ****  */
+ 151:Core/Src/nrf24l01.c **** static uint8_t nrf24l01_read_reg(uint8_t reg)
+ 152:Core/Src/nrf24l01.c **** {
+ 153:Core/Src/nrf24l01.c ****     uint8_t reg_val;
+ 154:Core/Src/nrf24l01.c **** 
+ 155:Core/Src/nrf24l01.c ****     NRF24L01_CSN(0);            /* 使能SPI传输 */
+ 156:Core/Src/nrf24l01.c ****     spi2_read_write_byte(reg);  /* 发送寄存器号 */
+ 157:Core/Src/nrf24l01.c ****     reg_val = spi2_read_write_byte(0XFF);   /* 读取寄存器内容 */
+ 158:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);            /* 禁止SPI传输 */
+ 159:Core/Src/nrf24l01.c **** 
+ 160:Core/Src/nrf24l01.c ****     return reg_val;             /* 返回状态值 */
+ 161:Core/Src/nrf24l01.c **** }
+ 162:Core/Src/nrf24l01.c **** 
+ 163:Core/Src/nrf24l01.c **** /**
+ 164:Core/Src/nrf24l01.c ****  * @brief       在指定位置读出指定长度的数据
+ 165:Core/Src/nrf24l01.c ****  * @param       reg   : 寄存器地址
+ 166:Core/Src/nrf24l01.c ****  * @param       pbuf  : 数据指针
+ 167:Core/Src/nrf24l01.c ****  * @param       len   : 数据长度
+ 168:Core/Src/nrf24l01.c ****  * @retval      状态寄存器值
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 6
+
+
+ 169:Core/Src/nrf24l01.c ****  */
+ 170:Core/Src/nrf24l01.c **** static uint8_t nrf24l01_read_buf(uint8_t reg, uint8_t *pbuf, uint8_t len)
+ 171:Core/Src/nrf24l01.c **** {
+ 172:Core/Src/nrf24l01.c ****     uint8_t status, i;
+ 173:Core/Src/nrf24l01.c **** 
+ 174:Core/Src/nrf24l01.c ****     NRF24L01_CSN(0);                            /* 使能SPI传输 */
+ 175:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg);         /* 发送寄存器值(位置),并读取状态值 */
+ 176:Core/Src/nrf24l01.c **** 
+ 177:Core/Src/nrf24l01.c ****     for (i = 0; i < len; i++)
+ 178:Core/Src/nrf24l01.c ****     {
+ 179:Core/Src/nrf24l01.c ****         pbuf[i] = spi2_read_write_byte(0XFF);   /* 读取数据 */
+ 180:Core/Src/nrf24l01.c ****     }
+ 181:Core/Src/nrf24l01.c **** 
+ 182:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);    /* 关闭SPI传输 */
+ 183:Core/Src/nrf24l01.c **** 
+ 184:Core/Src/nrf24l01.c ****     return status;      /* 返回读到的状态值 */
+ 185:Core/Src/nrf24l01.c **** }
+ 186:Core/Src/nrf24l01.c **** 
+ 187:Core/Src/nrf24l01.c **** /**
+ 188:Core/Src/nrf24l01.c ****  * @brief       在指定位置写指定长度的数据
+ 189:Core/Src/nrf24l01.c ****  * @param       reg   : 寄存器地址
+ 190:Core/Src/nrf24l01.c ****  * @param       pbuf  : 数据指针
+ 191:Core/Src/nrf24l01.c ****  * @param       len   : 数据长度
+ 192:Core/Src/nrf24l01.c ****  * @retval      状态寄存器值
+ 193:Core/Src/nrf24l01.c ****  */
+ 194:Core/Src/nrf24l01.c **** static uint8_t nrf24l01_write_buf(uint8_t reg, uint8_t *pbuf, uint8_t len)
+ 195:Core/Src/nrf24l01.c **** {
+ 116              		.loc 1 195 1 is_stmt 1 view -0
+ 117              		.cfi_startproc
+ 118              		@ args = 0, pretend = 0, frame = 0
+ 119              		@ frame_needed = 0, uses_anonymous_args = 0
+ 120              		.loc 1 195 1 is_stmt 0 view .LVU15
+ 121 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 122              	.LCFI4:
+ 123              		.cfi_def_cfa_offset 24
+ 124              		.cfi_offset 3, -24
+ 125              		.cfi_offset 4, -20
+ 126              		.cfi_offset 5, -16
+ 127              		.cfi_offset 6, -12
+ 128              		.cfi_offset 7, -8
+ 129              		.cfi_offset 14, -4
+ 130 0002 0546     		mov	r5, r0
+ 131 0004 0C46     		mov	r4, r1
+ 132 0006 1646     		mov	r6, r2
+ 196:Core/Src/nrf24l01.c ****     uint8_t status, i;
+ 133              		.loc 1 196 5 is_stmt 1 view .LVU16
+ 197:Core/Src/nrf24l01.c **** 
+ 198:Core/Src/nrf24l01.c ****     NRF24L01_CSN(0);    /* 使能SPI传输 */
+ 134              		.loc 1 198 5 view .LVU17
+ 135              		.loc 1 198 5 view .LVU18
+ 136 0008 0022     		movs	r2, #0
+ 137              	.LVL7:
+ 138              		.loc 1 198 5 is_stmt 0 view .LVU19
+ 139 000a 4FF48051 		mov	r1, #4096
+ 140              	.LVL8:
+ 141              		.loc 1 198 5 view .LVU20
+ 142 000e 0C48     		ldr	r0, .L13
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 7
+
+
+ 143              	.LVL9:
+ 144              		.loc 1 198 5 view .LVU21
+ 145 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 146              	.LVL10:
+ 147              		.loc 1 198 5 is_stmt 1 discriminator 1 view .LVU22
+ 199:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg);/* 发送寄存器值(位置),并读取状态值 */
+ 148              		.loc 1 199 5 view .LVU23
+ 149              		.loc 1 199 14 is_stmt 0 view .LVU24
+ 150 0014 2846     		mov	r0, r5
+ 151 0016 FFF7FEFF 		bl	spi2_read_write_byte
+ 152              	.LVL11:
+ 153 001a 0746     		mov	r7, r0
+ 154              	.LVL12:
+ 200:Core/Src/nrf24l01.c **** 
+ 201:Core/Src/nrf24l01.c ****     for (i = 0; i < len; i++)
+ 155              		.loc 1 201 5 is_stmt 1 view .LVU25
+ 156              		.loc 1 201 12 is_stmt 0 view .LVU26
+ 157 001c 0025     		movs	r5, #0
+ 158              	.LVL13:
+ 159              		.loc 1 201 5 view .LVU27
+ 160 001e 05E0     		b	.L10
+ 161              	.LVL14:
+ 162              	.L11:
+ 202:Core/Src/nrf24l01.c ****     {
+ 203:Core/Src/nrf24l01.c ****         spi2_read_write_byte(*pbuf++); /* 写入数据 */
+ 163              		.loc 1 203 9 is_stmt 1 view .LVU28
+ 164              		.loc 1 203 9 is_stmt 0 view .LVU29
+ 165 0020 14F8010B 		ldrb	r0, [r4], #1	@ zero_extendqisi2
+ 166              	.LVL15:
+ 167              		.loc 1 203 9 view .LVU30
+ 168 0024 FFF7FEFF 		bl	spi2_read_write_byte
+ 169              	.LVL16:
+ 201:Core/Src/nrf24l01.c ****     {
+ 170              		.loc 1 201 27 is_stmt 1 discriminator 3 view .LVU31
+ 171 0028 0135     		adds	r5, r5, #1
+ 172              	.LVL17:
+ 201:Core/Src/nrf24l01.c ****     {
+ 173              		.loc 1 201 27 is_stmt 0 discriminator 3 view .LVU32
+ 174 002a EDB2     		uxtb	r5, r5
+ 175              	.LVL18:
+ 176              	.L10:
+ 201:Core/Src/nrf24l01.c ****     {
+ 177              		.loc 1 201 19 is_stmt 1 discriminator 1 view .LVU33
+ 178 002c B542     		cmp	r5, r6
+ 179 002e F7D3     		bcc	.L11
+ 204:Core/Src/nrf24l01.c ****     }
+ 205:Core/Src/nrf24l01.c **** 
+ 206:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);    /* 关闭SPI传输 */
+ 180              		.loc 1 206 5 view .LVU34
+ 181              		.loc 1 206 5 view .LVU35
+ 182 0030 0122     		movs	r2, #1
+ 183 0032 4FF48051 		mov	r1, #4096
+ 184 0036 0248     		ldr	r0, .L13
+ 185 0038 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 186              	.LVL19:
+ 187              		.loc 1 206 5 discriminator 1 view .LVU36
+ 207:Core/Src/nrf24l01.c **** 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 8
+
+
+ 208:Core/Src/nrf24l01.c ****     return status;      /* 返回读到的状态值 */
+ 188              		.loc 1 208 5 view .LVU37
+ 209:Core/Src/nrf24l01.c **** }
+ 189              		.loc 1 209 1 is_stmt 0 view .LVU38
+ 190 003c 3846     		mov	r0, r7
+ 191 003e F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 192              	.LVL20:
+ 193              	.L14:
+ 194              		.loc 1 209 1 view .LVU39
+ 195              		.align	2
+ 196              	.L13:
+ 197 0040 00040240 		.word	1073873920
+ 198              		.cfi_endproc
+ 199              	.LFE142:
+ 201              		.section	.text.nrf24l01_read_buf,"ax",%progbits
+ 202              		.align	1
+ 203              		.syntax unified
+ 204              		.thumb
+ 205              		.thumb_func
+ 207              	nrf24l01_read_buf:
+ 208              	.LVL21:
+ 209              	.LFB141:
+ 171:Core/Src/nrf24l01.c ****     uint8_t status, i;
+ 210              		.loc 1 171 1 is_stmt 1 view -0
+ 211              		.cfi_startproc
+ 212              		@ args = 0, pretend = 0, frame = 0
+ 213              		@ frame_needed = 0, uses_anonymous_args = 0
+ 171:Core/Src/nrf24l01.c ****     uint8_t status, i;
+ 214              		.loc 1 171 1 is_stmt 0 view .LVU41
+ 215 0000 F8B5     		push	{r3, r4, r5, r6, r7, lr}
+ 216              	.LCFI5:
+ 217              		.cfi_def_cfa_offset 24
+ 218              		.cfi_offset 3, -24
+ 219              		.cfi_offset 4, -20
+ 220              		.cfi_offset 5, -16
+ 221              		.cfi_offset 6, -12
+ 222              		.cfi_offset 7, -8
+ 223              		.cfi_offset 14, -4
+ 224 0002 0446     		mov	r4, r0
+ 225 0004 0E46     		mov	r6, r1
+ 226 0006 1546     		mov	r5, r2
+ 172:Core/Src/nrf24l01.c **** 
+ 227              		.loc 1 172 5 is_stmt 1 view .LVU42
+ 174:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg);         /* 发送寄存器值(位置),并读取状态值 */
+ 228              		.loc 1 174 5 view .LVU43
+ 174:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg);         /* 发送寄存器值(位置),并读取状态值 */
+ 229              		.loc 1 174 5 view .LVU44
+ 230 0008 0022     		movs	r2, #0
+ 231              	.LVL22:
+ 174:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg);         /* 发送寄存器值(位置),并读取状态值 */
+ 232              		.loc 1 174 5 is_stmt 0 view .LVU45
+ 233 000a 4FF48051 		mov	r1, #4096
+ 234              	.LVL23:
+ 174:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg);         /* 发送寄存器值(位置),并读取状态值 */
+ 235              		.loc 1 174 5 view .LVU46
+ 236 000e 0C48     		ldr	r0, .L19
+ 237              	.LVL24:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 9
+
+
+ 174:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg);         /* 发送寄存器值(位置),并读取状态值 */
+ 238              		.loc 1 174 5 view .LVU47
+ 239 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 240              	.LVL25:
+ 174:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg);         /* 发送寄存器值(位置),并读取状态值 */
+ 241              		.loc 1 174 5 is_stmt 1 discriminator 1 view .LVU48
+ 175:Core/Src/nrf24l01.c **** 
+ 242              		.loc 1 175 5 view .LVU49
+ 175:Core/Src/nrf24l01.c **** 
+ 243              		.loc 1 175 14 is_stmt 0 view .LVU50
+ 244 0014 2046     		mov	r0, r4
+ 245 0016 FFF7FEFF 		bl	spi2_read_write_byte
+ 246              	.LVL26:
+ 247 001a 0746     		mov	r7, r0
+ 248              	.LVL27:
+ 177:Core/Src/nrf24l01.c ****     {
+ 249              		.loc 1 177 5 is_stmt 1 view .LVU51
+ 177:Core/Src/nrf24l01.c ****     {
+ 250              		.loc 1 177 12 is_stmt 0 view .LVU52
+ 251 001c 0024     		movs	r4, #0
+ 252              	.LVL28:
+ 177:Core/Src/nrf24l01.c ****     {
+ 253              		.loc 1 177 5 view .LVU53
+ 254 001e 05E0     		b	.L16
+ 255              	.LVL29:
+ 256              	.L17:
+ 179:Core/Src/nrf24l01.c ****     }
+ 257              		.loc 1 179 9 is_stmt 1 view .LVU54
+ 179:Core/Src/nrf24l01.c ****     }
+ 258              		.loc 1 179 19 is_stmt 0 view .LVU55
+ 259 0020 FF20     		movs	r0, #255
+ 260 0022 FFF7FEFF 		bl	spi2_read_write_byte
+ 261              	.LVL30:
+ 179:Core/Src/nrf24l01.c ****     }
+ 262              		.loc 1 179 17 discriminator 1 view .LVU56
+ 263 0026 3055     		strb	r0, [r6, r4]
+ 177:Core/Src/nrf24l01.c ****     {
+ 264              		.loc 1 177 27 is_stmt 1 discriminator 3 view .LVU57
+ 265 0028 0134     		adds	r4, r4, #1
+ 266              	.LVL31:
+ 177:Core/Src/nrf24l01.c ****     {
+ 267              		.loc 1 177 27 is_stmt 0 discriminator 3 view .LVU58
+ 268 002a E4B2     		uxtb	r4, r4
+ 269              	.LVL32:
+ 270              	.L16:
+ 177:Core/Src/nrf24l01.c ****     {
+ 271              		.loc 1 177 19 is_stmt 1 discriminator 1 view .LVU59
+ 272 002c AC42     		cmp	r4, r5
+ 273 002e F7D3     		bcc	.L17
+ 182:Core/Src/nrf24l01.c **** 
+ 274              		.loc 1 182 5 view .LVU60
+ 182:Core/Src/nrf24l01.c **** 
+ 275              		.loc 1 182 5 view .LVU61
+ 276 0030 0122     		movs	r2, #1
+ 277 0032 4FF48051 		mov	r1, #4096
+ 278 0036 0248     		ldr	r0, .L19
+ 279 0038 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 10
+
+
+ 280              	.LVL33:
+ 182:Core/Src/nrf24l01.c **** 
+ 281              		.loc 1 182 5 discriminator 1 view .LVU62
+ 184:Core/Src/nrf24l01.c **** }
+ 282              		.loc 1 184 5 view .LVU63
+ 185:Core/Src/nrf24l01.c **** 
+ 283              		.loc 1 185 1 is_stmt 0 view .LVU64
+ 284 003c 3846     		mov	r0, r7
+ 285 003e F8BD     		pop	{r3, r4, r5, r6, r7, pc}
+ 286              	.LVL34:
+ 287              	.L20:
+ 185:Core/Src/nrf24l01.c **** 
+ 288              		.loc 1 185 1 view .LVU65
+ 289              		.align	2
+ 290              	.L19:
+ 291 0040 00040240 		.word	1073873920
+ 292              		.cfi_endproc
+ 293              	.LFE141:
+ 295              		.section	.text.nrf24l01_read_reg,"ax",%progbits
+ 296              		.align	1
+ 297              		.syntax unified
+ 298              		.thumb
+ 299              		.thumb_func
+ 301              	nrf24l01_read_reg:
+ 302              	.LVL35:
+ 303              	.LFB140:
+ 152:Core/Src/nrf24l01.c ****     uint8_t reg_val;
+ 304              		.loc 1 152 1 is_stmt 1 view -0
+ 305              		.cfi_startproc
+ 306              		@ args = 0, pretend = 0, frame = 0
+ 307              		@ frame_needed = 0, uses_anonymous_args = 0
+ 152:Core/Src/nrf24l01.c ****     uint8_t reg_val;
+ 308              		.loc 1 152 1 is_stmt 0 view .LVU67
+ 309 0000 38B5     		push	{r3, r4, r5, lr}
+ 310              	.LCFI6:
+ 311              		.cfi_def_cfa_offset 16
+ 312              		.cfi_offset 3, -16
+ 313              		.cfi_offset 4, -12
+ 314              		.cfi_offset 5, -8
+ 315              		.cfi_offset 14, -4
+ 316 0002 0446     		mov	r4, r0
+ 153:Core/Src/nrf24l01.c **** 
+ 317              		.loc 1 153 5 is_stmt 1 view .LVU68
+ 155:Core/Src/nrf24l01.c ****     spi2_read_write_byte(reg);  /* 发送寄存器号 */
+ 318              		.loc 1 155 5 view .LVU69
+ 155:Core/Src/nrf24l01.c ****     spi2_read_write_byte(reg);  /* 发送寄存器号 */
+ 319              		.loc 1 155 5 view .LVU70
+ 320 0004 0A4D     		ldr	r5, .L23
+ 321 0006 0022     		movs	r2, #0
+ 322 0008 4FF48051 		mov	r1, #4096
+ 323 000c 2846     		mov	r0, r5
+ 324              	.LVL36:
+ 155:Core/Src/nrf24l01.c ****     spi2_read_write_byte(reg);  /* 发送寄存器号 */
+ 325              		.loc 1 155 5 is_stmt 0 view .LVU71
+ 326 000e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 327              	.LVL37:
+ 155:Core/Src/nrf24l01.c ****     spi2_read_write_byte(reg);  /* 发送寄存器号 */
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 11
+
+
+ 328              		.loc 1 155 5 is_stmt 1 discriminator 1 view .LVU72
+ 156:Core/Src/nrf24l01.c ****     reg_val = spi2_read_write_byte(0XFF);   /* 读取寄存器内容 */
+ 329              		.loc 1 156 5 view .LVU73
+ 330 0012 2046     		mov	r0, r4
+ 331 0014 FFF7FEFF 		bl	spi2_read_write_byte
+ 332              	.LVL38:
+ 157:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);            /* 禁止SPI传输 */
+ 333              		.loc 1 157 5 view .LVU74
+ 157:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);            /* 禁止SPI传输 */
+ 334              		.loc 1 157 15 is_stmt 0 view .LVU75
+ 335 0018 FF20     		movs	r0, #255
+ 336 001a FFF7FEFF 		bl	spi2_read_write_byte
+ 337              	.LVL39:
+ 338 001e 0446     		mov	r4, r0
+ 339              	.LVL40:
+ 158:Core/Src/nrf24l01.c **** 
+ 340              		.loc 1 158 5 is_stmt 1 view .LVU76
+ 158:Core/Src/nrf24l01.c **** 
+ 341              		.loc 1 158 5 view .LVU77
+ 342 0020 0122     		movs	r2, #1
+ 343 0022 4FF48051 		mov	r1, #4096
+ 344 0026 2846     		mov	r0, r5
+ 345 0028 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 346              	.LVL41:
+ 158:Core/Src/nrf24l01.c **** 
+ 347              		.loc 1 158 5 discriminator 1 view .LVU78
+ 160:Core/Src/nrf24l01.c **** }
+ 348              		.loc 1 160 5 view .LVU79
+ 161:Core/Src/nrf24l01.c **** 
+ 349              		.loc 1 161 1 is_stmt 0 view .LVU80
+ 350 002c 2046     		mov	r0, r4
+ 351 002e 38BD     		pop	{r3, r4, r5, pc}
+ 352              	.LVL42:
+ 353              	.L24:
+ 161:Core/Src/nrf24l01.c **** 
+ 354              		.loc 1 161 1 view .LVU81
+ 355              		.align	2
+ 356              	.L23:
+ 357 0030 00040240 		.word	1073873920
+ 358              		.cfi_endproc
+ 359              	.LFE140:
+ 361              		.section	.text.nrf24l01_write_reg,"ax",%progbits
+ 362              		.align	1
+ 363              		.syntax unified
+ 364              		.thumb
+ 365              		.thumb_func
+ 367              	nrf24l01_write_reg:
+ 368              	.LVL43:
+ 369              	.LFB139:
+ 135:Core/Src/nrf24l01.c ****     uint8_t status;
+ 370              		.loc 1 135 1 is_stmt 1 view -0
+ 371              		.cfi_startproc
+ 372              		@ args = 0, pretend = 0, frame = 0
+ 373              		@ frame_needed = 0, uses_anonymous_args = 0
+ 135:Core/Src/nrf24l01.c ****     uint8_t status;
+ 374              		.loc 1 135 1 is_stmt 0 view .LVU83
+ 375 0000 70B5     		push	{r4, r5, r6, lr}
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 12
+
+
+ 376              	.LCFI7:
+ 377              		.cfi_def_cfa_offset 16
+ 378              		.cfi_offset 4, -16
+ 379              		.cfi_offset 5, -12
+ 380              		.cfi_offset 6, -8
+ 381              		.cfi_offset 14, -4
+ 382 0002 0446     		mov	r4, r0
+ 383 0004 0D46     		mov	r5, r1
+ 136:Core/Src/nrf24l01.c **** 
+ 384              		.loc 1 136 5 is_stmt 1 view .LVU84
+ 138:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg); /* 发送寄存器号 */
+ 385              		.loc 1 138 5 view .LVU85
+ 138:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg); /* 发送寄存器号 */
+ 386              		.loc 1 138 5 view .LVU86
+ 387 0006 0B4E     		ldr	r6, .L27
+ 388 0008 0022     		movs	r2, #0
+ 389 000a 4FF48051 		mov	r1, #4096
+ 390              	.LVL44:
+ 138:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg); /* 发送寄存器号 */
+ 391              		.loc 1 138 5 is_stmt 0 view .LVU87
+ 392 000e 3046     		mov	r0, r6
+ 393              	.LVL45:
+ 138:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg); /* 发送寄存器号 */
+ 394              		.loc 1 138 5 view .LVU88
+ 395 0010 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 396              	.LVL46:
+ 138:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg); /* 发送寄存器号 */
+ 397              		.loc 1 138 5 is_stmt 1 discriminator 1 view .LVU89
+ 139:Core/Src/nrf24l01.c ****     spi2_read_write_byte(value);        /* 写入寄存器的值 */
+ 398              		.loc 1 139 5 view .LVU90
+ 139:Core/Src/nrf24l01.c ****     spi2_read_write_byte(value);        /* 写入寄存器的值 */
+ 399              		.loc 1 139 14 is_stmt 0 view .LVU91
+ 400 0014 2046     		mov	r0, r4
+ 401 0016 FFF7FEFF 		bl	spi2_read_write_byte
+ 402              	.LVL47:
+ 403 001a 0446     		mov	r4, r0
+ 404              	.LVL48:
+ 140:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);                    /* 禁止SPI传输 */
+ 405              		.loc 1 140 5 is_stmt 1 view .LVU92
+ 406 001c 2846     		mov	r0, r5
+ 407 001e FFF7FEFF 		bl	spi2_read_write_byte
+ 408              	.LVL49:
+ 141:Core/Src/nrf24l01.c **** 
+ 409              		.loc 1 141 5 view .LVU93
+ 141:Core/Src/nrf24l01.c **** 
+ 410              		.loc 1 141 5 view .LVU94
+ 411 0022 0122     		movs	r2, #1
+ 412 0024 4FF48051 		mov	r1, #4096
+ 413 0028 3046     		mov	r0, r6
+ 414 002a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 415              	.LVL50:
+ 141:Core/Src/nrf24l01.c **** 
+ 416              		.loc 1 141 5 discriminator 1 view .LVU95
+ 143:Core/Src/nrf24l01.c **** }
+ 417              		.loc 1 143 5 view .LVU96
+ 144:Core/Src/nrf24l01.c **** 
+ 418              		.loc 1 144 1 is_stmt 0 view .LVU97
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 13
+
+
+ 419 002e 2046     		mov	r0, r4
+ 420 0030 70BD     		pop	{r4, r5, r6, pc}
+ 421              	.LVL51:
+ 422              	.L28:
+ 144:Core/Src/nrf24l01.c **** 
+ 423              		.loc 1 144 1 view .LVU98
+ 424 0032 00BF     		.align	2
+ 425              	.L27:
+ 426 0034 00040240 		.word	1073873920
+ 427              		.cfi_endproc
+ 428              	.LFE139:
+ 430              		.section	.text.nrf24l01_spi_init,"ax",%progbits
+ 431              		.align	1
+ 432              		.global	nrf24l01_spi_init
+ 433              		.syntax unified
+ 434              		.thumb
+ 435              		.thumb_func
+ 437              	nrf24l01_spi_init:
+ 438              	.LFB136:
+  62:Core/Src/nrf24l01.c ****     /* NRF24L01 要求 SPI Mode 0: CPOL=0, CPHA=0 (第1个边沿采样).
+ 439              		.loc 1 62 1 is_stmt 1 view -0
+ 440              		.cfi_startproc
+ 441              		@ args = 0, pretend = 0, frame = 0
+ 442              		@ frame_needed = 0, uses_anonymous_args = 0
+ 443 0000 08B5     		push	{r3, lr}
+ 444              	.LCFI8:
+ 445              		.cfi_def_cfa_offset 8
+ 446              		.cfi_offset 3, -8
+ 447              		.cfi_offset 14, -4
+  66:Core/Src/nrf24l01.c **** }
+ 448              		.loc 1 66 5 view .LVU100
+ 449 0002 1020     		movs	r0, #16
+ 450 0004 FFF7FEFF 		bl	spi2_set_speed
+ 451              	.LVL52:
+  67:Core/Src/nrf24l01.c **** 
+ 452              		.loc 1 67 1 is_stmt 0 view .LVU101
+ 453 0008 08BD     		pop	{r3, pc}
+ 454              		.cfi_endproc
+ 455              	.LFE136:
+ 457              		.section	.text.nrf24l01_init,"ax",%progbits
+ 458              		.align	1
+ 459              		.global	nrf24l01_init
+ 460              		.syntax unified
+ 461              		.thumb
+ 462              		.thumb_func
+ 464              	nrf24l01_init:
+ 465              	.LFB137:
+  76:Core/Src/nrf24l01.c ****     GPIO_InitTypeDef gpio_init_struct;
+ 466              		.loc 1 76 1 is_stmt 1 view -0
+ 467              		.cfi_startproc
+ 468              		@ args = 0, pretend = 0, frame = 32
+ 469              		@ frame_needed = 0, uses_anonymous_args = 0
+ 470 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+ 471              	.LCFI9:
+ 472              		.cfi_def_cfa_offset 36
+ 473              		.cfi_offset 4, -36
+ 474              		.cfi_offset 5, -32
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 14
+
+
+ 475              		.cfi_offset 6, -28
+ 476              		.cfi_offset 7, -24
+ 477              		.cfi_offset 8, -20
+ 478              		.cfi_offset 9, -16
+ 479              		.cfi_offset 10, -12
+ 480              		.cfi_offset 11, -8
+ 481              		.cfi_offset 14, -4
+ 482 0004 89B0     		sub	sp, sp, #36
+ 483              	.LCFI10:
+ 484              		.cfi_def_cfa_offset 72
+  77:Core/Src/nrf24l01.c **** 
+ 485              		.loc 1 77 5 view .LVU103
+  79:Core/Src/nrf24l01.c ****     NRF24L01_CSN_GPIO_CLK_ENABLE(); /* CSN口时钟使能 */
+ 486              		.loc 1 79 5 view .LVU104
+  79:Core/Src/nrf24l01.c ****     NRF24L01_CSN_GPIO_CLK_ENABLE(); /* CSN口时钟使能 */
+ 487              		.loc 1 79 5 view .LVU105
+ 488              	.LBB2:
+  79:Core/Src/nrf24l01.c ****     NRF24L01_CSN_GPIO_CLK_ENABLE(); /* CSN口时钟使能 */
+ 489              		.loc 1 79 5 view .LVU106
+ 490 0006 0024     		movs	r4, #0
+ 491 0008 0094     		str	r4, [sp]
+  79:Core/Src/nrf24l01.c ****     NRF24L01_CSN_GPIO_CLK_ENABLE(); /* CSN口时钟使能 */
+ 492              		.loc 1 79 5 view .LVU107
+ 493 000a 294B     		ldr	r3, .L33
+ 494 000c 1A6B     		ldr	r2, [r3, #48]
+ 495 000e 42F00802 		orr	r2, r2, #8
+ 496 0012 1A63     		str	r2, [r3, #48]
+  79:Core/Src/nrf24l01.c ****     NRF24L01_CSN_GPIO_CLK_ENABLE(); /* CSN口时钟使能 */
+ 497              		.loc 1 79 5 view .LVU108
+ 498 0014 1A6B     		ldr	r2, [r3, #48]
+ 499 0016 02F00802 		and	r2, r2, #8
+ 500 001a 0092     		str	r2, [sp]
+  79:Core/Src/nrf24l01.c ****     NRF24L01_CSN_GPIO_CLK_ENABLE(); /* CSN口时钟使能 */
+ 501              		.loc 1 79 5 view .LVU109
+ 502 001c 009A     		ldr	r2, [sp]
+ 503              	.LBE2:
+  79:Core/Src/nrf24l01.c ****     NRF24L01_CSN_GPIO_CLK_ENABLE(); /* CSN口时钟使能 */
+ 504              		.loc 1 79 5 view .LVU110
+  79:Core/Src/nrf24l01.c ****     NRF24L01_CSN_GPIO_CLK_ENABLE(); /* CSN口时钟使能 */
+ 505              		.loc 1 79 5 view .LVU111
+  80:Core/Src/nrf24l01.c ****     NRF24L01_IRQ_GPIO_CLK_ENABLE(); /* IRQ口时钟使能 */
+ 506              		.loc 1 80 5 view .LVU112
+  80:Core/Src/nrf24l01.c ****     NRF24L01_IRQ_GPIO_CLK_ENABLE(); /* IRQ口时钟使能 */
+ 507              		.loc 1 80 5 view .LVU113
+ 508              	.LBB3:
+  80:Core/Src/nrf24l01.c ****     NRF24L01_IRQ_GPIO_CLK_ENABLE(); /* IRQ口时钟使能 */
+ 509              		.loc 1 80 5 view .LVU114
+ 510 001e 0194     		str	r4, [sp, #4]
+  80:Core/Src/nrf24l01.c ****     NRF24L01_IRQ_GPIO_CLK_ENABLE(); /* IRQ口时钟使能 */
+ 511              		.loc 1 80 5 view .LVU115
+ 512 0020 1A6B     		ldr	r2, [r3, #48]
+ 513 0022 42F00202 		orr	r2, r2, #2
+ 514 0026 1A63     		str	r2, [r3, #48]
+  80:Core/Src/nrf24l01.c ****     NRF24L01_IRQ_GPIO_CLK_ENABLE(); /* IRQ口时钟使能 */
+ 515              		.loc 1 80 5 view .LVU116
+ 516 0028 1A6B     		ldr	r2, [r3, #48]
+ 517 002a 02F00202 		and	r2, r2, #2
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 15
+
+
+ 518 002e 0192     		str	r2, [sp, #4]
+  80:Core/Src/nrf24l01.c ****     NRF24L01_IRQ_GPIO_CLK_ENABLE(); /* IRQ口时钟使能 */
+ 519              		.loc 1 80 5 view .LVU117
+ 520 0030 019A     		ldr	r2, [sp, #4]
+ 521              	.LBE3:
+  80:Core/Src/nrf24l01.c ****     NRF24L01_IRQ_GPIO_CLK_ENABLE(); /* IRQ口时钟使能 */
+ 522              		.loc 1 80 5 view .LVU118
+  80:Core/Src/nrf24l01.c ****     NRF24L01_IRQ_GPIO_CLK_ENABLE(); /* IRQ口时钟使能 */
+ 523              		.loc 1 80 5 view .LVU119
+  81:Core/Src/nrf24l01.c **** 
+ 524              		.loc 1 81 5 view .LVU120
+  81:Core/Src/nrf24l01.c **** 
+ 525              		.loc 1 81 5 view .LVU121
+ 526              	.LBB4:
+  81:Core/Src/nrf24l01.c **** 
+ 527              		.loc 1 81 5 view .LVU122
+ 528 0032 0294     		str	r4, [sp, #8]
+  81:Core/Src/nrf24l01.c **** 
+ 529              		.loc 1 81 5 view .LVU123
+ 530 0034 1A6B     		ldr	r2, [r3, #48]
+ 531 0036 42F00802 		orr	r2, r2, #8
+ 532 003a 1A63     		str	r2, [r3, #48]
+  81:Core/Src/nrf24l01.c **** 
+ 533              		.loc 1 81 5 view .LVU124
+ 534 003c 1B6B     		ldr	r3, [r3, #48]
+ 535 003e 03F00803 		and	r3, r3, #8
+ 536 0042 0293     		str	r3, [sp, #8]
+  81:Core/Src/nrf24l01.c **** 
+ 537              		.loc 1 81 5 view .LVU125
+ 538 0044 029B     		ldr	r3, [sp, #8]
+ 539              	.LBE4:
+  81:Core/Src/nrf24l01.c **** 
+ 540              		.loc 1 81 5 view .LVU126
+  81:Core/Src/nrf24l01.c **** 
+ 541              		.loc 1 81 5 view .LVU127
+  83:Core/Src/nrf24l01.c ****     gpio_init_struct.Mode = GPIO_MODE_OUTPUT_PP;             /* 推挽输出 */
+ 542              		.loc 1 83 5 view .LVU128
+  83:Core/Src/nrf24l01.c ****     gpio_init_struct.Mode = GPIO_MODE_OUTPUT_PP;             /* 推挽输出 */
+ 543              		.loc 1 83 26 is_stmt 0 view .LVU129
+ 544 0046 4FF4004A 		mov	r10, #32768
+ 545 004a CDF80CA0 		str	r10, [sp, #12]
+  84:Core/Src/nrf24l01.c ****     gpio_init_struct.Pull = GPIO_PULLUP;                     /* 上拉 */
+ 546              		.loc 1 84 5 is_stmt 1 view .LVU130
+  84:Core/Src/nrf24l01.c ****     gpio_init_struct.Pull = GPIO_PULLUP;                     /* 上拉 */
+ 547              		.loc 1 84 27 is_stmt 0 view .LVU131
+ 548 004e 0125     		movs	r5, #1
+ 549 0050 0495     		str	r5, [sp, #16]
+  85:Core/Src/nrf24l01.c ****     gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;           /* 高速 */
+ 550              		.loc 1 85 5 is_stmt 1 view .LVU132
+  85:Core/Src/nrf24l01.c ****     gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;           /* 高速 */
+ 551              		.loc 1 85 27 is_stmt 0 view .LVU133
+ 552 0052 0595     		str	r5, [sp, #20]
+  86:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_CE_GPIO_PORT, &gpio_init_struct); /* 初始化CE引脚 */
+ 553              		.loc 1 86 5 is_stmt 1 view .LVU134
+  86:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_CE_GPIO_PORT, &gpio_init_struct); /* 初始化CE引脚 */
+ 554              		.loc 1 86 28 is_stmt 0 view .LVU135
+ 555 0054 4FF0020B 		mov	fp, #2
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 16
+
+
+ 556 0058 CDF818B0 		str	fp, [sp, #24]
+  87:Core/Src/nrf24l01.c **** 
+ 557              		.loc 1 87 5 is_stmt 1 view .LVU136
+ 558 005c 03AF     		add	r7, sp, #12
+ 559 005e 154E     		ldr	r6, .L33+4
+ 560 0060 3946     		mov	r1, r7
+ 561 0062 3046     		mov	r0, r6
+ 562 0064 FFF7FEFF 		bl	HAL_GPIO_Init
+ 563              	.LVL53:
+  89:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_CSN_GPIO_PORT, &gpio_init_struct);/* 初始化CSN引脚 */
+ 564              		.loc 1 89 5 view .LVU137
+  89:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_CSN_GPIO_PORT, &gpio_init_struct);/* 初始化CSN引脚 */
+ 565              		.loc 1 89 26 is_stmt 0 view .LVU138
+ 566 0068 4FF48059 		mov	r9, #4096
+ 567 006c CDF80C90 		str	r9, [sp, #12]
+  90:Core/Src/nrf24l01.c **** 
+ 568              		.loc 1 90 5 is_stmt 1 view .LVU139
+ 569 0070 DFF84480 		ldr	r8, .L33+8
+ 570 0074 3946     		mov	r1, r7
+ 571 0076 4046     		mov	r0, r8
+ 572 0078 FFF7FEFF 		bl	HAL_GPIO_Init
+ 573              	.LVL54:
+  92:Core/Src/nrf24l01.c ****     gpio_init_struct.Mode = GPIO_MODE_INPUT;                 /* 输入 */
+ 574              		.loc 1 92 5 view .LVU140
+  92:Core/Src/nrf24l01.c ****     gpio_init_struct.Mode = GPIO_MODE_INPUT;                 /* 输入 */
+ 575              		.loc 1 92 26 is_stmt 0 view .LVU141
+ 576 007c 4FF48043 		mov	r3, #16384
+ 577 0080 0393     		str	r3, [sp, #12]
+  93:Core/Src/nrf24l01.c ****     gpio_init_struct.Pull = GPIO_PULLUP;                     /* 上拉 */
+ 578              		.loc 1 93 5 is_stmt 1 view .LVU142
+  93:Core/Src/nrf24l01.c ****     gpio_init_struct.Pull = GPIO_PULLUP;                     /* 上拉 */
+ 579              		.loc 1 93 27 is_stmt 0 view .LVU143
+ 580 0082 0494     		str	r4, [sp, #16]
+  94:Core/Src/nrf24l01.c ****     gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;           /* 高速 */
+ 581              		.loc 1 94 5 is_stmt 1 view .LVU144
+  94:Core/Src/nrf24l01.c ****     gpio_init_struct.Speed = GPIO_SPEED_FREQ_HIGH;           /* 高速 */
+ 582              		.loc 1 94 27 is_stmt 0 view .LVU145
+ 583 0084 0595     		str	r5, [sp, #20]
+  95:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_IRQ_GPIO_PORT, &gpio_init_struct);/* 初始化IRQ引脚 */
+ 584              		.loc 1 95 5 is_stmt 1 view .LVU146
+  95:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_IRQ_GPIO_PORT, &gpio_init_struct);/* 初始化IRQ引脚 */
+ 585              		.loc 1 95 28 is_stmt 0 view .LVU147
+ 586 0086 CDF818B0 		str	fp, [sp, #24]
+  96:Core/Src/nrf24l01.c **** 
+ 587              		.loc 1 96 5 is_stmt 1 view .LVU148
+ 588 008a 3946     		mov	r1, r7
+ 589 008c 3046     		mov	r0, r6
+ 590 008e FFF7FEFF 		bl	HAL_GPIO_Init
+ 591              	.LVL55:
+  99:Core/Src/nrf24l01.c ****     NRF24L01_CE(0);             /* 使能24L01 */
+ 592              		.loc 1 99 5 view .LVU149
+ 593 0092 FFF7FEFF 		bl	nrf24l01_spi_init
+ 594              	.LVL56:
+ 100:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);            /* SPI片选取消 */
+ 595              		.loc 1 100 5 view .LVU150
+ 100:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);            /* SPI片选取消 */
+ 596              		.loc 1 100 5 view .LVU151
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 17
+
+
+ 597 0096 2246     		mov	r2, r4
+ 598 0098 5146     		mov	r1, r10
+ 599 009a 3046     		mov	r0, r6
+ 600 009c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 601              	.LVL57:
+ 100:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);            /* SPI片选取消 */
+ 602              		.loc 1 100 5 discriminator 1 view .LVU152
+ 101:Core/Src/nrf24l01.c **** }
+ 603              		.loc 1 101 5 view .LVU153
+ 101:Core/Src/nrf24l01.c **** }
+ 604              		.loc 1 101 5 view .LVU154
+ 605 00a0 2A46     		mov	r2, r5
+ 606 00a2 4946     		mov	r1, r9
+ 607 00a4 4046     		mov	r0, r8
+ 608 00a6 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 609              	.LVL58:
+ 101:Core/Src/nrf24l01.c **** }
+ 610              		.loc 1 101 5 discriminator 1 view .LVU155
+ 102:Core/Src/nrf24l01.c **** 
+ 611              		.loc 1 102 1 is_stmt 0 view .LVU156
+ 612 00aa 09B0     		add	sp, sp, #36
+ 613              	.LCFI11:
+ 614              		.cfi_def_cfa_offset 36
+ 615              		@ sp needed
+ 616 00ac BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 617              	.L34:
+ 618              		.align	2
+ 619              	.L33:
+ 620 00b0 00380240 		.word	1073887232
+ 621 00b4 000C0240 		.word	1073875968
+ 622 00b8 00040240 		.word	1073873920
+ 623              		.cfi_endproc
+ 624              	.LFE137:
+ 626              		.section	.rodata.nrf24l01_check.str1.4,"aMS",%progbits,1
+ 627              		.align	2
+ 628              	.LC0:
+ 629 0000 A5A5A5A5 		.ascii	"\245\245\245\245\245\000"
+ 629      A500
+ 630              		.section	.text.nrf24l01_check,"ax",%progbits
+ 631              		.align	1
+ 632              		.global	nrf24l01_check
+ 633              		.syntax unified
+ 634              		.thumb
+ 635              		.thumb_func
+ 637              	nrf24l01_check:
+ 638              	.LFB138:
+ 110:Core/Src/nrf24l01.c ****     uint8_t buf[5] = {0XA5, 0XA5, 0XA5, 0XA5, 0XA5};
+ 639              		.loc 1 110 1 is_stmt 1 view -0
+ 640              		.cfi_startproc
+ 641              		@ args = 0, pretend = 0, frame = 8
+ 642              		@ frame_needed = 0, uses_anonymous_args = 0
+ 643 0000 10B5     		push	{r4, lr}
+ 644              	.LCFI12:
+ 645              		.cfi_def_cfa_offset 8
+ 646              		.cfi_offset 4, -8
+ 647              		.cfi_offset 14, -4
+ 648 0002 82B0     		sub	sp, sp, #8
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 18
+
+
+ 649              	.LCFI13:
+ 650              		.cfi_def_cfa_offset 16
+ 111:Core/Src/nrf24l01.c ****     uint8_t i;
+ 651              		.loc 1 111 5 view .LVU158
+ 111:Core/Src/nrf24l01.c ****     uint8_t i;
+ 652              		.loc 1 111 13 is_stmt 0 view .LVU159
+ 653 0004 134B     		ldr	r3, .L42
+ 654 0006 93E80300 		ldm	r3, {r0, r1}
+ 655 000a 0090     		str	r0, [sp]
+ 656 000c 8DF80410 		strb	r1, [sp, #4]
+ 112:Core/Src/nrf24l01.c **** 
+ 657              		.loc 1 112 5 is_stmt 1 view .LVU160
+ 114:Core/Src/nrf24l01.c ****     nrf24l01_write_buf(NRF_WRITE_REG + TX_ADDR, buf, 5);  /* 写入5个字节的地址. */
+ 658              		.loc 1 114 5 view .LVU161
+ 659 0010 2020     		movs	r0, #32
+ 660 0012 FFF7FEFF 		bl	spi2_set_speed
+ 661              	.LVL59:
+ 115:Core/Src/nrf24l01.c ****     nrf24l01_read_buf(TX_ADDR, buf, 5);                   /* 读出写入的地址 */
+ 662              		.loc 1 115 5 view .LVU162
+ 663 0016 0522     		movs	r2, #5
+ 664 0018 6946     		mov	r1, sp
+ 665 001a 3020     		movs	r0, #48
+ 666 001c FFF7FEFF 		bl	nrf24l01_write_buf
+ 667              	.LVL60:
+ 116:Core/Src/nrf24l01.c **** 
+ 668              		.loc 1 116 5 view .LVU163
+ 669 0020 0522     		movs	r2, #5
+ 670 0022 6946     		mov	r1, sp
+ 671 0024 1020     		movs	r0, #16
+ 672 0026 FFF7FEFF 		bl	nrf24l01_read_buf
+ 673              	.LVL61:
+ 118:Core/Src/nrf24l01.c ****     {
+ 674              		.loc 1 118 5 view .LVU164
+ 118:Core/Src/nrf24l01.c ****     {
+ 675              		.loc 1 118 12 is_stmt 0 view .LVU165
+ 676 002a 0023     		movs	r3, #0
+ 677              	.LVL62:
+ 678              	.L36:
+ 118:Core/Src/nrf24l01.c ****     {
+ 679              		.loc 1 118 19 is_stmt 1 discriminator 1 view .LVU166
+ 680 002c 042B     		cmp	r3, #4
+ 681 002e 09D8     		bhi	.L37
+ 120:Core/Src/nrf24l01.c ****     }
+ 682              		.loc 1 120 9 view .LVU167
+ 120:Core/Src/nrf24l01.c ****     }
+ 683              		.loc 1 120 16 is_stmt 0 view .LVU168
+ 684 0030 03F10802 		add	r2, r3, #8
+ 685 0034 6A44     		add	r2, sp, r2
+ 686 0036 12F8082C 		ldrb	r2, [r2, #-8]	@ zero_extendqisi2
+ 120:Core/Src/nrf24l01.c ****     }
+ 687              		.loc 1 120 12 view .LVU169
+ 688 003a A52A     		cmp	r2, #165
+ 689 003c 02D1     		bne	.L37
+ 118:Core/Src/nrf24l01.c ****     {
+ 690              		.loc 1 118 25 is_stmt 1 discriminator 2 view .LVU170
+ 691 003e 0133     		adds	r3, r3, #1
+ 692              	.LVL63:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 19
+
+
+ 118:Core/Src/nrf24l01.c ****     {
+ 693              		.loc 1 118 25 is_stmt 0 discriminator 2 view .LVU171
+ 694 0040 DBB2     		uxtb	r3, r3
+ 695              	.LVL64:
+ 118:Core/Src/nrf24l01.c ****     {
+ 696              		.loc 1 118 25 discriminator 2 view .LVU172
+ 697 0042 F3E7     		b	.L36
+ 698              	.LVL65:
+ 699              	.L37:
+ 123:Core/Src/nrf24l01.c **** 
+ 700              		.loc 1 123 5 is_stmt 1 view .LVU173
+ 123:Core/Src/nrf24l01.c **** 
+ 701              		.loc 1 123 8 is_stmt 0 view .LVU174
+ 702 0044 052B     		cmp	r3, #5
+ 703 0046 02D1     		bne	.L40
+ 125:Core/Src/nrf24l01.c **** }
+ 704              		.loc 1 125 12 view .LVU175
+ 705 0048 0020     		movs	r0, #0
+ 706              	.L39:
+ 126:Core/Src/nrf24l01.c **** 
+ 707              		.loc 1 126 1 view .LVU176
+ 708 004a 02B0     		add	sp, sp, #8
+ 709              	.LCFI14:
+ 710              		.cfi_remember_state
+ 711              		.cfi_def_cfa_offset 8
+ 712              		@ sp needed
+ 713 004c 10BD     		pop	{r4, pc}
+ 714              	.L40:
+ 715              	.LCFI15:
+ 716              		.cfi_restore_state
+ 123:Core/Src/nrf24l01.c **** 
+ 717              		.loc 1 123 24 discriminator 1 view .LVU177
+ 718 004e 0120     		movs	r0, #1
+ 719 0050 FBE7     		b	.L39
+ 720              	.L43:
+ 721 0052 00BF     		.align	2
+ 722              	.L42:
+ 723 0054 00000000 		.word	.LC0
+ 724              		.cfi_endproc
+ 725              	.LFE138:
+ 727              		.section	.text.nrf24l01_tx_packet,"ax",%progbits
+ 728              		.align	1
+ 729              		.global	nrf24l01_tx_packet
+ 730              		.syntax unified
+ 731              		.thumb
+ 732              		.thumb_func
+ 734              	nrf24l01_tx_packet:
+ 735              	.LVL66:
+ 736              	.LFB143:
+ 210:Core/Src/nrf24l01.c **** 
+ 211:Core/Src/nrf24l01.c **** /**
+ 212:Core/Src/nrf24l01.c ****  * @brief       启动NRF24L01发送一次数据(数据长度 = TX_PLOAD_WIDTH)
+ 213:Core/Src/nrf24l01.c ****  * @param       ptxbuf : 待发送数据首地址
+ 214:Core/Src/nrf24l01.c ****  * @retval      发送完成状态
+ 215:Core/Src/nrf24l01.c ****  *   @arg       0    : 发送成功
+ 216:Core/Src/nrf24l01.c ****  *   @arg       1    : 达到最大次数,失败
+ 217:Core/Src/nrf24l01.c ****  *   @arg       0XFF : 发送中
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 20
+
+
+ 218:Core/Src/nrf24l01.c ****  */
+ 219:Core/Src/nrf24l01.c **** uint8_t nrf24l01_tx_packet(uint8_t *ptxbuf)
+ 220:Core/Src/nrf24l01.c **** {
+ 737              		.loc 1 220 1 is_stmt 1 view -0
+ 738              		.cfi_startproc
+ 739              		@ args = 0, pretend = 0, frame = 0
+ 740              		@ frame_needed = 0, uses_anonymous_args = 0
+ 741              		.loc 1 220 1 is_stmt 0 view .LVU179
+ 742 0000 38B5     		push	{r3, r4, r5, lr}
+ 743              	.LCFI16:
+ 744              		.cfi_def_cfa_offset 16
+ 745              		.cfi_offset 3, -16
+ 746              		.cfi_offset 4, -12
+ 747              		.cfi_offset 5, -8
+ 748              		.cfi_offset 14, -4
+ 749 0002 0446     		mov	r4, r0
+ 221:Core/Src/nrf24l01.c ****     uint8_t sta;
+ 750              		.loc 1 221 5 is_stmt 1 view .LVU180
+ 222:Core/Src/nrf24l01.c ****     uint8_t rval = 0XFF;
+ 751              		.loc 1 222 5 view .LVU181
+ 752              	.LVL67:
+ 223:Core/Src/nrf24l01.c ****     uint32_t timeout;
+ 753              		.loc 1 223 5 view .LVU182
+ 224:Core/Src/nrf24l01.c **** 
+ 225:Core/Src/nrf24l01.c ****     /* 发送前清除所有旧中断标志，确保 IRQ 从高电平开始 */
+ 226:Core/Src/nrf24l01.c ****     sta = nrf24l01_read_reg(STATUS);
+ 754              		.loc 1 226 5 view .LVU183
+ 755              		.loc 1 226 11 is_stmt 0 view .LVU184
+ 756 0004 0720     		movs	r0, #7
+ 757              	.LVL68:
+ 758              		.loc 1 226 11 view .LVU185
+ 759 0006 FFF7FEFF 		bl	nrf24l01_read_reg
+ 760              	.LVL69:
+ 761 000a 0146     		mov	r1, r0
+ 762              	.LVL70:
+ 227:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);
+ 763              		.loc 1 227 5 is_stmt 1 view .LVU186
+ 764 000c 2720     		movs	r0, #39
+ 765 000e FFF7FEFF 		bl	nrf24l01_write_reg
+ 766              	.LVL71:
+ 228:Core/Src/nrf24l01.c **** 
+ 229:Core/Src/nrf24l01.c ****     NRF24L01_CE(0);
+ 767              		.loc 1 229 5 view .LVU187
+ 768              		.loc 1 229 5 view .LVU188
+ 769 0012 264D     		ldr	r5, .L53
+ 770 0014 0022     		movs	r2, #0
+ 771 0016 4FF40041 		mov	r1, #32768
+ 772 001a 2846     		mov	r0, r5
+ 773 001c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 774              	.LVL72:
+ 775              		.loc 1 229 5 discriminator 1 view .LVU189
+ 230:Core/Src/nrf24l01.c ****     nrf24l01_write_buf(WR_TX_PLOAD, ptxbuf, TX_PLOAD_WIDTH);    /* 写数据到TX BUF  TX_PLOAD_WID
+ 776              		.loc 1 230 5 view .LVU190
+ 777 0020 2022     		movs	r2, #32
+ 778 0022 2146     		mov	r1, r4
+ 779 0024 A020     		movs	r0, #160
+ 780 0026 FFF7FEFF 		bl	nrf24l01_write_buf
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 21
+
+
+ 781              	.LVL73:
+ 231:Core/Src/nrf24l01.c ****     NRF24L01_CE(1);                     /* 启动发送 */
+ 782              		.loc 1 231 5 view .LVU191
+ 783              		.loc 1 231 5 view .LVU192
+ 784 002a 0122     		movs	r2, #1
+ 785 002c 4FF40041 		mov	r1, #32768
+ 786 0030 2846     		mov	r0, r5
+ 787 0032 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 788              	.LVL74:
+ 789              		.loc 1 231 5 discriminator 1 view .LVU193
+ 232:Core/Src/nrf24l01.c **** 
+ 233:Core/Src/nrf24l01.c ****     /* 等待发送完成，超时 100ms（正常 TX_DS<1ms，MAX_RT<5ms） */
+ 234:Core/Src/nrf24l01.c ****     timeout = HAL_GetTick() + 100;
+ 790              		.loc 1 234 5 view .LVU194
+ 791              		.loc 1 234 15 is_stmt 0 view .LVU195
+ 792 0036 FFF7FEFF 		bl	HAL_GetTick
+ 793              	.LVL75:
+ 794              		.loc 1 234 13 discriminator 1 view .LVU196
+ 795 003a 00F16404 		add	r4, r0, #100
+ 796              	.LVL76:
+ 235:Core/Src/nrf24l01.c ****     while (NRF24L01_IRQ != 0) {
+ 797              		.loc 1 235 5 is_stmt 1 view .LVU197
+ 798              	.L45:
+ 799              		.loc 1 235 25 view .LVU198
+ 800              		.loc 1 235 12 is_stmt 0 view .LVU199
+ 801 003e 4FF48041 		mov	r1, #16384
+ 802 0042 1A48     		ldr	r0, .L53
+ 803 0044 FFF7FEFF 		bl	HAL_GPIO_ReadPin
+ 804              	.LVL77:
+ 805              		.loc 1 235 25 discriminator 1 view .LVU200
+ 806 0048 0546     		mov	r5, r0
+ 807 004a B8B1     		cbz	r0, .L51
+ 236:Core/Src/nrf24l01.c ****         if (HAL_GetTick() >= timeout) {
+ 808              		.loc 1 236 9 is_stmt 1 view .LVU201
+ 809              		.loc 1 236 13 is_stmt 0 view .LVU202
+ 810 004c FFF7FEFF 		bl	HAL_GetTick
+ 811              	.LVL78:
+ 812              		.loc 1 236 12 discriminator 1 view .LVU203
+ 813 0050 A042     		cmp	r0, r4
+ 814 0052 F4D3     		bcc	.L45
+ 237:Core/Src/nrf24l01.c ****             NRF24L01_CE(0);                             /* 停止发送 */
+ 815              		.loc 1 237 13 is_stmt 1 view .LVU204
+ 816              		.loc 1 237 13 view .LVU205
+ 817 0054 0022     		movs	r2, #0
+ 818 0056 4FF40041 		mov	r1, #32768
+ 819 005a 1448     		ldr	r0, .L53
+ 820 005c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 821              	.LVL79:
+ 822              		.loc 1 237 13 discriminator 1 view .LVU206
+ 238:Core/Src/nrf24l01.c ****             sta = nrf24l01_read_reg(STATUS);            /* 读并清除中断标志 */
+ 823              		.loc 1 238 13 view .LVU207
+ 824              		.loc 1 238 19 is_stmt 0 view .LVU208
+ 825 0060 0720     		movs	r0, #7
+ 826 0062 FFF7FEFF 		bl	nrf24l01_read_reg
+ 827              	.LVL80:
+ 828 0066 0146     		mov	r1, r0
+ 829              	.LVL81:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 22
+
+
+ 239:Core/Src/nrf24l01.c ****             nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);
+ 830              		.loc 1 239 13 is_stmt 1 view .LVU209
+ 831 0068 2720     		movs	r0, #39
+ 832 006a FFF7FEFF 		bl	nrf24l01_write_reg
+ 833              	.LVL82:
+ 240:Core/Src/nrf24l01.c ****             nrf24l01_write_reg(FLUSH_TX, 0xff);         /* 清空TX FIFO */
+ 834              		.loc 1 240 13 view .LVU210
+ 835 006e FF21     		movs	r1, #255
+ 836 0070 E120     		movs	r0, #225
+ 837 0072 FFF7FEFF 		bl	nrf24l01_write_reg
+ 838              	.LVL83:
+ 241:Core/Src/nrf24l01.c ****             return 0xFF;
+ 839              		.loc 1 241 13 view .LVU211
+ 840              		.loc 1 241 20 is_stmt 0 view .LVU212
+ 841 0076 FF25     		movs	r5, #255
+ 842              	.LVL84:
+ 843              	.L46:
+ 242:Core/Src/nrf24l01.c ****         }
+ 243:Core/Src/nrf24l01.c ****     }
+ 244:Core/Src/nrf24l01.c **** 
+ 245:Core/Src/nrf24l01.c ****     sta = nrf24l01_read_reg(STATUS);    /* 读取状态寄存器的值 */
+ 246:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);    /* 清除TX_DS或MAX_RT中断标志 */
+ 247:Core/Src/nrf24l01.c **** 
+ 248:Core/Src/nrf24l01.c ****     if (sta & MAX_TX)   /* 达到最大重发次数 */
+ 249:Core/Src/nrf24l01.c ****     {
+ 250:Core/Src/nrf24l01.c ****         nrf24l01_write_reg(FLUSH_TX, 0xff);             /* 清除TX FIFO寄存器 */
+ 251:Core/Src/nrf24l01.c ****         rval = 1;
+ 252:Core/Src/nrf24l01.c ****     }
+ 253:Core/Src/nrf24l01.c **** 
+ 254:Core/Src/nrf24l01.c ****     if (sta & TX_OK)    /* 发送完成 */
+ 255:Core/Src/nrf24l01.c ****     {
+ 256:Core/Src/nrf24l01.c ****         rval = 0;       /* 标记发送成功 */
+ 257:Core/Src/nrf24l01.c ****     }
+ 258:Core/Src/nrf24l01.c **** 
+ 259:Core/Src/nrf24l01.c ****     return rval;        /* 返回结果 */
+ 260:Core/Src/nrf24l01.c **** }
+ 844              		.loc 1 260 1 view .LVU213
+ 845 0078 2846     		mov	r0, r5
+ 846 007a 38BD     		pop	{r3, r4, r5, pc}
+ 847              	.LVL85:
+ 848              	.L51:
+ 245:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);    /* 清除TX_DS或MAX_RT中断标志 */
+ 849              		.loc 1 245 5 is_stmt 1 view .LVU214
+ 245:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);    /* 清除TX_DS或MAX_RT中断标志 */
+ 850              		.loc 1 245 11 is_stmt 0 view .LVU215
+ 851 007c 0720     		movs	r0, #7
+ 852 007e FFF7FEFF 		bl	nrf24l01_read_reg
+ 853              	.LVL86:
+ 854 0082 0446     		mov	r4, r0
+ 855              	.LVL87:
+ 246:Core/Src/nrf24l01.c **** 
+ 856              		.loc 1 246 5 is_stmt 1 view .LVU216
+ 857 0084 0146     		mov	r1, r0
+ 858 0086 2720     		movs	r0, #39
+ 859              	.LVL88:
+ 246:Core/Src/nrf24l01.c **** 
+ 860              		.loc 1 246 5 is_stmt 0 view .LVU217
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 23
+
+
+ 861 0088 FFF7FEFF 		bl	nrf24l01_write_reg
+ 862              	.LVL89:
+ 248:Core/Src/nrf24l01.c ****     {
+ 863              		.loc 1 248 5 is_stmt 1 view .LVU218
+ 248:Core/Src/nrf24l01.c ****     {
+ 864              		.loc 1 248 8 is_stmt 0 view .LVU219
+ 865 008c 14F0100F 		tst	r4, #16
+ 866 0090 05D1     		bne	.L52
+ 222:Core/Src/nrf24l01.c ****     uint32_t timeout;
+ 867              		.loc 1 222 13 view .LVU220
+ 868 0092 FF23     		movs	r3, #255
+ 869              	.LVL90:
+ 870              	.L48:
+ 254:Core/Src/nrf24l01.c ****     {
+ 871              		.loc 1 254 5 is_stmt 1 view .LVU221
+ 254:Core/Src/nrf24l01.c ****     {
+ 872              		.loc 1 254 8 is_stmt 0 view .LVU222
+ 873 0094 14F0200F 		tst	r4, #32
+ 874 0098 EED1     		bne	.L46
+ 875 009a 1D46     		mov	r5, r3
+ 876 009c ECE7     		b	.L46
+ 877              	.LVL91:
+ 878              	.L52:
+ 250:Core/Src/nrf24l01.c ****         rval = 1;
+ 879              		.loc 1 250 9 is_stmt 1 view .LVU223
+ 880 009e FF21     		movs	r1, #255
+ 881 00a0 E120     		movs	r0, #225
+ 882 00a2 FFF7FEFF 		bl	nrf24l01_write_reg
+ 883              	.LVL92:
+ 251:Core/Src/nrf24l01.c ****     }
+ 884              		.loc 1 251 9 view .LVU224
+ 251:Core/Src/nrf24l01.c ****     }
+ 885              		.loc 1 251 14 is_stmt 0 view .LVU225
+ 886 00a6 0123     		movs	r3, #1
+ 887 00a8 F4E7     		b	.L48
+ 888              	.L54:
+ 889 00aa 00BF     		.align	2
+ 890              	.L53:
+ 891 00ac 000C0240 		.word	1073875968
+ 892              		.cfi_endproc
+ 893              	.LFE143:
+ 895              		.section	.text.nrf24l01_rx_packet,"ax",%progbits
+ 896              		.align	1
+ 897              		.global	nrf24l01_rx_packet
+ 898              		.syntax unified
+ 899              		.thumb
+ 900              		.thumb_func
+ 902              	nrf24l01_rx_packet:
+ 903              	.LVL93:
+ 904              	.LFB144:
+ 261:Core/Src/nrf24l01.c **** 
+ 262:Core/Src/nrf24l01.c **** /**
+ 263:Core/Src/nrf24l01.c ****  * @brief       启动NRF24L01接收一次数据(数据长度 = RX_PLOAD_WIDTH)
+ 264:Core/Src/nrf24l01.c ****  * @param       prxbuf : 接收数据缓冲区首地址
+ 265:Core/Src/nrf24l01.c ****  * @retval      接收完成状态
+ 266:Core/Src/nrf24l01.c ****  *   @arg       0 : 接收成功
+ 267:Core/Src/nrf24l01.c ****  *   @arg       1 : 失败
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 24
+
+
+ 268:Core/Src/nrf24l01.c ****  */
+ 269:Core/Src/nrf24l01.c **** uint8_t nrf24l01_rx_packet(uint8_t *prxbuf)
+ 270:Core/Src/nrf24l01.c **** {
+ 905              		.loc 1 270 1 is_stmt 1 view -0
+ 906              		.cfi_startproc
+ 907              		@ args = 0, pretend = 0, frame = 0
+ 908              		@ frame_needed = 0, uses_anonymous_args = 0
+ 909              		.loc 1 270 1 is_stmt 0 view .LVU227
+ 910 0000 38B5     		push	{r3, r4, r5, lr}
+ 911              	.LCFI17:
+ 912              		.cfi_def_cfa_offset 16
+ 913              		.cfi_offset 3, -16
+ 914              		.cfi_offset 4, -12
+ 915              		.cfi_offset 5, -8
+ 916              		.cfi_offset 14, -4
+ 917 0002 0546     		mov	r5, r0
+ 271:Core/Src/nrf24l01.c ****     uint8_t sta;
+ 918              		.loc 1 271 5 is_stmt 1 view .LVU228
+ 272:Core/Src/nrf24l01.c ****     uint8_t rval = 1;
+ 919              		.loc 1 272 5 view .LVU229
+ 920              	.LVL94:
+ 273:Core/Src/nrf24l01.c **** 
+ 274:Core/Src/nrf24l01.c ****     sta = nrf24l01_read_reg(STATUS);                            /* 读取状态寄存器的值 */
+ 921              		.loc 1 274 5 view .LVU230
+ 922              		.loc 1 274 11 is_stmt 0 view .LVU231
+ 923 0004 0720     		movs	r0, #7
+ 924              	.LVL95:
+ 925              		.loc 1 274 11 view .LVU232
+ 926 0006 FFF7FEFF 		bl	nrf24l01_read_reg
+ 927              	.LVL96:
+ 928 000a 0446     		mov	r4, r0
+ 929              	.LVL97:
+ 275:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);            /* 清除TX_DS或MAX_RT中断标志
+ 930              		.loc 1 275 5 is_stmt 1 view .LVU233
+ 931 000c 0146     		mov	r1, r0
+ 932 000e 2720     		movs	r0, #39
+ 933              	.LVL98:
+ 934              		.loc 1 275 5 is_stmt 0 view .LVU234
+ 935 0010 FFF7FEFF 		bl	nrf24l01_write_reg
+ 936              	.LVL99:
+ 276:Core/Src/nrf24l01.c **** 
+ 277:Core/Src/nrf24l01.c ****     if (sta & RX_OK)    /* 接收到数据 */
+ 937              		.loc 1 277 5 is_stmt 1 view .LVU235
+ 938              		.loc 1 277 8 is_stmt 0 view .LVU236
+ 939 0014 14F0400F 		tst	r4, #64
+ 940 0018 01D1     		bne	.L59
+ 272:Core/Src/nrf24l01.c **** 
+ 941              		.loc 1 272 13 view .LVU237
+ 942 001a 0120     		movs	r0, #1
+ 943              	.LVL100:
+ 944              	.L56:
+ 278:Core/Src/nrf24l01.c ****     {
+ 279:Core/Src/nrf24l01.c ****         nrf24l01_read_buf(RD_RX_PLOAD, prxbuf, RX_PLOAD_WIDTH); /* 读取数据 */
+ 280:Core/Src/nrf24l01.c ****         nrf24l01_write_reg(FLUSH_RX, 0xff);                     /* 清除RX FIFO寄存器 */
+ 281:Core/Src/nrf24l01.c ****         rval = 0;       /* 标记接收成功 */
+ 282:Core/Src/nrf24l01.c ****     }
+ 283:Core/Src/nrf24l01.c **** 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 25
+
+
+ 284:Core/Src/nrf24l01.c ****     return rval;        /* 返回结果 */
+ 945              		.loc 1 284 5 is_stmt 1 view .LVU238
+ 285:Core/Src/nrf24l01.c **** }
+ 946              		.loc 1 285 1 is_stmt 0 view .LVU239
+ 947 001c 38BD     		pop	{r3, r4, r5, pc}
+ 948              	.LVL101:
+ 949              	.L59:
+ 279:Core/Src/nrf24l01.c ****         nrf24l01_write_reg(FLUSH_RX, 0xff);                     /* 清除RX FIFO寄存器 */
+ 950              		.loc 1 279 9 is_stmt 1 view .LVU240
+ 951 001e 2022     		movs	r2, #32
+ 952 0020 2946     		mov	r1, r5
+ 953 0022 6120     		movs	r0, #97
+ 954 0024 FFF7FEFF 		bl	nrf24l01_read_buf
+ 955              	.LVL102:
+ 280:Core/Src/nrf24l01.c ****         rval = 0;       /* 标记接收成功 */
+ 956              		.loc 1 280 9 view .LVU241
+ 957 0028 FF21     		movs	r1, #255
+ 958 002a E220     		movs	r0, #226
+ 959 002c FFF7FEFF 		bl	nrf24l01_write_reg
+ 960              	.LVL103:
+ 281:Core/Src/nrf24l01.c ****     }
+ 961              		.loc 1 281 9 view .LVU242
+ 281:Core/Src/nrf24l01.c ****     }
+ 962              		.loc 1 281 14 is_stmt 0 view .LVU243
+ 963 0030 0020     		movs	r0, #0
+ 964 0032 F3E7     		b	.L56
+ 965              		.cfi_endproc
+ 966              	.LFE144:
+ 968              		.section	.text.nrf24l01_rx_mode,"ax",%progbits
+ 969              		.align	1
+ 970              		.global	nrf24l01_rx_mode
+ 971              		.syntax unified
+ 972              		.thumb
+ 973              		.thumb_func
+ 975              	nrf24l01_rx_mode:
+ 976              	.LFB145:
+ 286:Core/Src/nrf24l01.c **** 
+ 287:Core/Src/nrf24l01.c **** /**
+ 288:Core/Src/nrf24l01.c ****  * @brief       NRF24L01进入接收模式
+ 289:Core/Src/nrf24l01.c ****  *   @note      设置RX地址,写RX数据宽度,选择RF频道,波特率和LNA HCURR
+ 290:Core/Src/nrf24l01.c ****  *              当CE变高后,即进入RX模式,并可以接收数据了
+ 291:Core/Src/nrf24l01.c ****  * @param       无
+ 292:Core/Src/nrf24l01.c ****  * @retval      无
+ 293:Core/Src/nrf24l01.c ****  */
+ 294:Core/Src/nrf24l01.c **** void nrf24l01_rx_mode(void)
+ 295:Core/Src/nrf24l01.c **** {
+ 977              		.loc 1 295 1 is_stmt 1 view -0
+ 978              		.cfi_startproc
+ 979              		@ args = 0, pretend = 0, frame = 0
+ 980              		@ frame_needed = 0, uses_anonymous_args = 0
+ 981 0000 10B5     		push	{r4, lr}
+ 982              	.LCFI18:
+ 983              		.cfi_def_cfa_offset 8
+ 984              		.cfi_offset 4, -8
+ 985              		.cfi_offset 14, -4
+ 296:Core/Src/nrf24l01.c ****     NRF24L01_CE(0);
+ 986              		.loc 1 296 5 view .LVU245
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 26
+
+
+ 987              		.loc 1 296 5 view .LVU246
+ 988 0002 154C     		ldr	r4, .L62
+ 989 0004 0022     		movs	r2, #0
+ 990 0006 4FF40041 		mov	r1, #32768
+ 991 000a 2046     		mov	r0, r4
+ 992 000c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 993              	.LVL104:
+ 994              		.loc 1 296 5 discriminator 1 view .LVU247
+ 297:Core/Src/nrf24l01.c ****     nrf24l01_write_buf(NRF_WRITE_REG + RX_ADDR_P0, (uint8_t *)RX_ADDRESS, RX_ADR_WIDTH);    /* 写R
+ 995              		.loc 1 297 5 view .LVU248
+ 996 0010 0522     		movs	r2, #5
+ 997 0012 1249     		ldr	r1, .L62+4
+ 998 0014 2A20     		movs	r0, #42
+ 999 0016 FFF7FEFF 		bl	nrf24l01_write_buf
+ 1000              	.LVL105:
+ 298:Core/Src/nrf24l01.c **** 
+ 299:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_AA, 0x01);        /* 使能通道0的自动应答 */
+ 1001              		.loc 1 299 5 view .LVU249
+ 1002 001a 0121     		movs	r1, #1
+ 1003 001c 2120     		movs	r0, #33
+ 1004 001e FFF7FEFF 		bl	nrf24l01_write_reg
+ 1005              	.LVL106:
+ 300:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_RXADDR, 0x01);    /* 使能通道0的接收地址 */
+ 1006              		.loc 1 300 5 view .LVU250
+ 1007 0022 0121     		movs	r1, #1
+ 1008 0024 2220     		movs	r0, #34
+ 1009 0026 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1010              	.LVL107:
+ 301:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RF_CH, 40);          /* 设置RF通信频率 */
+ 1011              		.loc 1 301 5 view .LVU251
+ 1012 002a 2821     		movs	r1, #40
+ 1013 002c 2520     		movs	r0, #37
+ 1014 002e FFF7FEFF 		bl	nrf24l01_write_reg
+ 1015              	.LVL108:
+ 302:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RX_PW_P0, RX_PLOAD_WIDTH);   /* 选择通道0的有效数据
+ 1016              		.loc 1 302 5 view .LVU252
+ 1017 0032 2021     		movs	r1, #32
+ 1018 0034 3120     		movs	r0, #49
+ 1019 0036 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1020              	.LVL109:
+ 303:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RF_SETUP, 0x0f);     /* 设置TX发射参数,0db增益,2Mbps
+ 1021              		.loc 1 303 5 view .LVU253
+ 1022 003a 0F21     		movs	r1, #15
+ 1023 003c 2620     		movs	r0, #38
+ 1024 003e FFF7FEFF 		bl	nrf24l01_write_reg
+ 1025              	.LVL110:
+ 304:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + CONFIG, 0x0f);       /* 配置基本工作模式的参数;PW
+ 1026              		.loc 1 304 5 view .LVU254
+ 1027 0042 0F21     		movs	r1, #15
+ 1028 0044 2020     		movs	r0, #32
+ 1029 0046 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1030              	.LVL111:
+ 305:Core/Src/nrf24l01.c ****     NRF24L01_CE(1); /* CE为高,进入接收模式 */
+ 1031              		.loc 1 305 5 view .LVU255
+ 1032              		.loc 1 305 5 view .LVU256
+ 1033 004a 0122     		movs	r2, #1
+ 1034 004c 4FF40041 		mov	r1, #32768
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 27
+
+
+ 1035 0050 2046     		mov	r0, r4
+ 1036 0052 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1037              	.LVL112:
+ 1038              		.loc 1 305 5 discriminator 1 view .LVU257
+ 306:Core/Src/nrf24l01.c **** }
+ 1039              		.loc 1 306 1 is_stmt 0 view .LVU258
+ 1040 0056 10BD     		pop	{r4, pc}
+ 1041              	.L63:
+ 1042              		.align	2
+ 1043              	.L62:
+ 1044 0058 000C0240 		.word	1073875968
+ 1045 005c 00000000 		.word	RX_ADDRESS
+ 1046              		.cfi_endproc
+ 1047              	.LFE145:
+ 1049              		.section	.text.nrf24l01_tx_mode,"ax",%progbits
+ 1050              		.align	1
+ 1051              		.global	nrf24l01_tx_mode
+ 1052              		.syntax unified
+ 1053              		.thumb
+ 1054              		.thumb_func
+ 1056              	nrf24l01_tx_mode:
+ 1057              	.LFB146:
+ 307:Core/Src/nrf24l01.c **** 
+ 308:Core/Src/nrf24l01.c **** /**
+ 309:Core/Src/nrf24l01.c ****  * @brief       NRF24L01进入发送模式
+ 310:Core/Src/nrf24l01.c ****  *   @note      设置TX地址,写TX数据宽度,设置RX自动应答的地址,填充TX发送参数
+ 311:Core/Src/nrf24l01.c ****  *              LNA HCURR,PWR_UP,CRC使能
+ 312:Core/Src/nrf24l01.c ****  *              当CE变高后,即进入TX模式,并可以发送数据了, CE为高大于10us,则�
+ 313:Core/Src/nrf24l01.c ****  * @param       无
+ 314:Core/Src/nrf24l01.c ****  * @retval      无
+ 315:Core/Src/nrf24l01.c ****  */
+ 316:Core/Src/nrf24l01.c **** void nrf24l01_tx_mode(void)
+ 317:Core/Src/nrf24l01.c **** {
+ 1058              		.loc 1 317 1 is_stmt 1 view -0
+ 1059              		.cfi_startproc
+ 1060              		@ args = 0, pretend = 0, frame = 0
+ 1061              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1062 0000 10B5     		push	{r4, lr}
+ 1063              	.LCFI19:
+ 1064              		.cfi_def_cfa_offset 8
+ 1065              		.cfi_offset 4, -8
+ 1066              		.cfi_offset 14, -4
+ 318:Core/Src/nrf24l01.c ****     NRF24L01_CE(0);
+ 1067              		.loc 1 318 5 view .LVU260
+ 1068              		.loc 1 318 5 view .LVU261
+ 1069 0002 184C     		ldr	r4, .L66
+ 1070 0004 0022     		movs	r2, #0
+ 1071 0006 4FF40041 		mov	r1, #32768
+ 1072 000a 2046     		mov	r0, r4
+ 1073 000c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1074              	.LVL113:
+ 1075              		.loc 1 318 5 discriminator 1 view .LVU262
+ 319:Core/Src/nrf24l01.c ****     nrf24l01_write_buf(NRF_WRITE_REG + TX_ADDR, (uint8_t *)TX_ADDRESS, TX_ADR_WIDTH);       /* 写T
+ 1076              		.loc 1 319 5 view .LVU263
+ 1077 0010 0522     		movs	r2, #5
+ 1078 0012 1549     		ldr	r1, .L66+4
+ 1079 0014 3020     		movs	r0, #48
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 28
+
+
+ 1080 0016 FFF7FEFF 		bl	nrf24l01_write_buf
+ 1081              	.LVL114:
+ 320:Core/Src/nrf24l01.c ****     nrf24l01_write_buf(NRF_WRITE_REG + RX_ADDR_P0, (uint8_t *)RX_ADDRESS, RX_ADR_WIDTH);    /* 设�
+ 1082              		.loc 1 320 5 view .LVU264
+ 1083 001a 0522     		movs	r2, #5
+ 1084 001c 1349     		ldr	r1, .L66+8
+ 1085 001e 2A20     		movs	r0, #42
+ 1086 0020 FFF7FEFF 		bl	nrf24l01_write_buf
+ 1087              	.LVL115:
+ 321:Core/Src/nrf24l01.c **** 
+ 322:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_AA, 0x01);        /* 使能通道0的自动应答 */
+ 1088              		.loc 1 322 5 view .LVU265
+ 1089 0024 0121     		movs	r1, #1
+ 1090 0026 2120     		movs	r0, #33
+ 1091 0028 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1092              	.LVL116:
+ 323:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_RXADDR, 0x01);    /* 使能通道0的接收地址 */
+ 1093              		.loc 1 323 5 view .LVU266
+ 1094 002c 0121     		movs	r1, #1
+ 1095 002e 2220     		movs	r0, #34
+ 1096 0030 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1097              	.LVL117:
+ 324:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + SETUP_RETR, 0x1a);   /* 设置自动重发间隔时间:500us
+ 1098              		.loc 1 324 5 view .LVU267
+ 1099 0034 1A21     		movs	r1, #26
+ 1100 0036 2420     		movs	r0, #36
+ 1101 0038 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1102              	.LVL118:
+ 325:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RF_CH, 40);          /* 设置RF通道为40 */
+ 1103              		.loc 1 325 5 view .LVU268
+ 1104 003c 2821     		movs	r1, #40
+ 1105 003e 2520     		movs	r0, #37
+ 1106 0040 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1107              	.LVL119:
+ 326:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RF_SETUP, 0x0f);     /* 设置TX发射参数,0db增益,2Mbps
+ 1108              		.loc 1 326 5 view .LVU269
+ 1109 0044 0F21     		movs	r1, #15
+ 1110 0046 2620     		movs	r0, #38
+ 1111 0048 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1112              	.LVL120:
+ 327:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + CONFIG, 0x0e);       /* 配置基本工作模式的参数;PW
+ 1113              		.loc 1 327 5 view .LVU270
+ 1114 004c 0E21     		movs	r1, #14
+ 1115 004e 2020     		movs	r0, #32
+ 1116 0050 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1117              	.LVL121:
+ 328:Core/Src/nrf24l01.c ****     NRF24L01_CE(1); /* CE为高,10us后启动发送 */
+ 1118              		.loc 1 328 5 view .LVU271
+ 1119              		.loc 1 328 5 view .LVU272
+ 1120 0054 0122     		movs	r2, #1
+ 1121 0056 4FF40041 		mov	r1, #32768
+ 1122 005a 2046     		mov	r0, r4
+ 1123 005c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1124              	.LVL122:
+ 1125              		.loc 1 328 5 discriminator 1 view .LVU273
+ 329:Core/Src/nrf24l01.c **** }
+ 1126              		.loc 1 329 1 is_stmt 0 view .LVU274
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 29
+
+
+ 1127 0060 10BD     		pop	{r4, pc}
+ 1128              	.L67:
+ 1129 0062 00BF     		.align	2
+ 1130              	.L66:
+ 1131 0064 000C0240 		.word	1073875968
+ 1132 0068 00000000 		.word	TX_ADDRESS
+ 1133 006c 00000000 		.word	RX_ADDRESS
+ 1134              		.cfi_endproc
+ 1135              	.LFE146:
+ 1137              		.section	.text.B_nrf24l01_switch_rx_from_A,"ax",%progbits
+ 1138              		.align	1
+ 1139              		.global	B_nrf24l01_switch_rx_from_A
+ 1140              		.syntax unified
+ 1141              		.thumb
+ 1142              		.thumb_func
+ 1144              	B_nrf24l01_switch_rx_from_A:
+ 1145              	.LFB147:
+ 330:Core/Src/nrf24l01.c **** 
+ 331:Core/Src/nrf24l01.c **** 
+ 332:Core/Src/nrf24l01.c **** /**
+ 333:Core/Src/nrf24l01.c ****  * @brief  B模块第1步：切换为"接收A数据"模式(A-B通信)
+ 334:Core/Src/nrf24l01.c ****  * @note   基于库函数nrf24l01_rx_mode()修改，使用ADDR_AB和CH_AB
+ 335:Core/Src/nrf24l01.c ****  */
+ 336:Core/Src/nrf24l01.c **** void B_nrf24l01_switch_rx_from_A(void)
+ 337:Core/Src/nrf24l01.c **** {
+ 1146              		.loc 1 337 1 is_stmt 1 view -0
+ 1147              		.cfi_startproc
+ 1148              		@ args = 0, pretend = 0, frame = 0
+ 1149              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1150 0000 10B5     		push	{r4, lr}
+ 1151              	.LCFI20:
+ 1152              		.cfi_def_cfa_offset 8
+ 1153              		.cfi_offset 4, -8
+ 1154              		.cfi_offset 14, -4
+ 338:Core/Src/nrf24l01.c ****     NRF24L01_CE(0);  // 拉低CE，进入配置模式(停止当前模式)
+ 1155              		.loc 1 338 5 view .LVU276
+ 1156              		.loc 1 338 5 view .LVU277
+ 1157 0002 154C     		ldr	r4, .L70
+ 1158 0004 0022     		movs	r2, #0
+ 1159 0006 4FF40041 		mov	r1, #32768
+ 1160 000a 2046     		mov	r0, r4
+ 1161 000c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1162              	.LVL123:
+ 1163              		.loc 1 338 5 discriminator 1 view .LVU278
+ 339:Core/Src/nrf24l01.c **** 
+ 340:Core/Src/nrf24l01.c ****     // 1. 写RX_ADDR_P0为A与B的地址(ADDR_AB)
+ 341:Core/Src/nrf24l01.c ****     nrf24l01_write_buf(NRF_WRITE_REG + RX_ADDR_P0, ADDR_AB, ADDR_AB_LEN);
+ 1164              		.loc 1 341 5 view .LVU279
+ 1165 0010 0522     		movs	r2, #5
+ 1166 0012 1249     		ldr	r1, .L70+4
+ 1167 0014 2A20     		movs	r0, #42
+ 1168 0016 FFF7FEFF 		bl	nrf24l01_write_buf
+ 1169              	.LVL124:
+ 342:Core/Src/nrf24l01.c **** 
+ 343:Core/Src/nrf24l01.c ****     // 2. 库函数默认设置，保持不变，仅修改频道和地址
+ 344:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_AA, 0x01);        // 使能通道0自动应答(对A回复
+ 1170              		.loc 1 344 5 view .LVU280
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 30
+
+
+ 1171 001a 0121     		movs	r1, #1
+ 1172 001c 2120     		movs	r0, #33
+ 1173 001e FFF7FEFF 		bl	nrf24l01_write_reg
+ 1174              	.LVL125:
+ 345:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_RXADDR, 0x01);    // 使能通道0接收地址
+ 1175              		.loc 1 345 5 view .LVU281
+ 1176 0022 0121     		movs	r1, #1
+ 1177 0024 2220     		movs	r0, #34
+ 1178 0026 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1179              	.LVL126:
+ 346:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RF_CH, CH_AB);       // 切换到A-B频道 30
+ 1180              		.loc 1 346 5 view .LVU282
+ 1181 002a 1E21     		movs	r1, #30
+ 1182 002c 2520     		movs	r0, #37
+ 1183 002e FFF7FEFF 		bl	nrf24l01_write_reg
+ 1184              	.LVL127:
+ 347:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RX_PW_P0, DATA_WIDTH); // 数据长度32字节
+ 1185              		.loc 1 347 5 view .LVU283
+ 1186 0032 2021     		movs	r1, #32
+ 1187 0034 3120     		movs	r0, #49
+ 1188 0036 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1189              	.LVL128:
+ 348:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RF_SETUP, 0x0f);     // 0db增益，2Mbps，低噪声放大�
+ 1190              		.loc 1 348 5 view .LVU284
+ 1191 003a 0F21     		movs	r1, #15
+ 1192 003c 2620     		movs	r0, #38
+ 1193 003e FFF7FEFF 		bl	nrf24l01_write_reg
+ 1194              	.LVL129:
+ 349:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + CONFIG, 0x0f);       // 接收模式，PWR_UP，EN_CRC
+ 1195              		.loc 1 349 5 view .LVU285
+ 1196 0042 0F21     		movs	r1, #15
+ 1197 0044 2020     		movs	r0, #32
+ 1198 0046 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1199              	.LVL130:
+ 350:Core/Src/nrf24l01.c **** 
+ 351:Core/Src/nrf24l01.c ****     NRF24L01_CE(1);  // 拉高CE，进入接收状态
+ 1200              		.loc 1 351 5 view .LVU286
+ 1201              		.loc 1 351 5 view .LVU287
+ 1202 004a 0122     		movs	r2, #1
+ 1203 004c 4FF40041 		mov	r1, #32768
+ 1204 0050 2046     		mov	r0, r4
+ 1205 0052 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1206              	.LVL131:
+ 1207              		.loc 1 351 5 discriminator 1 view .LVU288
+ 352:Core/Src/nrf24l01.c **** //    HAL_Delay(10);   // 延时保证模式切换完成，避免模式冲突
+ 353:Core/Src/nrf24l01.c **** }
+ 1208              		.loc 1 353 1 is_stmt 0 view .LVU289
+ 1209 0056 10BD     		pop	{r4, pc}
+ 1210              	.L71:
+ 1211              		.align	2
+ 1212              	.L70:
+ 1213 0058 000C0240 		.word	1073875968
+ 1214 005c 00000000 		.word	ADDR_AB
+ 1215              		.cfi_endproc
+ 1216              	.LFE147:
+ 1218              		.section	.text.B_nrf24l01_switch_tx_to_C,"ax",%progbits
+ 1219              		.align	1
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 31
+
+
+ 1220              		.global	B_nrf24l01_switch_tx_to_C
+ 1221              		.syntax unified
+ 1222              		.thumb
+ 1223              		.thumb_func
+ 1225              	B_nrf24l01_switch_tx_to_C:
+ 1226              	.LFB148:
+ 354:Core/Src/nrf24l01.c **** 
+ 355:Core/Src/nrf24l01.c **** /**
+ 356:Core/Src/nrf24l01.c ****  * @brief  B模块第2步：切换为"发送数据给C"模式(B-C通信)
+ 357:Core/Src/nrf24l01.c ****  * @note   基于库函数nrf24l01_tx_mode()修改，使用ADDR_BC和CH_BC
+ 358:Core/Src/nrf24l01.c ****  */
+ 359:Core/Src/nrf24l01.c **** void B_nrf24l01_switch_tx_to_C(void)
+ 360:Core/Src/nrf24l01.c **** {
+ 1227              		.loc 1 360 1 is_stmt 1 view -0
+ 1228              		.cfi_startproc
+ 1229              		@ args = 0, pretend = 0, frame = 0
+ 1230              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1231 0000 10B5     		push	{r4, lr}
+ 1232              	.LCFI21:
+ 1233              		.cfi_def_cfa_offset 8
+ 1234              		.cfi_offset 4, -8
+ 1235              		.cfi_offset 14, -4
+ 361:Core/Src/nrf24l01.c ****     NRF24L01_CE(0);  // 拉低CE，进入配置模式(停止当前模式)
+ 1236              		.loc 1 361 5 view .LVU291
+ 1237              		.loc 1 361 5 view .LVU292
+ 1238 0002 0022     		movs	r2, #0
+ 1239 0004 4FF40041 		mov	r1, #32768
+ 1240 0008 1348     		ldr	r0, .L74
+ 1241 000a FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1242              	.LVL132:
+ 1243              		.loc 1 361 5 discriminator 1 view .LVU293
+ 362:Core/Src/nrf24l01.c **** 
+ 363:Core/Src/nrf24l01.c ****     // 1. 写TX地址为B与C的地址(ADDR_BC)
+ 364:Core/Src/nrf24l01.c ****     nrf24l01_write_buf(NRF_WRITE_REG + TX_ADDR, ADDR_BC, ADDR_BC_LEN);
+ 1244              		.loc 1 364 5 view .LVU294
+ 1245 000e 134C     		ldr	r4, .L74+4
+ 1246 0010 0522     		movs	r2, #5
+ 1247 0012 2146     		mov	r1, r4
+ 1248 0014 3020     		movs	r0, #48
+ 1249 0016 FFF7FEFF 		bl	nrf24l01_write_buf
+ 1250              	.LVL133:
+ 365:Core/Src/nrf24l01.c ****     // 2. 写RX_ADDR_P0(用于ACK)，必须与C的TX地址一致(即ADDR_BC)
+ 366:Core/Src/nrf24l01.c ****     nrf24l01_write_buf(NRF_WRITE_REG + RX_ADDR_P0, ADDR_BC, ADDR_BC_LEN);
+ 1251              		.loc 1 366 5 view .LVU295
+ 1252 001a 0522     		movs	r2, #5
+ 1253 001c 2146     		mov	r1, r4
+ 1254 001e 2A20     		movs	r0, #42
+ 1255 0020 FFF7FEFF 		bl	nrf24l01_write_buf
+ 1256              	.LVL134:
+ 367:Core/Src/nrf24l01.c **** 
+ 368:Core/Src/nrf24l01.c ****     // 3. 库函数默认设置，保持不变，仅修改频道和地址
+ 369:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_AA, 0x01);        // 使能通道0自动应答
+ 1257              		.loc 1 369 5 view .LVU296
+ 1258 0024 0121     		movs	r1, #1
+ 1259 0026 2120     		movs	r0, #33
+ 1260 0028 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1261              	.LVL135:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 32
+
+
+ 370:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_RXADDR, 0x01);    // 使能通道0接收地址
+ 1262              		.loc 1 370 5 view .LVU297
+ 1263 002c 0121     		movs	r1, #1
+ 1264 002e 2220     		movs	r0, #34
+ 1265 0030 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1266              	.LVL136:
+ 371:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + SETUP_RETR, 0x1a);   // 自动重发10次，间隔500us+86us
+ 1267              		.loc 1 371 5 view .LVU298
+ 1268 0034 1A21     		movs	r1, #26
+ 1269 0036 2420     		movs	r0, #36
+ 1270 0038 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1271              	.LVL137:
+ 372:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RF_CH, CH_BC);       // 切换到B-C频道 40
+ 1272              		.loc 1 372 5 view .LVU299
+ 1273 003c 2821     		movs	r1, #40
+ 1274 003e 2520     		movs	r0, #37
+ 1275 0040 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1276              	.LVL138:
+ 373:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + RF_SETUP, 0x0f);     // 0db增益，2Mbps，低噪声放大�
+ 1277              		.loc 1 373 5 view .LVU300
+ 1278 0044 0F21     		movs	r1, #15
+ 1279 0046 2620     		movs	r0, #38
+ 1280 0048 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1281              	.LVL139:
+ 374:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + CONFIG, 0x0e);       // 发送模式，PWR_UP，EN_CRC
+ 1282              		.loc 1 374 5 view .LVU301
+ 1283 004c 0E21     		movs	r1, #14
+ 1284 004e 2020     		movs	r0, #32
+ 1285 0050 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1286              	.LVL140:
+ 375:Core/Src/nrf24l01.c **** 
+ 376:Core/Src/nrf24l01.c **** //    HAL_Delay(10);   // 延时保证模式切换完成，注意:CE置高在nrf24l01_tx_packet里
+ 377:Core/Src/nrf24l01.c **** }
+ 1287              		.loc 1 377 1 is_stmt 0 view .LVU302
+ 1288 0054 10BD     		pop	{r4, pc}
+ 1289              	.L75:
+ 1290 0056 00BF     		.align	2
+ 1291              	.L74:
+ 1292 0058 000C0240 		.word	1073875968
+ 1293 005c 00000000 		.word	ADDR_BC
+ 1294              		.cfi_endproc
+ 1295              	.LFE148:
+ 1297              		.section	.text.NRF_check,"ax",%progbits
+ 1298              		.align	1
+ 1299              		.global	NRF_check
+ 1300              		.syntax unified
+ 1301              		.thumb
+ 1302              		.thumb_func
+ 1304              	NRF_check:
+ 1305              	.LFB149:
+ 378:Core/Src/nrf24l01.c **** 
+ 379:Core/Src/nrf24l01.c **** void NRF_check(void)
+ 380:Core/Src/nrf24l01.c **** {
+ 1306              		.loc 1 380 1 is_stmt 1 view -0
+ 1307              		.cfi_startproc
+ 1308              		@ args = 0, pretend = 0, frame = 0
+ 1309              		@ frame_needed = 0, uses_anonymous_args = 0
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 33
+
+
+ 1310 0000 08B5     		push	{r3, lr}
+ 1311              	.LCFI22:
+ 1312              		.cfi_def_cfa_offset 8
+ 1313              		.cfi_offset 3, -8
+ 1314              		.cfi_offset 14, -4
+ 381:Core/Src/nrf24l01.c ****     while (nrf24l01_check()){
+ 1315              		.loc 1 381 5 view .LVU304
+ 1316              		.loc 1 381 11 is_stmt 0 view .LVU305
+ 1317 0002 07E0     		b	.L77
+ 1318              	.L78:
+ 382:Core/Src/nrf24l01.c ****      HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_5);
+ 1319              		.loc 1 382 6 is_stmt 1 view .LVU306
+ 1320 0004 2021     		movs	r1, #32
+ 1321 0006 0948     		ldr	r0, .L80
+ 1322 0008 FFF7FEFF 		bl	HAL_GPIO_TogglePin
+ 1323              	.LVL141:
+ 383:Core/Src/nrf24l01.c ****         HAL_Delay(1000);
+ 1324              		.loc 1 383 9 view .LVU307
+ 1325 000c 4FF47A70 		mov	r0, #1000
+ 1326 0010 FFF7FEFF 		bl	HAL_Delay
+ 1327              	.LVL142:
+ 1328              	.L77:
+ 381:Core/Src/nrf24l01.c ****     while (nrf24l01_check()){
+ 1329              		.loc 1 381 12 view .LVU308
+ 1330 0014 FFF7FEFF 		bl	nrf24l01_check
+ 1331              	.LVL143:
+ 381:Core/Src/nrf24l01.c ****     while (nrf24l01_check()){
+ 1332              		.loc 1 381 12 is_stmt 0 discriminator 1 view .LVU309
+ 1333 0018 0028     		cmp	r0, #0
+ 1334 001a F3D1     		bne	.L78
+ 384:Core/Src/nrf24l01.c ****     } /* 检测NRF24L01是否存在 */
+ 385:Core/Src/nrf24l01.c **** 
+ 386:Core/Src/nrf24l01.c ****     B_nrf24l01_switch_rx_from_A();
+ 1335              		.loc 1 386 5 is_stmt 1 view .LVU310
+ 1336 001c FFF7FEFF 		bl	B_nrf24l01_switch_rx_from_A
+ 1337              	.LVL144:
+ 387:Core/Src/nrf24l01.c ****     HAL_GPIO_WritePin(GPIOD, GPIO_PIN_5, GPIO_PIN_SET);
+ 1338              		.loc 1 387 5 view .LVU311
+ 1339 0020 0122     		movs	r2, #1
+ 1340 0022 2021     		movs	r1, #32
+ 1341 0024 0148     		ldr	r0, .L80
+ 1342 0026 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 1343              	.LVL145:
+ 388:Core/Src/nrf24l01.c **** }
+ 1344              		.loc 1 388 1 is_stmt 0 view .LVU312
+ 1345 002a 08BD     		pop	{r3, pc}
+ 1346              	.L81:
+ 1347              		.align	2
+ 1348              	.L80:
+ 1349 002c 000C0240 		.word	1073875968
+ 1350              		.cfi_endproc
+ 1351              	.LFE149:
+ 1353              		.section	.text.B_receive_from_host,"ax",%progbits
+ 1354              		.align	1
+ 1355              		.global	B_receive_from_host
+ 1356              		.syntax unified
+ 1357              		.thumb
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 34
+
+
+ 1358              		.thumb_func
+ 1360              	B_receive_from_host:
+ 1361              	.LVL146:
+ 1362              	.LFB150:
+ 389:Core/Src/nrf24l01.c **** 
+ 390:Core/Src/nrf24l01.c **** /**
+ 391:Core/Src/nrf24l01.c ****  * @brief  B模块：接收主机A发来的数据包（非阻塞轮询, 适合主循环调用）
+ 392:Core/Src/nrf24l01.c ****  * @note   调用前需确保已切换到接收A模式(B_nrf24l01_switch_rx_from_A)
+ 393:Core/Src/nrf24l01.c ****  * @param  pbuf : 接收数据缓冲区(至少 RX_PLOAD_WIDTH=32 字节)
+ 394:Core/Src/nrf24l01.c ****  * @retval 0    : 收到新数据包, 数据已写入 pbuf
+ 395:Core/Src/nrf24l01.c ****  *         1    : 当前无新数据
+ 396:Core/Src/nrf24l01.c ****  */
+ 397:Core/Src/nrf24l01.c **** uint8_t B_receive_from_host(uint8_t *pbuf)
+ 398:Core/Src/nrf24l01.c **** {
+ 1363              		.loc 1 398 1 is_stmt 1 view -0
+ 1364              		.cfi_startproc
+ 1365              		@ args = 0, pretend = 0, frame = 0
+ 1366              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1367              		.loc 1 398 1 is_stmt 0 view .LVU314
+ 1368 0000 10B5     		push	{r4, lr}
+ 1369              	.LCFI23:
+ 1370              		.cfi_def_cfa_offset 8
+ 1371              		.cfi_offset 4, -8
+ 1372              		.cfi_offset 14, -4
+ 1373 0002 0446     		mov	r4, r0
+ 399:Core/Src/nrf24l01.c ****     uint8_t sta;
+ 1374              		.loc 1 399 5 is_stmt 1 view .LVU315
+ 400:Core/Src/nrf24l01.c **** 
+ 401:Core/Src/nrf24l01.c ****     /* 读取 STATUS, 检查 RX_DR 标志 (bit6) */
+ 402:Core/Src/nrf24l01.c ****     sta = nrf24l01_read_reg(STATUS);
+ 1375              		.loc 1 402 5 view .LVU316
+ 1376              		.loc 1 402 11 is_stmt 0 view .LVU317
+ 1377 0004 0720     		movs	r0, #7
+ 1378              	.LVL147:
+ 1379              		.loc 1 402 11 view .LVU318
+ 1380 0006 FFF7FEFF 		bl	nrf24l01_read_reg
+ 1381              	.LVL148:
+ 403:Core/Src/nrf24l01.c **** 
+ 404:Core/Src/nrf24l01.c ****     if (sta & RX_OK)    /* 有数据收到 */
+ 1382              		.loc 1 404 5 is_stmt 1 view .LVU319
+ 1383              		.loc 1 404 8 is_stmt 0 view .LVU320
+ 1384 000a 10F0400F 		tst	r0, #64
+ 1385 000e 01D1     		bne	.L86
+ 405:Core/Src/nrf24l01.c ****     {
+ 406:Core/Src/nrf24l01.c ****         /* 清除 RX_DR 中断标志 */
+ 407:Core/Src/nrf24l01.c ****         nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);
+ 408:Core/Src/nrf24l01.c **** 
+ 409:Core/Src/nrf24l01.c ****         /* 读出有效数据 */
+ 410:Core/Src/nrf24l01.c ****         nrf24l01_read_buf(RD_RX_PLOAD, pbuf, RX_PLOAD_WIDTH);
+ 411:Core/Src/nrf24l01.c **** 
+ 412:Core/Src/nrf24l01.c ****         /* 清空 RX FIFO, 准备接收下一包 */
+ 413:Core/Src/nrf24l01.c ****         nrf24l01_write_reg(FLUSH_RX, 0xff);
+ 414:Core/Src/nrf24l01.c **** 
+ 415:Core/Src/nrf24l01.c ****         return 0;       /* 收到数据 */
+ 416:Core/Src/nrf24l01.c ****     }
+ 417:Core/Src/nrf24l01.c **** 
+ 418:Core/Src/nrf24l01.c ****     return 1;           /* 无新数据 */
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 35
+
+
+ 1386              		.loc 1 418 12 view .LVU321
+ 1387 0010 0120     		movs	r0, #1
+ 1388              	.LVL149:
+ 1389              	.L83:
+ 419:Core/Src/nrf24l01.c **** }
+ 1390              		.loc 1 419 1 view .LVU322
+ 1391 0012 10BD     		pop	{r4, pc}
+ 1392              	.LVL150:
+ 1393              	.L86:
+ 407:Core/Src/nrf24l01.c **** 
+ 1394              		.loc 1 407 9 is_stmt 1 view .LVU323
+ 1395 0014 0146     		mov	r1, r0
+ 1396 0016 2720     		movs	r0, #39
+ 1397              	.LVL151:
+ 407:Core/Src/nrf24l01.c **** 
+ 1398              		.loc 1 407 9 is_stmt 0 view .LVU324
+ 1399 0018 FFF7FEFF 		bl	nrf24l01_write_reg
+ 1400              	.LVL152:
+ 410:Core/Src/nrf24l01.c **** 
+ 1401              		.loc 1 410 9 is_stmt 1 view .LVU325
+ 1402 001c 2022     		movs	r2, #32
+ 1403 001e 2146     		mov	r1, r4
+ 1404 0020 6120     		movs	r0, #97
+ 1405 0022 FFF7FEFF 		bl	nrf24l01_read_buf
+ 1406              	.LVL153:
+ 413:Core/Src/nrf24l01.c **** 
+ 1407              		.loc 1 413 9 view .LVU326
+ 1408 0026 FF21     		movs	r1, #255
+ 1409 0028 E220     		movs	r0, #226
+ 1410 002a FFF7FEFF 		bl	nrf24l01_write_reg
+ 1411              	.LVL154:
+ 415:Core/Src/nrf24l01.c ****     }
+ 1412              		.loc 1 415 9 view .LVU327
+ 415:Core/Src/nrf24l01.c ****     }
+ 1413              		.loc 1 415 16 is_stmt 0 view .LVU328
+ 1414 002e 0020     		movs	r0, #0
+ 1415 0030 EFE7     		b	.L83
+ 1416              		.cfi_endproc
+ 1417              	.LFE150:
+ 1419              		.section	.text.floatToTwoSint8,"ax",%progbits
+ 1420              		.align	1
+ 1421              		.global	floatToTwoSint8
+ 1422              		.syntax unified
+ 1423              		.thumb
+ 1424              		.thumb_func
+ 1426              	floatToTwoSint8:
+ 1427              	.LVL155:
+ 1428              	.LFB151:
+ 420:Core/Src/nrf24l01.c **** 
+ 421:Core/Src/nrf24l01.c **** /**
+ 422:Core/Src/nrf24l01.c ****  * @brief  浮点数转两个uint8_t (精度0.01, 范围-327.68~327.67)
+ 423:Core/Src/nrf24l01.c ****  */
+ 424:Core/Src/nrf24l01.c **** void floatToTwoSint8(float num, uint8_t *high_byte, uint8_t *low_byte)
+ 425:Core/Src/nrf24l01.c **** {
+ 1429              		.loc 1 425 1 is_stmt 1 view -0
+ 1430              		.cfi_startproc
+ 1431              		@ args = 0, pretend = 0, frame = 0
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 36
+
+
+ 1432              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1433              		.loc 1 425 1 is_stmt 0 view .LVU330
+ 1434 0000 38B5     		push	{r3, r4, r5, lr}
+ 1435              	.LCFI24:
+ 1436              		.cfi_def_cfa_offset 16
+ 1437              		.cfi_offset 3, -16
+ 1438              		.cfi_offset 4, -12
+ 1439              		.cfi_offset 5, -8
+ 1440              		.cfi_offset 14, -4
+ 1441 0002 0546     		mov	r5, r0
+ 1442 0004 0C46     		mov	r4, r1
+ 426:Core/Src/nrf24l01.c ****     if (num > 327.67f) num = 327.67f;
+ 1443              		.loc 1 426 5 is_stmt 1 view .LVU331
+ 1444              		.loc 1 426 8 is_stmt 0 view .LVU332
+ 1445 0006 DFED147A 		vldr.32	s15, .L92
+ 1446 000a B4EEE70A 		vcmpe.f32	s0, s15
+ 1447 000e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1448 0012 09DC     		bgt	.L89
+ 427:Core/Src/nrf24l01.c ****     if (num < -327.68f) num = -327.68f;
+ 1449              		.loc 1 427 5 is_stmt 1 view .LVU333
+ 1450              		.loc 1 427 8 is_stmt 0 view .LVU334
+ 1451 0014 DFED117A 		vldr.32	s15, .L92+4
+ 1452 0018 B4EEE70A 		vcmpe.f32	s0, s15
+ 1453 001c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 1454 0020 04D5     		bpl	.L88
+ 1455              		.loc 1 427 29 discriminator 1 view .LVU335
+ 1456 0022 9FED0E0A 		vldr.32	s0, .L92+4
+ 1457              	.LVL156:
+ 1458              		.loc 1 427 29 discriminator 1 view .LVU336
+ 1459 0026 01E0     		b	.L88
+ 1460              	.LVL157:
+ 1461              	.L89:
+ 426:Core/Src/nrf24l01.c ****     if (num > 327.67f) num = 327.67f;
+ 1462              		.loc 1 426 28 discriminator 1 view .LVU337
+ 1463 0028 9FED0B0A 		vldr.32	s0, .L92
+ 1464              	.LVL158:
+ 1465              	.L88:
+ 428:Core/Src/nrf24l01.c **** 
+ 429:Core/Src/nrf24l01.c ****     int16_t scaled = (int16_t)(round(num * 100.0f));
+ 1466              		.loc 1 429 5 is_stmt 1 view .LVU338
+ 1467              		.loc 1 429 32 is_stmt 0 view .LVU339
+ 1468 002c DFED0C7A 		vldr.32	s15, .L92+8
+ 1469 0030 60EE277A 		vmul.f32	s15, s0, s15
+ 1470 0034 17EE900A 		vmov	r0, s15
+ 1471              	.LVL159:
+ 1472              		.loc 1 429 32 view .LVU340
+ 1473 0038 FFF7FEFF 		bl	__aeabi_f2d
+ 1474              	.LVL160:
+ 1475              		.loc 1 429 32 view .LVU341
+ 1476 003c 41EC100B 		vmov	d0, r0, r1
+ 1477 0040 FFF7FEFF 		bl	round
+ 1478              	.LVL161:
+ 1479 0044 51EC100B 		vmov	r0, r1, d0
+ 1480              		.loc 1 429 13 discriminator 1 view .LVU342
+ 1481 0048 FFF7FEFF 		bl	__aeabi_d2iz
+ 1482              	.LVL162:
+ 430:Core/Src/nrf24l01.c **** 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 37
+
+
+ 431:Core/Src/nrf24l01.c ****     *high_byte = (scaled >> 8) & 0xFF;
+ 1483              		.loc 1 431 5 is_stmt 1 view .LVU343
+ 1484              		.loc 1 431 16 is_stmt 0 view .LVU344
+ 1485 004c 40F30723 		sbfx	r3, r0, #8, #8
+ 1486 0050 2B70     		strb	r3, [r5]
+ 432:Core/Src/nrf24l01.c ****     *low_byte = scaled & 0xFF;
+ 1487              		.loc 1 432 5 is_stmt 1 view .LVU345
+ 1488              		.loc 1 432 15 is_stmt 0 view .LVU346
+ 1489 0052 2070     		strb	r0, [r4]
+ 433:Core/Src/nrf24l01.c **** }
+ 1490              		.loc 1 433 1 view .LVU347
+ 1491 0054 38BD     		pop	{r3, r4, r5, pc}
+ 1492              	.LVL163:
+ 1493              	.L93:
+ 1494              		.loc 1 433 1 view .LVU348
+ 1495 0056 00BF     		.align	2
+ 1496              	.L92:
+ 1497 0058 C3D5A343 		.word	1134810563
+ 1498 005c 0AD7A3C3 		.word	-1012672758
+ 1499 0060 0000C842 		.word	1120403456
+ 1500              		.cfi_endproc
+ 1501              	.LFE151:
+ 1503              		.section	.text.twoSint8ToFloat,"ax",%progbits
+ 1504              		.align	1
+ 1505              		.global	twoSint8ToFloat
+ 1506              		.syntax unified
+ 1507              		.thumb
+ 1508              		.thumb_func
+ 1510              	twoSint8ToFloat:
+ 1511              	.LVL164:
+ 1512              	.LFB152:
+ 434:Core/Src/nrf24l01.c **** 
+ 435:Core/Src/nrf24l01.c **** /**
+ 436:Core/Src/nrf24l01.c ****  * @brief  两个uint8_t还原为浮点数
+ 437:Core/Src/nrf24l01.c ****  */
+ 438:Core/Src/nrf24l01.c **** float twoSint8ToFloat(uint8_t high_byte, uint8_t low_byte)
+ 439:Core/Src/nrf24l01.c **** {
+ 1513              		.loc 1 439 1 is_stmt 1 view -0
+ 1514              		.cfi_startproc
+ 1515              		@ args = 0, pretend = 0, frame = 0
+ 1516              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1517              		@ link register save eliminated.
+ 440:Core/Src/nrf24l01.c ****     int16_t scaled = (int16_t)((high_byte << 8) | low_byte);
+ 1518              		.loc 1 440 5 view .LVU350
+ 1519              		.loc 1 440 22 is_stmt 0 view .LVU351
+ 1520 0000 0002     		lsls	r0, r0, #8
+ 1521              	.LVL165:
+ 1522              		.loc 1 440 22 view .LVU352
+ 1523 0002 00B2     		sxth	r0, r0
+ 1524              		.loc 1 440 13 view .LVU353
+ 1525 0004 0843     		orrs	r0, r0, r1
+ 1526              	.LVL166:
+ 441:Core/Src/nrf24l01.c ****     return (float)scaled / 100.0f;
+ 1527              		.loc 1 441 5 is_stmt 1 view .LVU354
+ 1528              		.loc 1 441 12 is_stmt 0 view .LVU355
+ 1529 0006 07EE900A 		vmov	s15, r0	@ int
+ 1530 000a B8EEE70A 		vcvt.f32.s32	s0, s15
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 38
+
+
+ 442:Core/Src/nrf24l01.c **** }
+ 1531              		.loc 1 442 1 view .LVU356
+ 1532 000e DFED027A 		vldr.32	s15, .L95
+ 1533 0012 80EE270A 		vdiv.f32	s0, s0, s15
+ 1534 0016 7047     		bx	lr
+ 1535              	.L96:
+ 1536              		.align	2
+ 1537              	.L95:
+ 1538 0018 0000C842 		.word	1120403456
+ 1539              		.cfi_endproc
+ 1540              	.LFE152:
+ 1542              		.section	.text.nrf_receive_task,"ax",%progbits
+ 1543              		.align	1
+ 1544              		.global	nrf_receive_task
+ 1545              		.syntax unified
+ 1546              		.thumb
+ 1547              		.thumb_func
+ 1549              	nrf_receive_task:
+ 1550              	.LFB153:
+ 443:Core/Src/nrf24l01.c **** 
+ 444:Core/Src/nrf24l01.c **** uint8_t key_mode = 0;
+ 445:Core/Src/nrf24l01.c **** uint8_t encoderl_value = 0, encoderr_value = 0;
+ 446:Core/Src/nrf24l01.c **** float rocker_lx, rocker_ly, rocker_rx, rocker_ry;
+ 447:Core/Src/nrf24l01.c **** 
+ 448:Core/Src/nrf24l01.c **** /**
+ 449:Core/Src/nrf24l01.c ****  * @brief  B模块：NRF 数据接收任务（主循环轮询调用）
+ 450:Core/Src/nrf24l01.c ****  * @note   一包数据内完成帧头校验 + 数据解析
+ 451:Core/Src/nrf24l01.c ****  * @retval 0: 收到有效数据包并解析完成
+ 452:Core/Src/nrf24l01.c ****  *         1: 当前无新数据或帧校验失败
+ 453:Core/Src/nrf24l01.c ****  */
+ 454:Core/Src/nrf24l01.c **** uint8_t nrf_receive_task(void)
+ 455:Core/Src/nrf24l01.c **** {
+ 1551              		.loc 1 455 1 is_stmt 1 view -0
+ 1552              		.cfi_startproc
+ 1553              		@ args = 0, pretend = 0, frame = 0
+ 1554              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1555 0000 38B5     		push	{r3, r4, r5, lr}
+ 1556              	.LCFI25:
+ 1557              		.cfi_def_cfa_offset 16
+ 1558              		.cfi_offset 3, -16
+ 1559              		.cfi_offset 4, -12
+ 1560              		.cfi_offset 5, -8
+ 1561              		.cfi_offset 14, -4
+ 456:Core/Src/nrf24l01.c ****     if (B_receive_from_host(nrf_rx_buf) != 0) {
+ 1562              		.loc 1 456 5 view .LVU358
+ 1563              		.loc 1 456 9 is_stmt 0 view .LVU359
+ 1564 0002 1E48     		ldr	r0, .L103
+ 1565 0004 FFF7FEFF 		bl	B_receive_from_host
+ 1566              	.LVL167:
+ 1567              		.loc 1 456 8 discriminator 1 view .LVU360
+ 1568 0008 0028     		cmp	r0, #0
+ 1569 000a 2FD1     		bne	.L99
+ 1570 000c 0446     		mov	r4, r0
+ 457:Core/Src/nrf24l01.c ****         return 1;   /* 无新数据 */
+ 458:Core/Src/nrf24l01.c ****     }
+ 459:Core/Src/nrf24l01.c **** 
+ 460:Core/Src/nrf24l01.c ****     /* 帧头尾校验：0x55 开头, 0xFF 结尾(第20字节) */
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 39
+
+
+ 461:Core/Src/nrf24l01.c ****     if (nrf_rx_buf[0] != 0x55 || nrf_rx_buf[19] != 0xFF) {
+ 1571              		.loc 1 461 5 is_stmt 1 view .LVU361
+ 1572              		.loc 1 461 19 is_stmt 0 view .LVU362
+ 1573 000e 1B4B     		ldr	r3, .L103
+ 1574 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1575              		.loc 1 461 8 view .LVU363
+ 1576 0012 552B     		cmp	r3, #85
+ 1577 0014 2DD1     		bne	.L100
+ 1578              		.loc 1 461 44 discriminator 1 view .LVU364
+ 1579 0016 194B     		ldr	r3, .L103
+ 1580 0018 DB7C     		ldrb	r3, [r3, #19]	@ zero_extendqisi2
+ 1581              		.loc 1 461 31 discriminator 1 view .LVU365
+ 1582 001a FF2B     		cmp	r3, #255
+ 1583 001c 2BD1     		bne	.L101
+ 462:Core/Src/nrf24l01.c ****         return 1;   /* 帧校验失败 */
+ 463:Core/Src/nrf24l01.c ****     }
+ 464:Core/Src/nrf24l01.c **** 
+ 465:Core/Src/nrf24l01.c ****     /* 解析数据 */
+ 466:Core/Src/nrf24l01.c ****     key_mode       = nrf_rx_buf[1];
+ 1584              		.loc 1 466 5 is_stmt 1 view .LVU366
+ 1585              		.loc 1 466 32 is_stmt 0 view .LVU367
+ 1586 001e 174D     		ldr	r5, .L103
+ 1587 0020 6A78     		ldrb	r2, [r5, #1]	@ zero_extendqisi2
+ 1588              		.loc 1 466 20 view .LVU368
+ 1589 0022 174B     		ldr	r3, .L103+4
+ 1590 0024 1A70     		strb	r2, [r3]
+ 467:Core/Src/nrf24l01.c ****     encoderl_value = nrf_rx_buf[2];
+ 1591              		.loc 1 467 5 is_stmt 1 view .LVU369
+ 1592              		.loc 1 467 32 is_stmt 0 view .LVU370
+ 1593 0026 AA78     		ldrb	r2, [r5, #2]	@ zero_extendqisi2
+ 1594              		.loc 1 467 20 view .LVU371
+ 1595 0028 164B     		ldr	r3, .L103+8
+ 1596 002a 1A70     		strb	r2, [r3]
+ 468:Core/Src/nrf24l01.c ****     encoderr_value = nrf_rx_buf[3];
+ 1597              		.loc 1 468 5 is_stmt 1 view .LVU372
+ 1598              		.loc 1 468 32 is_stmt 0 view .LVU373
+ 1599 002c EA78     		ldrb	r2, [r5, #3]	@ zero_extendqisi2
+ 1600              		.loc 1 468 20 view .LVU374
+ 1601 002e 164B     		ldr	r3, .L103+12
+ 1602 0030 1A70     		strb	r2, [r3]
+ 469:Core/Src/nrf24l01.c ****     rocker_lx      = twoSint8ToFloat(nrf_rx_buf[4],  nrf_rx_buf[5]);
+ 1603              		.loc 1 469 5 is_stmt 1 view .LVU375
+ 1604              		.loc 1 469 22 is_stmt 0 view .LVU376
+ 1605 0032 6979     		ldrb	r1, [r5, #5]	@ zero_extendqisi2
+ 1606 0034 2879     		ldrb	r0, [r5, #4]	@ zero_extendqisi2
+ 1607 0036 FFF7FEFF 		bl	twoSint8ToFloat
+ 1608              	.LVL168:
+ 1609              		.loc 1 469 20 discriminator 1 view .LVU377
+ 1610 003a 144B     		ldr	r3, .L103+16
+ 1611 003c 83ED000A 		vstr.32	s0, [r3]
+ 470:Core/Src/nrf24l01.c ****     rocker_ly      = twoSint8ToFloat(nrf_rx_buf[6],  nrf_rx_buf[7]);
+ 1612              		.loc 1 470 5 is_stmt 1 view .LVU378
+ 1613              		.loc 1 470 22 is_stmt 0 view .LVU379
+ 1614 0040 E979     		ldrb	r1, [r5, #7]	@ zero_extendqisi2
+ 1615 0042 A879     		ldrb	r0, [r5, #6]	@ zero_extendqisi2
+ 1616 0044 FFF7FEFF 		bl	twoSint8ToFloat
+ 1617              	.LVL169:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 40
+
+
+ 1618              		.loc 1 470 20 discriminator 1 view .LVU380
+ 1619 0048 114B     		ldr	r3, .L103+20
+ 1620 004a 83ED000A 		vstr.32	s0, [r3]
+ 471:Core/Src/nrf24l01.c ****     rocker_rx      = twoSint8ToFloat(nrf_rx_buf[8],  nrf_rx_buf[9]);
+ 1621              		.loc 1 471 5 is_stmt 1 view .LVU381
+ 1622              		.loc 1 471 22 is_stmt 0 view .LVU382
+ 1623 004e 697A     		ldrb	r1, [r5, #9]	@ zero_extendqisi2
+ 1624 0050 287A     		ldrb	r0, [r5, #8]	@ zero_extendqisi2
+ 1625 0052 FFF7FEFF 		bl	twoSint8ToFloat
+ 1626              	.LVL170:
+ 1627              		.loc 1 471 20 discriminator 1 view .LVU383
+ 1628 0056 0F4B     		ldr	r3, .L103+24
+ 1629 0058 83ED000A 		vstr.32	s0, [r3]
+ 472:Core/Src/nrf24l01.c ****     rocker_ry      = twoSint8ToFloat(nrf_rx_buf[10], nrf_rx_buf[11]);
+ 1630              		.loc 1 472 5 is_stmt 1 view .LVU384
+ 1631              		.loc 1 472 22 is_stmt 0 view .LVU385
+ 1632 005c E97A     		ldrb	r1, [r5, #11]	@ zero_extendqisi2
+ 1633 005e A87A     		ldrb	r0, [r5, #10]	@ zero_extendqisi2
+ 1634 0060 FFF7FEFF 		bl	twoSint8ToFloat
+ 1635              	.LVL171:
+ 1636              		.loc 1 472 20 discriminator 1 view .LVU386
+ 1637 0064 0C4B     		ldr	r3, .L103+28
+ 1638 0066 83ED000A 		vstr.32	s0, [r3]
+ 473:Core/Src/nrf24l01.c **** 
+ 474:Core/Src/nrf24l01.c ****     return 0;   /* 解析成功 */
+ 1639              		.loc 1 474 5 is_stmt 1 view .LVU387
+ 1640              		.loc 1 474 12 is_stmt 0 view .LVU388
+ 1641 006a 00E0     		b	.L98
+ 1642              	.L99:
+ 457:Core/Src/nrf24l01.c ****     }
+ 1643              		.loc 1 457 16 view .LVU389
+ 1644 006c 0124     		movs	r4, #1
+ 1645              	.L98:
+ 475:Core/Src/nrf24l01.c **** }...
+ 1646              		.loc 1 475 1 view .LVU390
+ 1647 006e 2046     		mov	r0, r4
+ 1648 0070 38BD     		pop	{r3, r4, r5, pc}
+ 1649              	.L100:
+ 462:Core/Src/nrf24l01.c ****         return 1;   /* 帧校验失败 */
+ 1650              		.loc 1 462 16 view .LVU391
+ 1651 0072 0124     		movs	r4, #1
+ 1652 0074 FBE7     		b	.L98
+ 1653              	.L101:
+ 1654 0076 0124     		movs	r4, #1
+ 1655 0078 F9E7     		b	.L98
+ 1656              	.L104:
+ 1657 007a 00BF     		.align	2
+ 1658              	.L103:
+ 1659 007c 00000000 		.word	nrf_rx_buf
+ 1660 0080 00000000 		.word	key_mode
+ 1661 0084 00000000 		.word	encoderl_value
+ 1662 0088 00000000 		.word	encoderr_value
+ 1663 008c 00000000 		.word	rocker_lx
+ 1664 0090 00000000 		.word	rocker_ly
+ 1665 0094 00000000 		.word	rocker_rx
+ 1666 0098 00000000 		.word	rocker_ry
+ 1667              		.cfi_endproc
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 41
+
+
+ 1668              	.LFE153:
+ 1670              		.global	rocker_ry
+ 1671              		.section	.bss.rocker_ry,"aw",%nobits
+ 1672              		.align	2
+ 1675              	rocker_ry:
+ 1676 0000 00000000 		.space	4
+ 1677              		.global	rocker_rx
+ 1678              		.section	.bss.rocker_rx,"aw",%nobits
+ 1679              		.align	2
+ 1682              	rocker_rx:
+ 1683 0000 00000000 		.space	4
+ 1684              		.global	rocker_ly
+ 1685              		.section	.bss.rocker_ly,"aw",%nobits
+ 1686              		.align	2
+ 1689              	rocker_ly:
+ 1690 0000 00000000 		.space	4
+ 1691              		.global	rocker_lx
+ 1692              		.section	.bss.rocker_lx,"aw",%nobits
+ 1693              		.align	2
+ 1696              	rocker_lx:
+ 1697 0000 00000000 		.space	4
+ 1698              		.global	encoderr_value
+ 1699              		.section	.bss.encoderr_value,"aw",%nobits
+ 1702              	encoderr_value:
+ 1703 0000 00       		.space	1
+ 1704              		.global	encoderl_value
+ 1705              		.section	.bss.encoderl_value,"aw",%nobits
+ 1708              	encoderl_value:
+ 1709 0000 00       		.space	1
+ 1710              		.global	key_mode
+ 1711              		.section	.bss.key_mode,"aw",%nobits
+ 1714              	key_mode:
+ 1715 0000 00       		.space	1
+ 1716              		.global	nrf_rx_buf
+ 1717              		.section	.bss.nrf_rx_buf,"aw",%nobits
+ 1718              		.align	2
+ 1721              	nrf_rx_buf:
+ 1722 0000 00000000 		.space	32
+ 1722      00000000 
+ 1722      00000000 
+ 1722      00000000 
+ 1722      00000000 
+ 1723              		.global	RX_ADDRESS
+ 1724              		.section	.rodata.RX_ADDRESS,"a"
+ 1725              		.align	2
+ 1728              	RX_ADDRESS:
+ 1729 0000 34431010 		.ascii	"4C\020\020\001"
+ 1729      01
+ 1730              		.global	TX_ADDRESS
+ 1731              		.section	.rodata.TX_ADDRESS,"a"
+ 1732              		.align	2
+ 1735              	TX_ADDRESS:
+ 1736 0000 34431010 		.ascii	"4C\020\020\001"
+ 1736      01
+ 1737              		.global	ADDR_BC
+ 1738              		.section	.data.ADDR_BC,"aw"
+ 1739              		.align	2
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 42
+
+
+ 1742              	ADDR_BC:
+ 1743 0000 AABBCCDD 		.ascii	"\252\273\314\335\356"
+ 1743      EE
+ 1744              		.global	ADDR_AB
+ 1745              		.section	.data.ADDR_AB,"aw"
+ 1746              		.align	2
+ 1749              	ADDR_AB:
+ 1750 0000 11223344 		.ascii	"\021\"3DU"
+ 1750      55
+ 1751              		.text
+ 1752              	.Letext0:
+ 1753              		.file 2 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ 1754              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/sy
+ 1755              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 1756              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 1757              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
+ 1758              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 1759              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h"
+ 1760              		.file 9 "Core/Inc/nrf24l01.h"
+ 1761              		.file 10 "Core/Inc/spi.h"
+ 1762              		.file 11 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ 1763              		.file 12 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/m
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 43
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 nrf24l01.c
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:21     .text.spi2_set_speed:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:26     .text.spi2_set_speed:00000000 spi2_set_speed
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:54     .text.spi2_set_speed:00000010 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:59     .text.spi2_read_write_byte:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:64     .text.spi2_read_write_byte:00000000 spi2_read_write_byte
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:103    .text.spi2_read_write_byte:00000028 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:108    .text.nrf24l01_write_buf:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:113    .text.nrf24l01_write_buf:00000000 nrf24l01_write_buf
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:197    .text.nrf24l01_write_buf:00000040 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:202    .text.nrf24l01_read_buf:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:207    .text.nrf24l01_read_buf:00000000 nrf24l01_read_buf
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:291    .text.nrf24l01_read_buf:00000040 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:296    .text.nrf24l01_read_reg:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:301    .text.nrf24l01_read_reg:00000000 nrf24l01_read_reg
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:357    .text.nrf24l01_read_reg:00000030 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:362    .text.nrf24l01_write_reg:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:367    .text.nrf24l01_write_reg:00000000 nrf24l01_write_reg
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:426    .text.nrf24l01_write_reg:00000034 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:431    .text.nrf24l01_spi_init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:437    .text.nrf24l01_spi_init:00000000 nrf24l01_spi_init
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:458    .text.nrf24l01_init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:464    .text.nrf24l01_init:00000000 nrf24l01_init
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:620    .text.nrf24l01_init:000000b0 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:627    .rodata.nrf24l01_check.str1.4:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:631    .text.nrf24l01_check:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:637    .text.nrf24l01_check:00000000 nrf24l01_check
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:723    .text.nrf24l01_check:00000054 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:728    .text.nrf24l01_tx_packet:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:734    .text.nrf24l01_tx_packet:00000000 nrf24l01_tx_packet
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:891    .text.nrf24l01_tx_packet:000000ac $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:896    .text.nrf24l01_rx_packet:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:902    .text.nrf24l01_rx_packet:00000000 nrf24l01_rx_packet
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:969    .text.nrf24l01_rx_mode:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:975    .text.nrf24l01_rx_mode:00000000 nrf24l01_rx_mode
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1044   .text.nrf24l01_rx_mode:00000058 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1728   .rodata.RX_ADDRESS:00000000 RX_ADDRESS
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1050   .text.nrf24l01_tx_mode:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1056   .text.nrf24l01_tx_mode:00000000 nrf24l01_tx_mode
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1131   .text.nrf24l01_tx_mode:00000064 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1735   .rodata.TX_ADDRESS:00000000 TX_ADDRESS
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1138   .text.B_nrf24l01_switch_rx_from_A:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1144   .text.B_nrf24l01_switch_rx_from_A:00000000 B_nrf24l01_switch_rx_from_A
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1213   .text.B_nrf24l01_switch_rx_from_A:00000058 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1749   .data.ADDR_AB:00000000 ADDR_AB
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1219   .text.B_nrf24l01_switch_tx_to_C:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1225   .text.B_nrf24l01_switch_tx_to_C:00000000 B_nrf24l01_switch_tx_to_C
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1292   .text.B_nrf24l01_switch_tx_to_C:00000058 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1742   .data.ADDR_BC:00000000 ADDR_BC
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1298   .text.NRF_check:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1304   .text.NRF_check:00000000 NRF_check
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1349   .text.NRF_check:0000002c $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1354   .text.B_receive_from_host:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1360   .text.B_receive_from_host:00000000 B_receive_from_host
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1420   .text.floatToTwoSint8:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1426   .text.floatToTwoSint8:00000000 floatToTwoSint8
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 44
+
+
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1497   .text.floatToTwoSint8:00000058 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1504   .text.twoSint8ToFloat:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1510   .text.twoSint8ToFloat:00000000 twoSint8ToFloat
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1538   .text.twoSint8ToFloat:00000018 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1543   .text.nrf_receive_task:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1549   .text.nrf_receive_task:00000000 nrf_receive_task
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1659   .text.nrf_receive_task:0000007c $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1721   .bss.nrf_rx_buf:00000000 nrf_rx_buf
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1714   .bss.key_mode:00000000 key_mode
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1708   .bss.encoderl_value:00000000 encoderl_value
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1702   .bss.encoderr_value:00000000 encoderr_value
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1696   .bss.rocker_lx:00000000 rocker_lx
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1689   .bss.rocker_ly:00000000 rocker_ly
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1682   .bss.rocker_rx:00000000 rocker_rx
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1675   .bss.rocker_ry:00000000 rocker_ry
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1672   .bss.rocker_ry:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1679   .bss.rocker_rx:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1686   .bss.rocker_ly:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1693   .bss.rocker_lx:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1703   .bss.encoderr_value:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1709   .bss.encoderl_value:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1715   .bss.key_mode:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1718   .bss.nrf_rx_buf:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1725   .rodata.RX_ADDRESS:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1732   .rodata.TX_ADDRESS:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1739   .data.ADDR_BC:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1746   .data.ADDR_AB:00000000 $d
+
+UNDEFINED SYMBOLS
+HAL_SPI_Init
+hspi2
+HAL_SPI_TransmitReceive
+HAL_GPIO_WritePin
+HAL_GPIO_Init
+HAL_GetTick
+HAL_GPIO_ReadPin
+HAL_GPIO_TogglePin
+HAL_Delay
+__aeabi_f2d
+round
+__aeabi_d2iz

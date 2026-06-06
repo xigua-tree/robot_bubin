@@ -1,0 +1,836 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"bt_proto.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/bt_proto.c"
+  20              		.section	.text.BT_Parse_Byte,"ax",%progbits
+  21              		.align	1
+  22              		.global	BT_Parse_Byte
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	BT_Parse_Byte:
+  28              	.LVL0:
+  29              	.LFB134:
+   1:Core/Src/bt_proto.c **** #include "bt_proto.h"
+   2:Core/Src/bt_proto.c **** #include <string.h>
+   3:Core/Src/bt_proto.c **** #include "main.h"
+   4:Core/Src/bt_proto.c **** 
+   5:Core/Src/bt_proto.c **** /* IMU 欧拉角（由 main.c 中的 imu_update_task 更新） */
+   6:Core/Src/bt_proto.c **** extern float g_roll, g_pitch, g_yaw;
+   7:Core/Src/bt_proto.c **** 
+   8:Core/Src/bt_proto.c **** 
+   9:Core/Src/bt_proto.c **** /* 状态机静态变量 */
+  10:Core/Src/bt_proto.c **** static BT_ParseState_t s_state = BT_STATE_HEAD;
+  11:Core/Src/bt_proto.c **** static uint8_t  s_data_buf[BT_RX_DATA_LEN];
+  12:Core/Src/bt_proto.c **** static uint8_t  s_data_idx;
+  13:Core/Src/bt_proto.c **** static uint8_t  s_checksum;
+  14:Core/Src/bt_proto.c **** 
+  15:Core/Src/bt_proto.c **** bool BT_Parse_Byte(uint8_t byte, BT_RxPacket_t *result)
+  16:Core/Src/bt_proto.c **** {
+  30              		.loc 1 16 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  17:Core/Src/bt_proto.c ****     switch (s_state) {
+  35              		.loc 1 17 5 view .LVU1
+  36 0000 2A4B     		ldr	r3, .L18
+  37 0002 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  38 0004 032B     		cmp	r3, #3
+  39 0006 4CD8     		bhi	.L11
+  40 0008 DFE803F0 		tbb	[pc, r3]
+  41              	.L4:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 2
+
+
+  42 000c 02       		.byte	(.L7-.L4)/2
+  43 000d 0F       		.byte	(.L6-.L4)/2
+  44 000e 30       		.byte	(.L12-.L4)/2
+  45 000f 37       		.byte	(.L3-.L4)/2
+  46              		.p2align 1
+  47              	.L7:
+  18:Core/Src/bt_proto.c ****     case BT_STATE_HEAD:
+  19:Core/Src/bt_proto.c ****         if (byte == BT_FRAME_HEAD) {
+  48              		.loc 1 19 9 view .LVU2
+  49              		.loc 1 19 12 is_stmt 0 view .LVU3
+  50 0010 A528     		cmp	r0, #165
+  51 0012 01D0     		beq	.L15
+  20:Core/Src/bt_proto.c ****             s_data_idx = 0;
+  21:Core/Src/bt_proto.c ****             s_checksum = 0;
+  22:Core/Src/bt_proto.c ****             s_state = BT_STATE_DATA;
+  23:Core/Src/bt_proto.c ****         }
+  24:Core/Src/bt_proto.c ****         break;
+  25:Core/Src/bt_proto.c **** 
+  26:Core/Src/bt_proto.c ****     case BT_STATE_DATA:
+  27:Core/Src/bt_proto.c ****         s_data_buf[s_data_idx++] = byte;
+  28:Core/Src/bt_proto.c ****         if (s_data_idx >= BT_RX_DATA_LEN) {
+  29:Core/Src/bt_proto.c ****             s_state = BT_STATE_CHECKSUM;
+  30:Core/Src/bt_proto.c ****         }
+  31:Core/Src/bt_proto.c ****         break;
+  32:Core/Src/bt_proto.c **** 
+  33:Core/Src/bt_proto.c ****     case BT_STATE_CHECKSUM:
+  34:Core/Src/bt_proto.c ****         /* 计算数据校验和 */
+  35:Core/Src/bt_proto.c ****         for (uint8_t i = 0; i < BT_RX_DATA_LEN; i++) {
+  36:Core/Src/bt_proto.c ****             s_checksum += s_data_buf[i];
+  37:Core/Src/bt_proto.c ****         }
+  38:Core/Src/bt_proto.c ****         if (byte == s_checksum) {
+  39:Core/Src/bt_proto.c ****             s_state = BT_STATE_TAIL;
+  40:Core/Src/bt_proto.c ****         } else {
+  41:Core/Src/bt_proto.c ****             s_state = BT_STATE_HEAD;  /* 校验失败，丢弃 */
+  42:Core/Src/bt_proto.c ****         }
+  43:Core/Src/bt_proto.c ****         break;
+  44:Core/Src/bt_proto.c **** 
+  45:Core/Src/bt_proto.c ****     case BT_STATE_TAIL:
+  46:Core/Src/bt_proto.c ****         if (byte == BT_FRAME_TAIL) {
+  47:Core/Src/bt_proto.c ****             /* 完整帧接收成功，解析数据 */
+  48:Core/Src/bt_proto.c ****             memcpy(&result->target_speed, &s_data_buf[0],  4);
+  49:Core/Src/bt_proto.c ****             memcpy(&result->Kp,           &s_data_buf[4],  4);
+  50:Core/Src/bt_proto.c ****             memcpy(&result->Ki,           &s_data_buf[8],  4);
+  51:Core/Src/bt_proto.c ****             memcpy(&result->Kd,           &s_data_buf[12], 4);
+  52:Core/Src/bt_proto.c ****             s_state = BT_STATE_HEAD;
+  53:Core/Src/bt_proto.c ****             return true;
+  54:Core/Src/bt_proto.c ****         }
+  55:Core/Src/bt_proto.c ****         s_state = BT_STATE_HEAD;  /* 包尾不匹配，丢弃 */
+  56:Core/Src/bt_proto.c ****         break;
+  57:Core/Src/bt_proto.c ****     }
+  58:Core/Src/bt_proto.c ****     return false;
+  52              		.loc 1 58 12 view .LVU4
+  53 0014 0020     		movs	r0, #0
+  54              	.LVL1:
+  55              		.loc 1 58 12 view .LVU5
+  56 0016 7047     		bx	lr
+  57              	.LVL2:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 3
+
+
+  58              	.L15:
+  20:Core/Src/bt_proto.c ****             s_data_idx = 0;
+  59              		.loc 1 20 13 is_stmt 1 view .LVU6
+  20:Core/Src/bt_proto.c ****             s_data_idx = 0;
+  60              		.loc 1 20 24 is_stmt 0 view .LVU7
+  61 0018 0020     		movs	r0, #0
+  62              	.LVL3:
+  20:Core/Src/bt_proto.c ****             s_data_idx = 0;
+  63              		.loc 1 20 24 view .LVU8
+  64 001a 254B     		ldr	r3, .L18+4
+  65 001c 1870     		strb	r0, [r3]
+  21:Core/Src/bt_proto.c ****             s_state = BT_STATE_DATA;
+  66              		.loc 1 21 13 is_stmt 1 view .LVU9
+  21:Core/Src/bt_proto.c ****             s_state = BT_STATE_DATA;
+  67              		.loc 1 21 24 is_stmt 0 view .LVU10
+  68 001e 254B     		ldr	r3, .L18+8
+  69 0020 1870     		strb	r0, [r3]
+  22:Core/Src/bt_proto.c ****         }
+  70              		.loc 1 22 13 is_stmt 1 view .LVU11
+  22:Core/Src/bt_proto.c ****         }
+  71              		.loc 1 22 21 is_stmt 0 view .LVU12
+  72 0022 224B     		ldr	r3, .L18
+  73 0024 0122     		movs	r2, #1
+  74 0026 1A70     		strb	r2, [r3]
+  75 0028 7047     		bx	lr
+  76              	.LVL4:
+  77              	.L6:
+  27:Core/Src/bt_proto.c ****         if (s_data_idx >= BT_RX_DATA_LEN) {
+  78              		.loc 1 27 9 is_stmt 1 view .LVU13
+  27:Core/Src/bt_proto.c ****         if (s_data_idx >= BT_RX_DATA_LEN) {
+  79              		.loc 1 27 30 is_stmt 0 view .LVU14
+  80 002a 2149     		ldr	r1, .L18+4
+  81              	.LVL5:
+  27:Core/Src/bt_proto.c ****         if (s_data_idx >= BT_RX_DATA_LEN) {
+  82              		.loc 1 27 30 view .LVU15
+  83 002c 0A78     		ldrb	r2, [r1]	@ zero_extendqisi2
+  84 002e 531C     		adds	r3, r2, #1
+  85 0030 DBB2     		uxtb	r3, r3
+  86 0032 0B70     		strb	r3, [r1]
+  27:Core/Src/bt_proto.c ****         if (s_data_idx >= BT_RX_DATA_LEN) {
+  87              		.loc 1 27 34 view .LVU16
+  88 0034 2049     		ldr	r1, .L18+12
+  89 0036 8854     		strb	r0, [r1, r2]
+  28:Core/Src/bt_proto.c ****             s_state = BT_STATE_CHECKSUM;
+  90              		.loc 1 28 9 is_stmt 1 view .LVU17
+  28:Core/Src/bt_proto.c ****             s_state = BT_STATE_CHECKSUM;
+  91              		.loc 1 28 12 is_stmt 0 view .LVU18
+  92 0038 0F2B     		cmp	r3, #15
+  93 003a 34D9     		bls	.L14
+  29:Core/Src/bt_proto.c ****         }
+  94              		.loc 1 29 13 is_stmt 1 view .LVU19
+  29:Core/Src/bt_proto.c ****         }
+  95              		.loc 1 29 21 is_stmt 0 view .LVU20
+  96 003c 1B4B     		ldr	r3, .L18
+  97 003e 0222     		movs	r2, #2
+  98 0040 1A70     		strb	r2, [r3]
+  99              		.loc 1 58 12 view .LVU21
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 4
+
+
+ 100 0042 0020     		movs	r0, #0
+ 101              	.LVL6:
+ 102              		.loc 1 58 12 view .LVU22
+ 103 0044 7047     		bx	lr
+ 104              	.LVL7:
+ 105              	.L8:
+ 106              	.LBB2:
+  36:Core/Src/bt_proto.c ****         }
+ 107              		.loc 1 36 13 is_stmt 1 view .LVU23
+  36:Core/Src/bt_proto.c ****         }
+ 108              		.loc 1 36 37 is_stmt 0 view .LVU24
+ 109 0046 1C4A     		ldr	r2, .L18+12
+ 110 0048 D25C     		ldrb	r2, [r2, r3]	@ zero_extendqisi2
+  36:Core/Src/bt_proto.c ****         }
+ 111              		.loc 1 36 24 view .LVU25
+ 112 004a 1A49     		ldr	r1, .L18+8
+ 113 004c 91F800C0 		ldrb	ip, [r1]	@ zero_extendqisi2
+ 114 0050 6244     		add	r2, r2, ip
+ 115 0052 0A70     		strb	r2, [r1]
+  35:Core/Src/bt_proto.c ****             s_checksum += s_data_buf[i];
+ 116              		.loc 1 35 50 is_stmt 1 discriminator 3 view .LVU26
+ 117 0054 0133     		adds	r3, r3, #1
+ 118              	.LVL8:
+  35:Core/Src/bt_proto.c ****             s_checksum += s_data_buf[i];
+ 119              		.loc 1 35 50 is_stmt 0 discriminator 3 view .LVU27
+ 120 0056 DBB2     		uxtb	r3, r3
+ 121              	.LVL9:
+ 122              	.L5:
+  35:Core/Src/bt_proto.c ****             s_checksum += s_data_buf[i];
+ 123              		.loc 1 35 31 is_stmt 1 discriminator 1 view .LVU28
+ 124 0058 0F2B     		cmp	r3, #15
+ 125 005a F4D9     		bls	.L8
+ 126              	.LBE2:
+  38:Core/Src/bt_proto.c ****             s_state = BT_STATE_TAIL;
+ 127              		.loc 1 38 9 view .LVU29
+  38:Core/Src/bt_proto.c ****             s_state = BT_STATE_TAIL;
+ 128              		.loc 1 38 18 is_stmt 0 view .LVU30
+ 129 005c 154B     		ldr	r3, .L18+8
+ 130              	.LVL10:
+  38:Core/Src/bt_proto.c ****             s_state = BT_STATE_TAIL;
+ 131              		.loc 1 38 18 view .LVU31
+ 132 005e 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+  38:Core/Src/bt_proto.c ****             s_state = BT_STATE_TAIL;
+ 133              		.loc 1 38 12 view .LVU32
+ 134 0060 8342     		cmp	r3, r0
+ 135 0062 05D0     		beq	.L16
+  41:Core/Src/bt_proto.c ****         }
+ 136              		.loc 1 41 13 is_stmt 1 view .LVU33
+  41:Core/Src/bt_proto.c ****         }
+ 137              		.loc 1 41 21 is_stmt 0 view .LVU34
+ 138 0064 0020     		movs	r0, #0
+ 139              	.LVL11:
+  41:Core/Src/bt_proto.c ****         }
+ 140              		.loc 1 41 21 view .LVU35
+ 141 0066 114B     		ldr	r3, .L18
+ 142 0068 1870     		strb	r0, [r3]
+ 143 006a 7047     		bx	lr
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 5
+
+
+ 144              	.LVL12:
+ 145              	.L12:
+  17:Core/Src/bt_proto.c ****     case BT_STATE_HEAD:
+ 146              		.loc 1 17 5 view .LVU36
+ 147 006c 0023     		movs	r3, #0
+ 148 006e F3E7     		b	.L5
+ 149              	.LVL13:
+ 150              	.L16:
+  39:Core/Src/bt_proto.c ****         } else {
+ 151              		.loc 1 39 13 is_stmt 1 view .LVU37
+  39:Core/Src/bt_proto.c ****         } else {
+ 152              		.loc 1 39 21 is_stmt 0 view .LVU38
+ 153 0070 0E4B     		ldr	r3, .L18
+ 154 0072 0322     		movs	r2, #3
+ 155 0074 1A70     		strb	r2, [r3]
+ 156              		.loc 1 58 12 view .LVU39
+ 157 0076 0020     		movs	r0, #0
+ 158              	.LVL14:
+ 159              		.loc 1 58 12 view .LVU40
+ 160 0078 7047     		bx	lr
+ 161              	.LVL15:
+ 162              	.L3:
+  46:Core/Src/bt_proto.c ****             /* 完整帧接收成功，解析数据 */
+ 163              		.loc 1 46 9 is_stmt 1 view .LVU41
+  46:Core/Src/bt_proto.c ****             /* 完整帧接收成功，解析数据 */
+ 164              		.loc 1 46 12 is_stmt 0 view .LVU42
+ 165 007a 5A28     		cmp	r0, #90
+ 166 007c 03D0     		beq	.L17
+  55:Core/Src/bt_proto.c ****         break;
+ 167              		.loc 1 55 9 is_stmt 1 view .LVU43
+  55:Core/Src/bt_proto.c ****         break;
+ 168              		.loc 1 55 17 is_stmt 0 view .LVU44
+ 169 007e 0020     		movs	r0, #0
+ 170              	.LVL16:
+  55:Core/Src/bt_proto.c ****         break;
+ 171              		.loc 1 55 17 view .LVU45
+ 172 0080 0A4B     		ldr	r3, .L18
+ 173 0082 1870     		strb	r0, [r3]
+  56:Core/Src/bt_proto.c ****     }
+ 174              		.loc 1 56 9 is_stmt 1 view .LVU46
+ 175 0084 7047     		bx	lr
+ 176              	.LVL17:
+ 177              	.L17:
+  48:Core/Src/bt_proto.c ****             memcpy(&result->Kp,           &s_data_buf[4],  4);
+ 178              		.loc 1 48 13 view .LVU47
+ 179 0086 0C4B     		ldr	r3, .L18+12
+ 180 0088 1A68     		ldr	r2, [r3]
+ 181 008a 0A60     		str	r2, [r1]	@ unaligned
+  49:Core/Src/bt_proto.c ****             memcpy(&result->Ki,           &s_data_buf[8],  4);
+ 182              		.loc 1 49 13 view .LVU48
+ 183 008c 5A68     		ldr	r2, [r3, #4]
+ 184 008e 4A60     		str	r2, [r1, #4]	@ unaligned
+  50:Core/Src/bt_proto.c ****             memcpy(&result->Kd,           &s_data_buf[12], 4);
+ 185              		.loc 1 50 13 view .LVU49
+ 186 0090 9A68     		ldr	r2, [r3, #8]
+ 187 0092 8A60     		str	r2, [r1, #8]	@ unaligned
+  51:Core/Src/bt_proto.c ****             s_state = BT_STATE_HEAD;
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 6
+
+
+ 188              		.loc 1 51 13 view .LVU50
+ 189 0094 DB68     		ldr	r3, [r3, #12]
+ 190 0096 CB60     		str	r3, [r1, #12]	@ unaligned
+  52:Core/Src/bt_proto.c ****             return true;
+ 191              		.loc 1 52 13 view .LVU51
+  52:Core/Src/bt_proto.c ****             return true;
+ 192              		.loc 1 52 21 is_stmt 0 view .LVU52
+ 193 0098 044B     		ldr	r3, .L18
+ 194 009a 0022     		movs	r2, #0
+ 195 009c 1A70     		strb	r2, [r3]
+  53:Core/Src/bt_proto.c ****         }
+ 196              		.loc 1 53 13 is_stmt 1 view .LVU53
+  53:Core/Src/bt_proto.c ****         }
+ 197              		.loc 1 53 20 is_stmt 0 view .LVU54
+ 198 009e 0120     		movs	r0, #1
+ 199              	.LVL18:
+  53:Core/Src/bt_proto.c ****         }
+ 200              		.loc 1 53 20 view .LVU55
+ 201 00a0 7047     		bx	lr
+ 202              	.LVL19:
+ 203              	.L11:
+  17:Core/Src/bt_proto.c ****     case BT_STATE_HEAD:
+ 204              		.loc 1 17 5 view .LVU56
+ 205 00a2 0020     		movs	r0, #0
+ 206              	.LVL20:
+  17:Core/Src/bt_proto.c ****     case BT_STATE_HEAD:
+ 207              		.loc 1 17 5 view .LVU57
+ 208 00a4 7047     		bx	lr
+ 209              	.LVL21:
+ 210              	.L14:
+ 211              		.loc 1 58 12 view .LVU58
+ 212 00a6 0020     		movs	r0, #0
+ 213              	.LVL22:
+  59:Core/Src/bt_proto.c **** }
+ 214              		.loc 1 59 1 view .LVU59
+ 215 00a8 7047     		bx	lr
+ 216              	.L19:
+ 217 00aa 00BF     		.align	2
+ 218              	.L18:
+ 219 00ac 00000000 		.word	s_state
+ 220 00b0 00000000 		.word	s_data_idx
+ 221 00b4 00000000 		.word	s_checksum
+ 222 00b8 00000000 		.word	s_data_buf
+ 223              		.cfi_endproc
+ 224              	.LFE134:
+ 226              		.section	.text.BT_Pack_Tx,"ax",%progbits
+ 227              		.align	1
+ 228              		.global	BT_Pack_Tx
+ 229              		.syntax unified
+ 230              		.thumb
+ 231              		.thumb_func
+ 233              	BT_Pack_Tx:
+ 234              	.LVL23:
+ 235              	.LFB135:
+  60:Core/Src/bt_proto.c **** 
+  61:Core/Src/bt_proto.c **** uint8_t BT_Pack_Tx(const BT_TxPacket_t *pkt, uint8_t *buf)
+  62:Core/Src/bt_proto.c **** {
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 7
+
+
+ 236              		.loc 1 62 1 is_stmt 1 view -0
+ 237              		.cfi_startproc
+ 238              		@ args = 0, pretend = 0, frame = 0
+ 239              		@ frame_needed = 0, uses_anonymous_args = 0
+ 240              		@ link register save eliminated.
+  63:Core/Src/bt_proto.c ****     buf[0] = BT_FRAME_HEAD;
+ 241              		.loc 1 63 5 view .LVU61
+ 242              		.loc 1 63 12 is_stmt 0 view .LVU62
+ 243 0000 A523     		movs	r3, #165
+ 244 0002 0B70     		strb	r3, [r1]
+  64:Core/Src/bt_proto.c **** 
+  65:Core/Src/bt_proto.c ****     /* count(i32) + encL(i32) + encR(i32) + speed(f32) + error(f32)
+  66:Core/Src/bt_proto.c ****        + roll(f32) + pitch(f32) + yaw(f32) = 32字节 */
+  67:Core/Src/bt_proto.c ****     memcpy(&buf[1],  &pkt->count,      sizeof(pkt->count));
+ 245              		.loc 1 67 5 is_stmt 1 view .LVU63
+ 246 0004 0368     		ldr	r3, [r0]	@ unaligned
+ 247 0006 C1F80130 		str	r3, [r1, #1]	@ unaligned
+  68:Core/Src/bt_proto.c ****     memcpy(&buf[5],  &pkt->Encoder_l,  sizeof(pkt->Encoder_l));
+ 248              		.loc 1 68 5 view .LVU64
+ 249 000a 4368     		ldr	r3, [r0, #4]	@ unaligned
+ 250 000c C1F80530 		str	r3, [r1, #5]	@ unaligned
+  69:Core/Src/bt_proto.c ****     memcpy(&buf[9],  &pkt->Encoder_r,  sizeof(pkt->Encoder_r));
+ 251              		.loc 1 69 5 view .LVU65
+ 252 0010 8368     		ldr	r3, [r0, #8]	@ unaligned
+ 253 0012 C1F80930 		str	r3, [r1, #9]	@ unaligned
+  70:Core/Src/bt_proto.c ****     memcpy(&buf[13], &pkt->speed,      sizeof(pkt->speed));
+ 254              		.loc 1 70 5 view .LVU66
+ 255 0016 C368     		ldr	r3, [r0, #12]	@ unaligned
+ 256 0018 C1F80D30 		str	r3, [r1, #13]	@ unaligned
+  71:Core/Src/bt_proto.c ****     memcpy(&buf[17], &pkt->error,      sizeof(pkt->error));
+ 257              		.loc 1 71 5 view .LVU67
+ 258 001c 0369     		ldr	r3, [r0, #16]	@ unaligned
+ 259 001e C1F81130 		str	r3, [r1, #17]	@ unaligned
+  72:Core/Src/bt_proto.c ****     memcpy(&buf[21], &pkt->roll,       sizeof(pkt->roll));
+ 260              		.loc 1 72 5 view .LVU68
+ 261 0022 4369     		ldr	r3, [r0, #20]	@ unaligned
+ 262 0024 C1F81530 		str	r3, [r1, #21]	@ unaligned
+  73:Core/Src/bt_proto.c ****     memcpy(&buf[25], &pkt->pitch,      sizeof(pkt->pitch));
+ 263              		.loc 1 73 5 view .LVU69
+ 264 0028 8369     		ldr	r3, [r0, #24]	@ unaligned
+ 265 002a C1F81930 		str	r3, [r1, #25]	@ unaligned
+  74:Core/Src/bt_proto.c ****     memcpy(&buf[29], &pkt->yaw,        sizeof(pkt->yaw));
+ 266              		.loc 1 74 5 view .LVU70
+ 267 002e C369     		ldr	r3, [r0, #28]	@ unaligned
+ 268 0030 C1F81D30 		str	r3, [r1, #29]	@ unaligned
+  75:Core/Src/bt_proto.c **** 
+  76:Core/Src/bt_proto.c ****     /* 校验和（数据字节之和的低8位） */
+  77:Core/Src/bt_proto.c ****     uint8_t checksum = 0;
+ 269              		.loc 1 77 5 view .LVU71
+ 270              	.LVL24:
+  78:Core/Src/bt_proto.c ****     for (uint8_t i = 0; i < BT_TX_DATA_LEN; i++) {
+ 271              		.loc 1 78 5 view .LVU72
+ 272              	.LBB3:
+ 273              		.loc 1 78 10 view .LVU73
+ 274              		.loc 1 78 18 is_stmt 0 view .LVU74
+ 275 0034 0023     		movs	r3, #0
+ 276              	.LBE3:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 8
+
+
+  77:Core/Src/bt_proto.c ****     for (uint8_t i = 0; i < BT_TX_DATA_LEN; i++) {
+ 277              		.loc 1 77 13 view .LVU75
+ 278 0036 1A46     		mov	r2, r3
+ 279              	.LBB4:
+ 280              		.loc 1 78 5 view .LVU76
+ 281 0038 04E0     		b	.L21
+ 282              	.LVL25:
+ 283              	.L22:
+  79:Core/Src/bt_proto.c ****         checksum += buf[1 + i];
+ 284              		.loc 1 79 9 is_stmt 1 view .LVU77
+ 285              		.loc 1 79 27 is_stmt 0 view .LVU78
+ 286 003a 0133     		adds	r3, r3, #1
+ 287              	.LVL26:
+ 288              		.loc 1 79 24 view .LVU79
+ 289 003c C85C     		ldrb	r0, [r1, r3]	@ zero_extendqisi2
+ 290              		.loc 1 79 18 view .LVU80
+ 291 003e 0244     		add	r2, r2, r0
+ 292              	.LVL27:
+ 293              		.loc 1 79 18 view .LVU81
+ 294 0040 D2B2     		uxtb	r2, r2
+ 295              	.LVL28:
+  78:Core/Src/bt_proto.c ****     for (uint8_t i = 0; i < BT_TX_DATA_LEN; i++) {
+ 296              		.loc 1 78 46 is_stmt 1 discriminator 3 view .LVU82
+ 297 0042 DBB2     		uxtb	r3, r3
+ 298              	.LVL29:
+ 299              	.L21:
+  78:Core/Src/bt_proto.c ****     for (uint8_t i = 0; i < BT_TX_DATA_LEN; i++) {
+ 300              		.loc 1 78 27 discriminator 1 view .LVU83
+ 301 0044 1F2B     		cmp	r3, #31
+ 302 0046 F8D9     		bls	.L22
+ 303              	.LBE4:
+  80:Core/Src/bt_proto.c ****     }
+  81:Core/Src/bt_proto.c ****     buf[BT_TX_DATA_LEN + 1] = checksum;
+ 304              		.loc 1 81 5 view .LVU84
+ 305              		.loc 1 81 29 is_stmt 0 view .LVU85
+ 306 0048 81F82120 		strb	r2, [r1, #33]
+  82:Core/Src/bt_proto.c **** 
+  83:Core/Src/bt_proto.c ****     buf[BT_TX_DATA_LEN + 2] = BT_FRAME_TAIL;
+ 307              		.loc 1 83 5 is_stmt 1 view .LVU86
+ 308              		.loc 1 83 29 is_stmt 0 view .LVU87
+ 309 004c 5A23     		movs	r3, #90
+ 310              	.LVL30:
+ 311              		.loc 1 83 29 view .LVU88
+ 312 004e 81F82230 		strb	r3, [r1, #34]
+  84:Core/Src/bt_proto.c ****     return BT_TX_PACKET_LEN;
+ 313              		.loc 1 84 5 is_stmt 1 view .LVU89
+  85:Core/Src/bt_proto.c **** }
+ 314              		.loc 1 85 1 is_stmt 0 view .LVU90
+ 315 0052 2320     		movs	r0, #35
+ 316 0054 7047     		bx	lr
+ 317              		.cfi_endproc
+ 318              	.LFE135:
+ 320              		.section	.text.blue_setparam_task,"ax",%progbits
+ 321              		.align	1
+ 322              		.global	blue_setparam_task
+ 323              		.syntax unified
+ 324              		.thumb
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 9
+
+
+ 325              		.thumb_func
+ 327              	blue_setparam_task:
+ 328              	.LFB136:
+  86:Core/Src/bt_proto.c **** 
+  87:Core/Src/bt_proto.c **** void blue_setparam_task()
+  88:Core/Src/bt_proto.c **** {
+ 329              		.loc 1 88 1 is_stmt 1 view -0
+ 330              		.cfi_startproc
+ 331              		@ args = 0, pretend = 0, frame = 8
+ 332              		@ frame_needed = 0, uses_anonymous_args = 0
+ 333 0000 70B5     		push	{r4, r5, r6, lr}
+ 334              	.LCFI0:
+ 335              		.cfi_def_cfa_offset 16
+ 336              		.cfi_offset 4, -16
+ 337              		.cfi_offset 5, -12
+ 338              		.cfi_offset 6, -8
+ 339              		.cfi_offset 14, -4
+ 340 0002 82B0     		sub	sp, sp, #8
+ 341              	.LCFI1:
+ 342              		.cfi_def_cfa_offset 24
+  89:Core/Src/bt_proto.c ****         /* ---- 协议解析 ---- */
+  90:Core/Src/bt_proto.c ****     RingBuf_t *rb = Get_UART_RxRingBuf();
+ 343              		.loc 1 90 5 view .LVU92
+ 344              		.loc 1 90 21 is_stmt 0 view .LVU93
+ 345 0004 FFF7FEFF 		bl	Get_UART_RxRingBuf
+ 346              	.LVL31:
+  91:Core/Src/bt_proto.c ****     uint8_t byte;
+ 347              		.loc 1 91 5 is_stmt 1 view .LVU94
+  92:Core/Src/bt_proto.c ****     if (RingBuf_Get(rb, &byte)) {
+ 348              		.loc 1 92 5 view .LVU95
+ 349              		.loc 1 92 9 is_stmt 0 view .LVU96
+ 350 0008 0DF10701 		add	r1, sp, #7
+ 351 000c FFF7FEFF 		bl	RingBuf_Get
+ 352              	.LVL32:
+ 353              		.loc 1 92 8 discriminator 1 view .LVU97
+ 354 0010 40B9     		cbnz	r0, .L30
+ 355              	.L24:
+ 356              	.LBB5:
+  93:Core/Src/bt_proto.c ****         if (BT_Parse_Byte(byte, &s_rx_pkt)) {
+  94:Core/Src/bt_proto.c ****             /* 应用 PID 参数和速度指令（对4个电机统一设置） */
+  95:Core/Src/bt_proto.c ****             for (int i = 0; i < 4; i++) {
+  96:Core/Src/bt_proto.c ****                 SpeedCtrl_SetPID(i, s_rx_pkt.Kp, s_rx_pkt.Ki, s_rx_pkt.Kd);
+  97:Core/Src/bt_proto.c ****                 SpeedCtrl_SetTarget(i, s_rx_pkt.target_speed);
+  98:Core/Src/bt_proto.c ****             }
+  99:Core/Src/bt_proto.c ****         }
+ 100:Core/Src/bt_proto.c ****     }
+ 101:Core/Src/bt_proto.c ****         /* ---- 周期上报速度（约 100ms 一次） ---- */
+ 102:Core/Src/bt_proto.c ****     {
+ 103:Core/Src/bt_proto.c ****         static uint32_t last_tx_tick = 0;
+ 357              		.loc 1 103 9 is_stmt 1 view .LVU98
+ 104:Core/Src/bt_proto.c ****         if (HAL_GetTick() - last_tx_tick >= 100) {
+ 358              		.loc 1 104 9 view .LVU99
+ 359              		.loc 1 104 13 is_stmt 0 view .LVU100
+ 360 0012 FFF7FEFF 		bl	HAL_GetTick
+ 361              	.LVL33:
+ 362              		.loc 1 104 27 discriminator 1 view .LVU101
+ 363 0016 284B     		ldr	r3, .L32
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 10
+
+
+ 364 0018 1B68     		ldr	r3, [r3]
+ 365 001a C01A     		subs	r0, r0, r3
+ 366              		.loc 1 104 12 discriminator 1 view .LVU102
+ 367 001c 6328     		cmp	r0, #99
+ 368 001e 1ED8     		bhi	.L31
+ 369              	.L23:
+ 370              	.LBE5:
+ 105:Core/Src/bt_proto.c ****             last_tx_tick = HAL_GetTick();
+ 106:Core/Src/bt_proto.c ****             /* 发送电机1的速度 */
+ 107:Core/Src/bt_proto.c ****             s_tx_pkt.count = tim8_counter;
+ 108:Core/Src/bt_proto.c ****             s_tx_pkt.speed = g_encoders[0].speed_rpm;
+ 109:Core/Src/bt_proto.c ****             s_tx_pkt.error = SpeedCtrl_GetError(0);
+ 110:Core/Src/bt_proto.c ****             s_tx_pkt.Encoder_l = encoderl_value;
+ 111:Core/Src/bt_proto.c ****             s_tx_pkt.Encoder_r = encoderr_value;
+ 112:Core/Src/bt_proto.c ****             s_tx_pkt.roll  = g_roll;
+ 113:Core/Src/bt_proto.c ****             s_tx_pkt.pitch = g_pitch;
+ 114:Core/Src/bt_proto.c ****             s_tx_pkt.yaw   = g_yaw;
+ 115:Core/Src/bt_proto.c ****             s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
+ 116:Core/Src/bt_proto.c ****             HAL_UART_Transmit(&huart3, s_tx_buf, s_tx_len, 100);
+ 117:Core/Src/bt_proto.c ****         }
+ 118:Core/Src/bt_proto.c ****     }
+ 119:Core/Src/bt_proto.c **** }...
+ 371              		.loc 1 119 1 view .LVU103
+ 372 0020 02B0     		add	sp, sp, #8
+ 373              	.LCFI2:
+ 374              		.cfi_remember_state
+ 375              		.cfi_def_cfa_offset 16
+ 376              		@ sp needed
+ 377 0022 70BD     		pop	{r4, r5, r6, pc}
+ 378              	.L30:
+ 379              	.LCFI3:
+ 380              		.cfi_restore_state
+  93:Core/Src/bt_proto.c ****         if (BT_Parse_Byte(byte, &s_rx_pkt)) {
+ 381              		.loc 1 93 9 is_stmt 1 view .LVU104
+  93:Core/Src/bt_proto.c ****         if (BT_Parse_Byte(byte, &s_rx_pkt)) {
+ 382              		.loc 1 93 13 is_stmt 0 view .LVU105
+ 383 0024 2549     		ldr	r1, .L32+4
+ 384 0026 9DF80700 		ldrb	r0, [sp, #7]	@ zero_extendqisi2
+ 385 002a FFF7FEFF 		bl	BT_Parse_Byte
+ 386              	.LVL34:
+  93:Core/Src/bt_proto.c ****         if (BT_Parse_Byte(byte, &s_rx_pkt)) {
+ 387              		.loc 1 93 12 discriminator 1 view .LVU106
+ 388 002e 0028     		cmp	r0, #0
+ 389 0030 EFD0     		beq	.L24
+ 390              	.LBB6:
+  95:Core/Src/bt_proto.c ****             for (int i = 0; i < 4; i++) {
+ 391              		.loc 1 95 22 view .LVU107
+ 392 0032 0025     		movs	r5, #0
+ 393 0034 10E0     		b	.L25
+ 394              	.LVL35:
+ 395              	.L26:
+  96:Core/Src/bt_proto.c ****                 SpeedCtrl_SetPID(i, s_rx_pkt.Kp, s_rx_pkt.Ki, s_rx_pkt.Kd);
+ 396              		.loc 1 96 17 is_stmt 1 view .LVU108
+ 397 0036 EEB2     		uxtb	r6, r5
+ 398 0038 204C     		ldr	r4, .L32+4
+ 399 003a 94ED031A 		vldr.32	s2, [r4, #12]
+ 400 003e D4ED020A 		vldr.32	s1, [r4, #8]
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 11
+
+
+ 401 0042 94ED010A 		vldr.32	s0, [r4, #4]
+ 402 0046 3046     		mov	r0, r6
+ 403 0048 FFF7FEFF 		bl	SpeedCtrl_SetPID
+ 404              	.LVL36:
+  97:Core/Src/bt_proto.c ****                 SpeedCtrl_SetTarget(i, s_rx_pkt.target_speed);
+ 405              		.loc 1 97 17 view .LVU109
+ 406 004c 94ED000A 		vldr.32	s0, [r4]
+ 407 0050 3046     		mov	r0, r6
+ 408 0052 FFF7FEFF 		bl	SpeedCtrl_SetTarget
+ 409              	.LVL37:
+  95:Core/Src/bt_proto.c ****             for (int i = 0; i < 4; i++) {
+ 410              		.loc 1 95 37 discriminator 3 view .LVU110
+ 411 0056 0135     		adds	r5, r5, #1
+ 412              	.LVL38:
+ 413              	.L25:
+  95:Core/Src/bt_proto.c ****             for (int i = 0; i < 4; i++) {
+ 414              		.loc 1 95 31 discriminator 1 view .LVU111
+ 415 0058 032D     		cmp	r5, #3
+ 416 005a ECDD     		ble	.L26
+ 417 005c D9E7     		b	.L24
+ 418              	.LVL39:
+ 419              	.L31:
+  95:Core/Src/bt_proto.c ****             for (int i = 0; i < 4; i++) {
+ 420              		.loc 1 95 31 is_stmt 0 discriminator 1 view .LVU112
+ 421              	.LBE6:
+ 422              	.LBB7:
+ 105:Core/Src/bt_proto.c ****             last_tx_tick = HAL_GetTick();
+ 423              		.loc 1 105 13 is_stmt 1 view .LVU113
+ 105:Core/Src/bt_proto.c ****             last_tx_tick = HAL_GetTick();
+ 424              		.loc 1 105 28 is_stmt 0 view .LVU114
+ 425 005e FFF7FEFF 		bl	HAL_GetTick
+ 426              	.LVL40:
+ 105:Core/Src/bt_proto.c ****             last_tx_tick = HAL_GetTick();
+ 427              		.loc 1 105 26 discriminator 1 view .LVU115
+ 428 0062 154B     		ldr	r3, .L32
+ 429 0064 1860     		str	r0, [r3]
+ 107:Core/Src/bt_proto.c ****             s_tx_pkt.count = tim8_counter;
+ 430              		.loc 1 107 13 is_stmt 1 view .LVU116
+ 107:Core/Src/bt_proto.c ****             s_tx_pkt.count = tim8_counter;
+ 431              		.loc 1 107 28 is_stmt 0 view .LVU117
+ 432 0066 164B     		ldr	r3, .L32+8
+ 433 0068 1B68     		ldr	r3, [r3]
+ 434 006a 164C     		ldr	r4, .L32+12
+ 435 006c 2360     		str	r3, [r4]
+ 108:Core/Src/bt_proto.c ****             s_tx_pkt.speed = g_encoders[0].speed_rpm;
+ 436              		.loc 1 108 13 is_stmt 1 view .LVU118
+ 108:Core/Src/bt_proto.c ****             s_tx_pkt.speed = g_encoders[0].speed_rpm;
+ 437              		.loc 1 108 43 is_stmt 0 view .LVU119
+ 438 006e 164B     		ldr	r3, .L32+16
+ 439 0070 DB68     		ldr	r3, [r3, #12]	@ float
+ 108:Core/Src/bt_proto.c ****             s_tx_pkt.speed = g_encoders[0].speed_rpm;
+ 440              		.loc 1 108 28 view .LVU120
+ 441 0072 E360     		str	r3, [r4, #12]	@ float
+ 109:Core/Src/bt_proto.c ****             s_tx_pkt.error = SpeedCtrl_GetError(0);
+ 442              		.loc 1 109 13 is_stmt 1 view .LVU121
+ 109:Core/Src/bt_proto.c ****             s_tx_pkt.error = SpeedCtrl_GetError(0);
+ 443              		.loc 1 109 30 is_stmt 0 view .LVU122
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 12
+
+
+ 444 0074 0020     		movs	r0, #0
+ 445 0076 FFF7FEFF 		bl	SpeedCtrl_GetError
+ 446              	.LVL41:
+ 109:Core/Src/bt_proto.c ****             s_tx_pkt.error = SpeedCtrl_GetError(0);
+ 447              		.loc 1 109 28 discriminator 1 view .LVU123
+ 448 007a 84ED040A 		vstr.32	s0, [r4, #16]
+ 110:Core/Src/bt_proto.c ****             s_tx_pkt.Encoder_l = encoderl_value;
+ 449              		.loc 1 110 13 is_stmt 1 view .LVU124
+ 110:Core/Src/bt_proto.c ****             s_tx_pkt.Encoder_l = encoderl_value;
+ 450              		.loc 1 110 32 is_stmt 0 view .LVU125
+ 451 007e 134B     		ldr	r3, .L32+20
+ 452 0080 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 453 0082 6360     		str	r3, [r4, #4]
+ 111:Core/Src/bt_proto.c ****             s_tx_pkt.Encoder_r = encoderr_value;
+ 454              		.loc 1 111 13 is_stmt 1 view .LVU126
+ 111:Core/Src/bt_proto.c ****             s_tx_pkt.Encoder_r = encoderr_value;
+ 455              		.loc 1 111 32 is_stmt 0 view .LVU127
+ 456 0084 124B     		ldr	r3, .L32+24
+ 457 0086 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 458 0088 A360     		str	r3, [r4, #8]
+ 112:Core/Src/bt_proto.c ****             s_tx_pkt.roll  = g_roll;
+ 459              		.loc 1 112 13 is_stmt 1 view .LVU128
+ 112:Core/Src/bt_proto.c ****             s_tx_pkt.roll  = g_roll;
+ 460              		.loc 1 112 28 is_stmt 0 view .LVU129
+ 461 008a 124B     		ldr	r3, .L32+28
+ 462 008c 1B68     		ldr	r3, [r3]	@ float
+ 463 008e 6361     		str	r3, [r4, #20]	@ float
+ 113:Core/Src/bt_proto.c ****             s_tx_pkt.pitch = g_pitch;
+ 464              		.loc 1 113 13 is_stmt 1 view .LVU130
+ 113:Core/Src/bt_proto.c ****             s_tx_pkt.pitch = g_pitch;
+ 465              		.loc 1 113 28 is_stmt 0 view .LVU131
+ 466 0090 114B     		ldr	r3, .L32+32
+ 467 0092 1B68     		ldr	r3, [r3]	@ float
+ 468 0094 A361     		str	r3, [r4, #24]	@ float
+ 114:Core/Src/bt_proto.c ****             s_tx_pkt.yaw   = g_yaw;
+ 469              		.loc 1 114 13 is_stmt 1 view .LVU132
+ 114:Core/Src/bt_proto.c ****             s_tx_pkt.yaw   = g_yaw;
+ 470              		.loc 1 114 28 is_stmt 0 view .LVU133
+ 471 0096 114B     		ldr	r3, .L32+36
+ 472 0098 1B68     		ldr	r3, [r3]	@ float
+ 473 009a E361     		str	r3, [r4, #28]	@ float
+ 115:Core/Src/bt_proto.c ****             s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
+ 474              		.loc 1 115 13 is_stmt 1 view .LVU134
+ 115:Core/Src/bt_proto.c ****             s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
+ 475              		.loc 1 115 24 is_stmt 0 view .LVU135
+ 476 009c 104D     		ldr	r5, .L32+40
+ 477 009e 2946     		mov	r1, r5
+ 478 00a0 2046     		mov	r0, r4
+ 479 00a2 FFF7FEFF 		bl	BT_Pack_Tx
+ 480              	.LVL42:
+ 481 00a6 0246     		mov	r2, r0
+ 115:Core/Src/bt_proto.c ****             s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
+ 482              		.loc 1 115 22 discriminator 1 view .LVU136
+ 483 00a8 0E4B     		ldr	r3, .L32+44
+ 484 00aa 1870     		strb	r0, [r3]
+ 116:Core/Src/bt_proto.c ****             HAL_UART_Transmit(&huart3, s_tx_buf, s_tx_len, 100);
+ 485              		.loc 1 116 13 is_stmt 1 view .LVU137
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 13
+
+
+ 486 00ac 6423     		movs	r3, #100
+ 487 00ae 2946     		mov	r1, r5
+ 488 00b0 0D48     		ldr	r0, .L32+48
+ 489 00b2 FFF7FEFF 		bl	HAL_UART_Transmit
+ 490              	.LVL43:
+ 491              	.LBE7:
+ 492              		.loc 1 119 1 is_stmt 0 view .LVU138
+ 493 00b6 B3E7     		b	.L23
+ 494              	.L33:
+ 495              		.align	2
+ 496              	.L32:
+ 497 00b8 00000000 		.word	last_tx_tick.0
+ 498 00bc 00000000 		.word	s_rx_pkt
+ 499 00c0 00000000 		.word	tim8_counter
+ 500 00c4 00000000 		.word	s_tx_pkt
+ 501 00c8 00000000 		.word	g_encoders
+ 502 00cc 00000000 		.word	encoderl_value
+ 503 00d0 00000000 		.word	encoderr_value
+ 504 00d4 00000000 		.word	g_roll
+ 505 00d8 00000000 		.word	g_pitch
+ 506 00dc 00000000 		.word	g_yaw
+ 507 00e0 00000000 		.word	s_tx_buf
+ 508 00e4 00000000 		.word	s_tx_len
+ 509 00e8 00000000 		.word	huart3
+ 510              		.cfi_endproc
+ 511              	.LFE136:
+ 513              		.section	.bss.last_tx_tick.0,"aw",%nobits
+ 514              		.align	2
+ 517              	last_tx_tick.0:
+ 518 0000 00000000 		.space	4
+ 519              		.section	.bss.s_checksum,"aw",%nobits
+ 522              	s_checksum:
+ 523 0000 00       		.space	1
+ 524              		.section	.bss.s_data_idx,"aw",%nobits
+ 527              	s_data_idx:
+ 528 0000 00       		.space	1
+ 529              		.section	.bss.s_data_buf,"aw",%nobits
+ 530              		.align	2
+ 533              	s_data_buf:
+ 534 0000 00000000 		.space	16
+ 534      00000000 
+ 534      00000000 
+ 534      00000000 
+ 535              		.section	.bss.s_state,"aw",%nobits
+ 538              	s_state:
+ 539 0000 00       		.space	1
+ 540              		.text
+ 541              	.Letext0:
+ 542              		.file 2 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ 543              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/sy
+ 544              		.file 4 "Core/Inc/bt_proto.h"
+ 545              		.file 5 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 546              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 547              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 548              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h"
+ 549              		.file 9 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h"
+ 550              		.file 10 "Core/Inc/ringbuf.h"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 14
+
+
+ 551              		.file 11 "Core/Inc/encoder.h"
+ 552              		.file 12 "Core/Inc/usart.h"
+ 553              		.file 13 "Core/Inc/speed_ctrl.h"
+ 554              		.file 14 "Core/Inc/stm32f4xx_it.h"
+ 555              		.file 15 "Core/Inc/nrf24l01.h"
+ 556              		.file 16 "Core/Inc/main.h"
+ 557              		.file 17 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccnerZaG.s 			page 15
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 bt_proto.c
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:21     .text.BT_Parse_Byte:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:27     .text.BT_Parse_Byte:00000000 BT_Parse_Byte
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:42     .text.BT_Parse_Byte:0000000c $d
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:46     .text.BT_Parse_Byte:00000010 $t
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:219    .text.BT_Parse_Byte:000000ac $d
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:538    .bss.s_state:00000000 s_state
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:527    .bss.s_data_idx:00000000 s_data_idx
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:522    .bss.s_checksum:00000000 s_checksum
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:533    .bss.s_data_buf:00000000 s_data_buf
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:227    .text.BT_Pack_Tx:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:233    .text.BT_Pack_Tx:00000000 BT_Pack_Tx
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:321    .text.blue_setparam_task:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:327    .text.blue_setparam_task:00000000 blue_setparam_task
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:497    .text.blue_setparam_task:000000b8 $d
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:517    .bss.last_tx_tick.0:00000000 last_tx_tick.0
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:514    .bss.last_tx_tick.0:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:523    .bss.s_checksum:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:528    .bss.s_data_idx:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:530    .bss.s_data_buf:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccnerZaG.s:539    .bss.s_state:00000000 $d
+
+UNDEFINED SYMBOLS
+Get_UART_RxRingBuf
+RingBuf_Get
+HAL_GetTick
+SpeedCtrl_SetPID
+SpeedCtrl_SetTarget
+SpeedCtrl_GetError
+HAL_UART_Transmit
+s_rx_pkt
+tim8_counter
+s_tx_pkt
+g_encoders
+encoderl_value
+encoderr_value
+g_roll
+g_pitch
+g_yaw
+s_tx_buf
+s_tx_len
+huart3

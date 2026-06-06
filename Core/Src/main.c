@@ -32,6 +32,8 @@
 #include "motor.h"
 #include "oled.h"
 #include "stm32f4xx_it.h"
+#include "MPU6050.h"
+#include "MahonyAHRS.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -57,6 +59,7 @@ BT_TxPacket_t s_tx_pkt;
 uint8_t s_tx_buf[BT_TX_PACKET_LEN];
 uint8_t s_tx_len;
 uint32_t s_led_off_tick;  /* LED 闪烁计时 */
+float g_roll, g_pitch, g_yaw;  /* 欧拉角 (度)，由 IMU 姿态解算更新 */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -68,6 +71,44 @@ extern volatile int tim8_counter;
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+
+/**
+  * 函    数：IMU 姿态解算更新任务
+  * 说    明：以 200Hz 频率读取 MPU6050 数据，运行 Mahony AHRS 算法，
+  *           将四元数转换为欧拉角并存入全局变量 g_roll/g_pitch/g_yaw
+  */
+static void imu_update_task(void)
+{
+    static uint32_t last_tick = 0;
+    uint32_t now = HAL_GetTick();
+
+    /* 200Hz = 每5ms更新一次 */
+    if (now - last_tick < 5) return;
+    last_tick = now;
+
+    int16_t acc_x, acc_y, acc_z, gyro_x, gyro_y, gyro_z;
+    MPU6050_GetData(&acc_x, &acc_y, &acc_z, &gyro_x, &gyro_y, &gyro_z);
+
+    /* 原始值转换为物理单位 */
+    /* 陀螺仪: ±2000°/s → rad/s,  加速度计: ±16g → g */
+    const float gyro_scale  = (2000.0f / 32768.0f) * (3.14159265359f / 180.0f);
+    const float accel_scale = 16.0f / 32768.0f;
+
+    float gx = gyro_x * gyro_scale;
+    float gy = gyro_y * gyro_scale;
+    float gz = gyro_z * gyro_scale;
+    float ax = acc_x * accel_scale;
+    float ay = acc_y * accel_scale;
+    float az = acc_z * accel_scale;
+
+    /* 更新 Mahony AHRS (6-DOF IMU 模式，无磁力计) */
+    float q[4] = {q0, q1, q2, q3};
+    MahonyAHRSupdateIMU(q, gx, gy, gz, ax, ay, az);
+    q0 = q[0]; q1 = q[1]; q2 = q[2]; q3 = q[3];
+
+    /* 四元数转欧拉角 (度) */
+    QuaternionToEuler(q, &g_roll, &g_pitch, &g_yaw);
+}
 
 /* USER CODE END 0 */
 
@@ -111,8 +152,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Motor_InitAll();
   SpeedCtrl_Init();
-  oled_init();
-  
+  // oled_init();
+  MPU6050_Init();
   /* 启用 TIM8 更新中断（PWM 已在 Motor_InitAll 中启动） */
   __HAL_TIM_ENABLE_IT(&htim8, TIM_IT_UPDATE);
 
@@ -133,10 +174,11 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
+    imu_update_task();
     blue_setparam_task();
   
-    nrf_receive_task();
-    oled_task();
+    // nrf_receive_task();
+    // oled_task();
 
   }  /* USER CODE END 3 */
 }
