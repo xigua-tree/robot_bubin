@@ -219,12 +219,27 @@ uint8_t nrf24l01_tx_packet(uint8_t *ptxbuf)
 {
     uint8_t sta;
     uint8_t rval = 0XFF;
+    uint32_t timeout;
+
+    /* 发送前清除所有旧中断标志，确保 IRQ 从高电平开始 */
+    sta = nrf24l01_read_reg(STATUS);
+    nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);
 
     NRF24L01_CE(0);
     nrf24l01_write_buf(WR_TX_PLOAD, ptxbuf, TX_PLOAD_WIDTH);    /* 写数据到TX BUF  TX_PLOAD_WIDTH个字节 */
     NRF24L01_CE(1);                     /* 启动发送 */
 
-    while (NRF24L01_IRQ != 0);          /* 等待发送完成 */
+    /* 等待发送完成，超时 100ms（正常 TX_DS<1ms，MAX_RT<5ms） */
+    timeout = HAL_GetTick() + 100;
+    while (NRF24L01_IRQ != 0) {
+        if (HAL_GetTick() >= timeout) {
+            NRF24L01_CE(0);                             /* 停止发送 */
+            sta = nrf24l01_read_reg(STATUS);            /* 读并清除中断标志 */
+            nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);
+            nrf24l01_write_reg(FLUSH_TX, 0xff);         /* 清空TX FIFO */
+            return 0xFF;
+        }
+    }
 
     sta = nrf24l01_read_reg(STATUS);    /* 读取状态寄存器的值 */
     nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);    /* 清除TX_DS或MAX_RT中断标志 */

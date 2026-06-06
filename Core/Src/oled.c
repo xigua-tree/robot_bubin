@@ -134,7 +134,12 @@ void oled_task()
     snprintf(buf, sizeof(buf), "counts:%d",tim8_counter);
     oled_show_string(48,0,buf,12);
 
-    snprintf(buf, sizeof(buf), "lx:%d     lr:%d",encoderl_value,encoderr_value);
+    snprintf(buf, sizeof(buf), "el:%d  er:%d",encoderl_value,encoderr_value);
     oled_show_string(0,2,buf,12);
     
+    snprintf(buf, sizeof(buf), "lx:%d  lr:%d",(int)rocker_lx,(int)rocker_ly);
+    oled_show_string(0,4,buf,12);
+
+    snprintf(buf, sizeof(buf), "rx:%d  rr:%d",(int)rocker_rx,(int)rocker_ry);
+    oled_show_string(0,6,buf,12);
 }

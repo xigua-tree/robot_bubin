@@ -11,9 +11,9 @@
 #define BT_RX_DATA_LEN  16   /* 4个float */
 #define BT_RX_PACKET_LEN 19  /* 1 + 16 + 1 + 1 */
 
-/* TX 包: A5 + count(int32) + speed(float) + error(float) + checksum + 5A */
-#define BT_TX_DATA_LEN  12   /* int32(4) + float(4) + float(4) */
-#define BT_TX_PACKET_LEN 15  /* 1 + 12 + 1 + 1 */
+/* TX 包: A5 + count(i32) + encL(i32) + encR(i32) + speed(f32) + error(f32) + checksum + 5A */
+#define BT_TX_DATA_LEN  20   /* 4 + 4 + 4 + 4 + 4 = 20 */
+#define BT_TX_PACKET_LEN 23  /* 1 + 20 + 1 + 1 = 23 */
 
 /* 接收解析结果 */
 typedef struct {
@@ -25,9 +25,11 @@ typedef struct {
 
 /* 发送数据 */
 typedef struct {
-    int32_t count;     /* 编码器累计计数 */
-    float   speed;     /* 滤波后速度 RPM */
-    float   error;     /* 速度误差 */
+    int32_t count;      /* 编码器累计计数 */
+    int32_t Encoder_l;  /* 左编码器值 */
+    int32_t Encoder_r;  /* 右编码器值 */
+    float   speed;      /* 滤波后速度 RPM */
+    float   error;      /* 速度误差 */
 } BT_TxPacket_t;
 
 /* 帧解析状态机 */

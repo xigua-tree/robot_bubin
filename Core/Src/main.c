@@ -133,13 +133,12 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
 
-    // blue_setparam_task();
+    blue_setparam_task();
   
     nrf_receive_task();
     oled_task();
 
-  }
-  /* USER CODE END 3 */
+  }  /* USER CODE END 3 */
 }
 
 /**

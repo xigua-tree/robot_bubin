@@ -59,12 +59,14 @@ uint8_t BT_Pack_Tx(const BT_TxPacket_t *pkt, uint8_t *buf)
 {
     buf[0] = BT_FRAME_HEAD;
 
-    /* count(int32) + speed(float) + error(float) */
-    memcpy(&buf[1],  &pkt->count, 4);
-    memcpy(&buf[5],  &pkt->speed, 4);
-    memcpy(&buf[9],  &pkt->error, 4);
+    /* count(i32) + encL(i32) + encR(i32) + speed(f32) + error(f32) = 20字节 */
+    memcpy(&buf[1],  &pkt->count,      sizeof(pkt->count));
+    memcpy(&buf[5],  &pkt->Encoder_l,  sizeof(pkt->Encoder_l));
+    memcpy(&buf[9],  &pkt->Encoder_r,  sizeof(pkt->Encoder_r));
+    memcpy(&buf[13], &pkt->speed,      sizeof(pkt->speed));
+    memcpy(&buf[17], &pkt->error,      sizeof(pkt->error));
 
-    /* 校验和（12字节数据之和的低8位） */
+    /* 校验和（数据字节之和的低8位） */
     uint8_t checksum = 0;
     for (uint8_t i = 0; i < BT_TX_DATA_LEN; i++) {
         checksum += buf[1 + i];
@@ -98,6 +100,8 @@ void blue_setparam_task()
             s_tx_pkt.count = tim8_counter;
             s_tx_pkt.speed = g_encoders[0].speed_rpm;
             s_tx_pkt.error = SpeedCtrl_GetError(0);
+            s_tx_pkt.Encoder_l = encoderl_value;
+            s_tx_pkt.Encoder_r = encoderr_value;
             s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
             HAL_UART_Transmit(&huart3, s_tx_buf, s_tx_len, 100);
         }
