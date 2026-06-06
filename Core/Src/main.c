@@ -18,6 +18,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "i2c.h"
+#include "spi.h"
 #include "tim.h"
 #include "usart.h"
 #include "gpio.h"
@@ -28,6 +30,8 @@
 #include "bt_proto.h"
 #include "speed_ctrl.h"
 #include "motor.h"
+#include "oled.h"
+#include "stm32f4xx_it.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -37,8 +41,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LED_PIN  GPIO_PIN_5
-#define LED_PORT GPIOD
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,11 +52,11 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-static BT_RxPacket_t s_rx_pkt;
-static BT_TxPacket_t s_tx_pkt;
-static uint8_t s_tx_buf[BT_TX_PACKET_LEN];
-static uint8_t s_tx_len;
-static uint32_t s_led_off_tick;  /* LED 闪烁计时 */
+BT_RxPacket_t s_rx_pkt;
+BT_TxPacket_t s_tx_pkt;
+uint8_t s_tx_buf[BT_TX_PACKET_LEN];
+uint8_t s_tx_len;
+uint32_t s_led_off_tick;  /* LED 闪烁计时 */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -103,9 +106,12 @@ int main(void)
   MX_TIM3_Init();
   MX_TIM4_Init();
   MX_TIM8_Init();
+  MX_SPI2_Init();
+  MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
   Motor_InitAll();
   SpeedCtrl_Init();
+  oled_init();
 
   /* 启用 TIM8 更新中断（PWM 已在 Motor_InitAll 中启动） */
   __HAL_TIM_ENABLE_IT(&htim8, TIM_IT_UPDATE);
@@ -126,30 +132,14 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     /* ---- LED 闪烁管理 ---- */
-    if (s_led_off_tick > 0 && HAL_GetTick() >= s_led_off_tick) {
-        HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_RESET);
-        s_led_off_tick = 0;
+
+    blue_setparam_task();
+
+    if(oled_task_flag == 1){
+      oled_task();
+      oled_task_flag = 0;
     }
-
-    /* ---- 协议解析 ---- */
-    RingBuf_t *rb = Get_UART_RxRingBuf();
-    uint8_t byte;
-    if (RingBuf_Get(rb, &byte)) {
-        if (BT_Parse_Byte(byte, &s_rx_pkt)) {
-            /* 有效帧收到 → LED 亮 200ms */
-            HAL_GPIO_WritePin(LED_PORT, LED_PIN, GPIO_PIN_SET);
-            s_led_off_tick = HAL_GetTick() + 200;
-
-            /* 应用 PID 参数和速度指令（对4个电机统一设置） */
-            for (int i = 0; i < 4; i++) {
-                SpeedCtrl_SetPID(i, s_rx_pkt.Kp, s_rx_pkt.Ki, s_rx_pkt.Kd);
-                SpeedCtrl_SetTarget(i, s_rx_pkt.target_speed);
-            }
-        }
-    }
-
-
-
+    
     /* ---- 周期上报速度（约 100ms 一次） ---- */
     {
         static uint32_t last_tx_tick = 0;

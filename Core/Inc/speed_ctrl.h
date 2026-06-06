@@ -7,6 +7,7 @@
 #include "encoder.h"
 #include "motor.h"
 #include "pid.h"
+#include "main.h"
 
 #define SPEED_CTRL_MOTOR_COUNT 4
 

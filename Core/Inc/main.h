@@ -31,12 +31,28 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "main.h"
+#include "i2c.h"
+#include "spi.h"
+#include "tim.h"
+#include "usart.h"
+#include "gpio.h"
 
+#include "ringbuf.h"
+#include "bt_proto.h"
+#include "speed_ctrl.h"
+#include "motor.h"
+#include "oled.h"
+#include "stm32f4xx_it.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
-
+extern BT_RxPacket_t s_rx_pkt;
+extern BT_TxPacket_t s_tx_pkt;
+extern uint8_t s_tx_buf[BT_TX_PACKET_LEN];
+extern uint8_t s_tx_len;
+extern uint32_t s_led_off_tick;  /* LED 闪烁计时 */
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
@@ -59,7 +75,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 
 /* USER CODE BEGIN Private defines */
-
+#define LED_PIN  GPIO_PIN_5
+#define LED_PORT GPIOD
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

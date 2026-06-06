@@ -4,7 +4,9 @@
       "Bash(pio run *)",
       "Bash(where pio *)",
       "Bash(pip show *)",
-      "Bash(\"C:/Users/10369/.platformio/penv/Scripts/pio.exe\" run *)"
+      "Bash(\"C:/Users/10369/.platformio/penv/Scripts/pio.exe\" run *)",
+      "Bash(python fix_comments.py)",
+      "Bash(python -c ' *)"
     ]
   }
 }

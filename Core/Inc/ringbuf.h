@@ -18,4 +18,7 @@ bool RingBuf_Get(RingBuf_t *rb, uint8_t *byte);     /* main loop consumer */
 uint16_t RingBuf_Available(RingBuf_t *rb);
 void RingBuf_Flush(RingBuf_t *rb);
 
+/* 获取 UART 接收环形缓冲区（定义在 stm32f4xx_it.c） */
+RingBuf_t *Get_UART_RxRingBuf(void);
+
 #endif

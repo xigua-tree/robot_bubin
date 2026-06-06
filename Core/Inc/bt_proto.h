@@ -43,5 +43,6 @@ bool BT_Parse_Byte(uint8_t byte, BT_RxPacket_t *result);
 
 /* 打包发送帧到 buffer，返回帧长度 */
 uint8_t BT_Pack_Tx(const BT_TxPacket_t *pkt, uint8_t *buf);
+void blue_setparam_task();
 
 #endif

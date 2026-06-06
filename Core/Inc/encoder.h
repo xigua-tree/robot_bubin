@@ -2,7 +2,7 @@
 #define __ENCODER_H
 
 #include <stdint.h>
-#include "main.h"
+#include "stm32f4xx_hal.h"
 
 /* 编码器线数（电机旋转一圈的脉冲数，4倍频前） */
 #define ENCODER_PPR 325
