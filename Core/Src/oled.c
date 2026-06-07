@@ -128,19 +128,19 @@ void oled_show_image(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_
     }
 }
 
-char buf[50];
+char buf[100];
 void oled_task()
 {
     oled_show_string(0,0,"Ready!",12);
     snprintf(buf, sizeof(buf), "counts:%d",tim8_counter);
     oled_show_string(48,0,buf,12);
 
-    snprintf(buf, sizeof(buf), "el:%d  er:%d",encoderl_value,encoderr_value);
+    snprintf(buf, sizeof(buf), "r1:%d  r2:%d",wheel_rpm[1],wheel_rpm[0]);
     oled_show_string(0,2,buf,12);
     
-    snprintf(buf, sizeof(buf), "lx:%d  lr:%d",(int)rocker_lx,(int)rocker_ly);
+    snprintf(buf, sizeof(buf), "r3:%d  r4:%d",wheel_rpm[2],wheel_rpm[3]);
     oled_show_string(0,4,buf,12);
 
-    snprintf(buf, sizeof(buf), "rx:%d  rr:%d",(int)rocker_rx,(int)rocker_ry);
+    snprintf(buf, sizeof(buf), "ry:%d  rx:%d",Vx,Vy);
     oled_show_string(0,6,buf,12);
 }

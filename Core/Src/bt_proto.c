@@ -89,15 +89,15 @@ void blue_setparam_task()
         /* ---- 协议解析 ---- */
     RingBuf_t *rb = Get_UART_RxRingBuf();
     uint8_t byte;
-    if (RingBuf_Get(rb, &byte)) {
-        if (BT_Parse_Byte(byte, &s_rx_pkt)) {
-            /* 应用 PID 参数和速度指令（对4个电机统一设置） */
-            for (int i = 0; i < 4; i++) {
-                SpeedCtrl_SetPID(i, s_rx_pkt.Kp, s_rx_pkt.Ki, s_rx_pkt.Kd);
-                SpeedCtrl_SetTarget(i, s_rx_pkt.target_speed);
-            }
-        }
-    }
+    // if (RingBuf_Get(rb, &byte)) {
+    //     if (BT_Parse_Byte(byte, &s_rx_pkt)) {
+    //         /* 应用 PID 参数和速度指令（对4个电机统一设置） */
+    //         for (int i = 0; i < 4; i++) {
+    //             SpeedCtrl_SetPID(i, s_rx_pkt.Kp, s_rx_pkt.Ki, s_rx_pkt.Kd);
+    //             SpeedCtrl_SetTarget(i, s_rx_pkt.target_speed);
+    //         }
+    //     }
+    // }
         /* ---- 周期上报速度（约 100ms 一次） ---- */
     {
         static uint32_t last_tx_tick = 0;
@@ -105,7 +105,8 @@ void blue_setparam_task()
             last_tx_tick = HAL_GetTick();
             /* 发送电机1的速度 */
             s_tx_pkt.count = tim8_counter;
-            s_tx_pkt.speed = g_encoders[0].speed_rpm;
+            // s_tx_pkt.speed = g_encoders[0].speed_rpm;//wheel_rpm
+            s_tx_pkt.speed = wheel_rpm[2];
             s_tx_pkt.error = SpeedCtrl_GetError(0);
             s_tx_pkt.Encoder_l = encoderl_value;
             s_tx_pkt.Encoder_r = encoderr_value;

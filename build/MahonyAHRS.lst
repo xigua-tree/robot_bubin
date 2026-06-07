@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 1
 
 
    1              		.cpu cortex-m4
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
   27:Core/Src/MahonyAHRS.c **** //#define sampleFreq	1000.0f			// sample frequency in Hz
   28:Core/Src/MahonyAHRS.c **** //#define twoKpDef	0.5f
   29:Core/Src/MahonyAHRS.c **** //#define twoKiDef	0.001f
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 2
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 2
 
 
   30:Core/Src/MahonyAHRS.c **** 
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
   84:Core/Src/MahonyAHRS.c ****         q0q3 = q[0] * q[3];
   85:Core/Src/MahonyAHRS.c ****         q1q1 = q[1] * q[1];
   86:Core/Src/MahonyAHRS.c ****         q1q2 = q[1] * q[2];
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 3
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 3
 
 
   87:Core/Src/MahonyAHRS.c ****         q1q3 = q[1] * q[3];
@@ -167,7 +167,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  130:Core/Src/MahonyAHRS.c **** 	}
  131:Core/Src/MahonyAHRS.c **** 	
  132:Core/Src/MahonyAHRS.c **** 	// Integrate rate of change of quaternion
- 133:Core/Src/MahonyAHRS.c **** 	gx *= (0.5f * (1.0f / sampleFreq));		// pre-multiply common factors
+ 133:Core/Src/MahonyAHRS.c **** 	gx *= (0.5f * (1.0f / sampleFreq));		
  134:Core/Src/MahonyAHRS.c **** 	gy *= (0.5f * (1.0f / sampleFreq));
  135:Core/Src/MahonyAHRS.c **** 	gz *= (0.5f * (1.0f / sampleFreq));
  136:Core/Src/MahonyAHRS.c **** 	qa = q[0];
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  141:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
  142:Core/Src/MahonyAHRS.c **** 	q[3] += (qa * gz + qb * gy - qc * gx); 
  143:Core/Src/MahonyAHRS.c **** 	
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 4
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 4
 
 
  144:Core/Src/MahonyAHRS.c **** 	// Normalise quaternion
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  198:Core/Src/MahonyAHRS.c **** 		gz += twoKp * halfez;
  199:Core/Src/MahonyAHRS.c **** 	}
  200:Core/Src/MahonyAHRS.c **** 	
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 5
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 5
 
 
  201:Core/Src/MahonyAHRS.c **** 	// Integrate rate of change of quaternion
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  231:Core/Src/MahonyAHRS.c **** 	y = y * (1.5f - (halfx * y * y));
   54              		.loc 1 231 2 is_stmt 1 view .LVU10
   55              		.loc 1 231 25 is_stmt 0 view .LVU11
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 6
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 6
 
 
   56 0016 67EE277A 		vmul.f32	s15, s14, s15
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  108 000c F0EE609A 		vmov.f32	s19, s1
  109 0010 B0EE418A 		vmov.f32	s16, s2
  110 0014 F0EE618A 		vmov.f32	s17, s3
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 7
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 7
 
 
  111 0018 B0EE42AA 		vmov.f32	s20, s4
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  167:Core/Src/MahonyAHRS.c **** 		az *= recipNorm;        
  149              		.loc 1 167 3 is_stmt 1 view .LVU35
  167:Core/Src/MahonyAHRS.c **** 		az *= recipNorm;        
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 8
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 8
 
 
  150              		.loc 1 167 6 is_stmt 0 view .LVU36
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  173:Core/Src/MahonyAHRS.c **** 	
  187              		.loc 1 173 38 view .LVU54
  188 0098 66EEA66A 		vmul.f32	s13, s13, s13
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 9
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 9
 
 
  173:Core/Src/MahonyAHRS.c **** 	
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  227 00d2 40F3B380 		ble	.L11
  182:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
  228              		.loc 1 182 4 is_stmt 1 view .LVU71
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 10
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 10
 
 
  182:Core/Src/MahonyAHRS.c **** 			integralFBy += twoKi * halfey * (1.0f / sampleFreq);
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  269              	.LVL26:
  186:Core/Src/MahonyAHRS.c **** 			gz += integralFBz;
  270              		.loc 1 186 4 is_stmt 1 view .LVU86
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 11
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 11
 
 
  271 0130 D2ED007A 		vldr.32	s15, [r2]
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  310              		.loc 1 203 2 is_stmt 1 view .LVU101
  203:Core/Src/MahonyAHRS.c **** 	gz *= (0.5f * (1.0f / sampleFreq));
  311              		.loc 1 203 5 is_stmt 0 view .LVU102
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 12
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 12
 
 
  312 016e 69EEA70A 		vmul.f32	s1, s19, s15
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  348 01a2 60EE268A 		vmul.f32	s17, s0, s13
  209:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
  349              		.loc 1 209 24 view .LVU121
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 13
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 13
 
 
  350 01a6 21EE276A 		vmul.f32	s12, s2, s15
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  387 01ea 31EE401A 		vsub.f32	s2, s2, s0
  211:Core/Src/MahonyAHRS.c **** 	
  388              		.loc 1 211 7 view .LVU139
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 14
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 14
 
 
  389 01ee 79EE819A 		vadd.f32	s19, s19, s2
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  426              		.loc 1 219 1 view .LVU156
  427 0236 BDEC068B 		vldm	sp!, {d8-d10}
  428              	.LCFI2:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 15
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 15
 
 
  429              		.cfi_remember_state
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  479              	.LFB0:
   51:Core/Src/MahonyAHRS.c **** 	float recipNorm;
  480              		.loc 1 51 125 is_stmt 1 view -0
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 16
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 16
 
 
  481              		.cfi_startproc
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
   60:Core/Src/MahonyAHRS.c **** 		MahonyAHRSupdateIMU(q, gx, gy, gz, ax, ay, az);
  528              		.loc 1 60 2 view .LVU171
   60:Core/Src/MahonyAHRS.c **** 		MahonyAHRSupdateIMU(q, gx, gy, gz, ax, ay, az);
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 17
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 17
 
 
  529              		.loc 1 60 4 is_stmt 0 view .LVU172
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  570              		.loc 1 70 3 is_stmt 1 view .LVU185
   70:Core/Src/MahonyAHRS.c **** 		ay *= recipNorm;
  571              		.loc 1 70 6 is_stmt 0 view .LVU186
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 18
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 18
 
 
  572 0086 68EE805A 		vmul.f32	s11, s17, s0
@@ -1078,7 +1078,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  610              	.LVL57:
   81:Core/Src/MahonyAHRS.c ****         q0q1 = q[0] * q[1];
  611              		.loc 1 81 9 is_stmt 1 view .LVU203
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 19
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 19
 
 
   81:Core/Src/MahonyAHRS.c ****         q0q1 = q[0] * q[1];
@@ -1138,7 +1138,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  648              		.loc 1 88 9 is_stmt 1 view .LVU221
   88:Core/Src/MahonyAHRS.c ****         q2q3 = q[2] * q[3];
  649              		.loc 1 88 14 is_stmt 0 view .LVU222
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 20
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 20
 
 
  650 00f2 68EEA8EA 		vmul.f32	s29, s17, s17
@@ -1198,7 +1198,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  687 012e 77EEA67A 		vadd.f32	s15, s15, s13
  688              	.LVL70:
   94:Core/Src/MahonyAHRS.c ****         bx = sqrt(hx * hx + hy * hy);
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 21
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 21
 
 
  689              		.loc 1 94 25 view .LVU240
@@ -1258,7 +1258,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  729              	.LVL78:
  730 017a 07EE100A 		vmov	s14, r0
  731              	.LVL79:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 22
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 22
 
 
   96:Core/Src/MahonyAHRS.c **** 
@@ -1318,7 +1318,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  768 01b2 2BEE276A 		vmul.f32	s12, s22, s15
  102:Core/Src/MahonyAHRS.c ****         halfwy = bx * (q1q2 - q0q3) + bz * (q0q1 + q2q3);
  769              		.loc 1 102 16 view .LVU273
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 23
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 23
 
 
  770 01b6 3CEE06CA 		vadd.f32	s24, s24, s12
@@ -1378,7 +1378,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
  808              		.loc 1 108 3 is_stmt 1 view .LVU290
  108:Core/Src/MahonyAHRS.c **** 		halfez = (ax * halfvy - ay * halfvx) + (mx * halfwy - my * halfwx);
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 24
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 24
 
 
  809              		.loc 1 108 16 is_stmt 0 view .LVU291
@@ -1438,7 +1438,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  848              		.loc 1 112 3 is_stmt 1 view .LVU306
  112:Core/Src/MahonyAHRS.c **** 			integralFBx += twoKi * halfex * (1.0f / sampleFreq);	// integral error scaled by Ki
  849              		.loc 1 112 12 is_stmt 0 view .LVU307
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 25
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 25
 
 
  850 0236 644B     		ldr	r3, .L27
@@ -1498,7 +1498,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  890              		.loc 1 116 4 is_stmt 1 view .LVU321
  891 029a D1ED007A 		vldr.32	s15, [r1]
  116:Core/Src/MahonyAHRS.c **** 			gy += integralFBy;
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 26
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 26
 
 
  892              		.loc 1 116 7 is_stmt 0 view .LVU322
@@ -1558,7 +1558,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  931              		.loc 1 133 5 is_stmt 0 view .LVU337
  932 02d8 DFED417A 		vldr.32	s15, .L27+24
  933 02dc 2AEE27AA 		vmul.f32	s20, s20, s15
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 27
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 27
 
 
  934              	.LVL106:
@@ -1618,7 +1618,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  970 0310 C4ED009A 		vstr.32	s19, [r4]
  140:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
  971              		.loc 1 140 2 is_stmt 1 view .LVU356
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 28
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 28
 
 
  140:Core/Src/MahonyAHRS.c **** 	q[2] += (qa * gy - qb * gz + q[3] * gx);
@@ -1678,7 +1678,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  1008              		.loc 1 142 34 view .LVU374
  1009 0358 2AEE07AA 		vmul.f32	s20, s20, s14
  1010              	.LVL114:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 29
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 29
 
 
  142:Core/Src/MahonyAHRS.c **** 	
@@ -1738,7 +1738,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  1047              		.loc 1 149 7 is_stmt 0 view .LVU392
  1048 03a0 28EE008A 		vmul.f32	s16, s16, s0
  1049 03a4 84ED038A 		vstr.32	s16, [r4, #12]
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 30
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 30
 
 
  1050              	.LVL117:
@@ -1798,7 +1798,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  1097 03be 1360     		str	r3, [r2]	@ float
  123:Core/Src/MahonyAHRS.c **** 		}
  1098              		.loc 1 123 4 is_stmt 1 view .LVU400
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 31
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 31
 
 
  123:Core/Src/MahonyAHRS.c **** 		}
@@ -1858,7 +1858,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  1145 0006 0446     		mov	r4, r0
  1146 0008 0F46     		mov	r7, r1
  1147 000a 1646     		mov	r6, r2
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 32
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 32
 
 
  1148 000c 1D46     		mov	r5, r3
@@ -1918,7 +1918,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  1194 0066 30EE670A 		vsub.f32	s0, s0, s15
  1195              		.loc 1 248 11 view .LVU426
  1196 006a 30EE000A 		vadd.f32	s0, s0, s0
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 33
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 33
 
 
  1197              	.LVL123:
@@ -1978,7 +1978,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  1241              	.LVL126:
  256:Core/Src/MahonyAHRS.c ****                   1.0f - 2.0f * (q[2] * q[2] + q[3] * q[3]));
  1242              		.loc 1 256 10 discriminator 1 view .LVU446
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 34
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 34
 
 
  1243 00c0 85ED000A 		vstr.32	s0, [r5]
@@ -2038,7 +2038,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  1286 0106 00BF     		.align	2
  1287              	.L35:
  1288 0108 E12E6542 		.word	1113927393
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 35
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 35
 
 
  1289              		.cfi_endproc
@@ -2098,48 +2098,48 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 1
  1361 0000 0000803F 		.word	1065353216
  1362              		.text
  1363              	.Letext0:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 36
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 36
 
 
  1364              		.file 2 "Core/Inc/MahonyAHRS.h"
  1365              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccVHglcg.s 			page 37
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s 			page 37
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 MahonyAHRS.c
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:21     .text.invSqrt:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:27     .text.invSqrt:00000000 invSqrt
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:73     .text.invSqrt:0000002c $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:78     .text.MahonyAHRSupdateIMU:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:84     .text.MahonyAHRSupdateIMU:00000000 MahonyAHRSupdateIMU
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:460    .text.MahonyAHRSupdateIMU:0000024c $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1353   .data.twoKi:00000000 twoKi
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1318   .bss.integralFBx:00000000 integralFBx
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1311   .bss.integralFBy:00000000 integralFBy
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1304   .bss.integralFBz:00000000 integralFBz
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1360   .data.twoKp:00000000 twoKp
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:471    .text.MahonyAHRSupdate:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:477    .text.MahonyAHRSupdate:00000000 MahonyAHRSupdate
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1106   .text.MahonyAHRSupdate:000003c8 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1117   .text.QuaternionToEuler:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1123   .text.QuaternionToEuler:00000000 QuaternionToEuler
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1288   .text.QuaternionToEuler:00000108 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1297   .bss.INS_quat:00000000 INS_quat
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1294   .bss.INS_quat:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1301   .bss.integralFBz:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1308   .bss.integralFBy:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1315   .bss.integralFBx:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1325   .bss.q3:00000000 q3
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1322   .bss.q3:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1332   .bss.q2:00000000 q2
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1329   .bss.q2:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1339   .bss.q1:00000000 q1
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1336   .bss.q1:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1346   .data.q0:00000000 q0
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1343   .data.q0:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1350   .data.twoKi:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccVHglcg.s:1357   .data.twoKp:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:21     .text.invSqrt:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:27     .text.invSqrt:00000000 invSqrt
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:73     .text.invSqrt:0000002c $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:78     .text.MahonyAHRSupdateIMU:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:84     .text.MahonyAHRSupdateIMU:00000000 MahonyAHRSupdateIMU
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:460    .text.MahonyAHRSupdateIMU:0000024c $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1353   .data.twoKi:00000000 twoKi
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1318   .bss.integralFBx:00000000 integralFBx
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1311   .bss.integralFBy:00000000 integralFBy
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1304   .bss.integralFBz:00000000 integralFBz
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1360   .data.twoKp:00000000 twoKp
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:471    .text.MahonyAHRSupdate:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:477    .text.MahonyAHRSupdate:00000000 MahonyAHRSupdate
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1106   .text.MahonyAHRSupdate:000003c8 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1117   .text.QuaternionToEuler:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1123   .text.QuaternionToEuler:00000000 QuaternionToEuler
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1288   .text.QuaternionToEuler:00000108 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1297   .bss.INS_quat:00000000 INS_quat
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1294   .bss.INS_quat:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1301   .bss.integralFBz:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1308   .bss.integralFBy:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1315   .bss.integralFBx:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1325   .bss.q3:00000000 q3
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1322   .bss.q3:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1332   .bss.q2:00000000 q2
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1329   .bss.q2:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1339   .bss.q1:00000000 q1
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1336   .bss.q1:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1346   .data.q0:00000000 q0
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1343   .data.q0:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1350   .data.twoKi:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccTzk2qh.s:1357   .data.twoKp:00000000 $d
 
 UNDEFINED SYMBOLS
 __aeabi_f2d

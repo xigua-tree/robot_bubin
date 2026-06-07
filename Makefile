@@ -68,6 +68,7 @@ Core/Src/i2c.c \
 Core/Src/oled.c \
 Core/Src/MPU6050.c \
 Core/Src/MahonyAHRS.c \
+Core/Src/gyro_calib.c \
 Core/Src/bt_proto.c \
 Core/Src/encoder.c \
 Core/Src/motor.c \
@@ -75,6 +76,8 @@ Core/Src/speed_ctrl.c \
 Core/Src/pid.c \
 Core/Src/ringbuf.c \
 Core/Src/nrf24l01.c \
+Core/Src/kinematics.c \
+Core/Src/yaw_ctrl.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c.c \
 Drivers/STM32F4xx_HAL_Driver/Src/stm32f4xx_hal_i2c_ex.c
 

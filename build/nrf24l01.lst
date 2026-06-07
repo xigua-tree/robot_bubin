@@ -1,4 +1,4 @@
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 1
 
 
    1              		.cpu cortex-m4
@@ -58,7 +58,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
   28:Core/Src/nrf24l01.c **** 
   29:Core/Src/nrf24l01.c **** /* ---- 移植层：SPI 底层操作 (用 HAL 实现) ---- */
   30:Core/Src/nrf24l01.c **** 
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 2
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 2
 
 
   31:Core/Src/nrf24l01.c **** /**
@@ -118,7 +118,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
   62              		.thumb_func
   64              	spi2_read_write_byte:
   65              	.LVL3:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 3
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 3
 
 
   66              	.LFB134:
@@ -178,7 +178,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  115              	.LFB142:
   53:Core/Src/nrf24l01.c **** /* ---- 移植层结束 ---- */
   54:Core/Src/nrf24l01.c **** 
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 4
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 4
 
 
   55:Core/Src/nrf24l01.c **** 
@@ -238,7 +238,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  109:Core/Src/nrf24l01.c **** uint8_t nrf24l01_check(void)
  110:Core/Src/nrf24l01.c **** {
  111:Core/Src/nrf24l01.c ****     uint8_t buf[5] = {0XA5, 0XA5, 0XA5, 0XA5, 0XA5};
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 5
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 5
 
 
  112:Core/Src/nrf24l01.c ****     uint8_t i;
@@ -298,7 +298,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  166:Core/Src/nrf24l01.c ****  * @param       pbuf  : 数据指针
  167:Core/Src/nrf24l01.c ****  * @param       len   : 数据长度
  168:Core/Src/nrf24l01.c ****  * @retval      状态寄存器值
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 6
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 6
 
 
  169:Core/Src/nrf24l01.c ****  */
@@ -358,7 +358,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  140              	.LVL8:
  141              		.loc 1 198 5 view .LVU20
  142 000e 0C48     		ldr	r0, .L13
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 7
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 7
 
 
  143              	.LVL9:
@@ -418,7 +418,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  186              	.LVL19:
  187              		.loc 1 206 5 discriminator 1 view .LVU36
  207:Core/Src/nrf24l01.c **** 
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 8
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 8
 
 
  208:Core/Src/nrf24l01.c ****     return status;      /* 返回读到的状态值 */
@@ -478,7 +478,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  235              		.loc 1 174 5 view .LVU46
  236 000e 0C48     		ldr	r0, .L19
  237              	.LVL24:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 9
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 9
 
 
  174:Core/Src/nrf24l01.c ****     status = spi2_read_write_byte(reg);         /* 发送寄存器值(位置),并读取状态值 */
@@ -538,7 +538,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  277 0032 4FF48051 		mov	r1, #4096
  278 0036 0248     		ldr	r0, .L19
  279 0038 FFF7FEFF 		bl	HAL_GPIO_WritePin
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 10
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 10
 
 
  280              	.LVL33:
@@ -598,7 +598,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  326 000e FFF7FEFF 		bl	HAL_GPIO_WritePin
  327              	.LVL37:
  155:Core/Src/nrf24l01.c ****     spi2_read_write_byte(reg);  /* 发送寄存器号 */
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 11
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 11
 
 
  328              		.loc 1 155 5 is_stmt 1 discriminator 1 view .LVU72
@@ -658,7 +658,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  135:Core/Src/nrf24l01.c ****     uint8_t status;
  374              		.loc 1 135 1 is_stmt 0 view .LVU83
  375 0000 70B5     		push	{r4, r5, r6, lr}
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 12
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 12
 
 
  376              	.LCFI7:
@@ -718,7 +718,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  417              		.loc 1 143 5 view .LVU96
  144:Core/Src/nrf24l01.c **** 
  418              		.loc 1 144 1 is_stmt 0 view .LVU97
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 13
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 13
 
 
  419 002e 2046     		mov	r0, r4
@@ -778,7 +778,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  472              		.cfi_def_cfa_offset 36
  473              		.cfi_offset 4, -36
  474              		.cfi_offset 5, -32
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 14
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 14
 
 
  475              		.cfi_offset 6, -28
@@ -838,7 +838,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  515              		.loc 1 80 5 view .LVU116
  516 0028 1A6B     		ldr	r2, [r3, #48]
  517 002a 02F00202 		and	r2, r2, #2
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 15
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 15
 
 
  518 002e 0192     		str	r2, [sp, #4]
@@ -898,7 +898,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
   86:Core/Src/nrf24l01.c ****     HAL_GPIO_Init(NRF24L01_CE_GPIO_PORT, &gpio_init_struct); /* 初始化CE引脚 */
  554              		.loc 1 86 28 is_stmt 0 view .LVU135
  555 0054 4FF0020B 		mov	fp, #2
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 16
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 16
 
 
  556 0058 CDF818B0 		str	fp, [sp, #24]
@@ -958,7 +958,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  595              		.loc 1 100 5 view .LVU150
  100:Core/Src/nrf24l01.c ****     NRF24L01_CSN(1);            /* SPI片选取消 */
  596              		.loc 1 100 5 view .LVU151
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 17
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 17
 
 
  597 0096 2246     		mov	r2, r4
@@ -1018,7 +1018,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  646              		.cfi_offset 4, -8
  647              		.cfi_offset 14, -4
  648 0002 82B0     		sub	sp, sp, #8
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 18
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 18
 
 
  649              	.LCFI13:
@@ -1078,7 +1078,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  690              		.loc 1 118 25 is_stmt 1 discriminator 2 view .LVU170
  691 003e 0133     		adds	r3, r3, #1
  692              	.LVL63:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 19
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 19
 
 
  118:Core/Src/nrf24l01.c ****     {
@@ -1138,7 +1138,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  215:Core/Src/nrf24l01.c ****  *   @arg       0    : 发送成功
  216:Core/Src/nrf24l01.c ****  *   @arg       1    : 达到最大次数,失败
  217:Core/Src/nrf24l01.c ****  *   @arg       0XFF : 发送中
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 20
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 20
 
 
  218:Core/Src/nrf24l01.c ****  */
@@ -1198,7 +1198,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  778 0022 2146     		mov	r1, r4
  779 0024 A020     		movs	r0, #160
  780 0026 FFF7FEFF 		bl	nrf24l01_write_buf
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 21
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 21
 
 
  781              	.LVL73:
@@ -1258,7 +1258,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  827              	.LVL80:
  828 0066 0146     		mov	r1, r0
  829              	.LVL81:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 22
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 22
 
 
  239:Core/Src/nrf24l01.c ****             nrf24l01_write_reg(NRF_WRITE_REG + STATUS, sta);
@@ -1318,7 +1318,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  859              	.LVL88:
  246:Core/Src/nrf24l01.c **** 
  860              		.loc 1 246 5 is_stmt 0 view .LVU217
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 23
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 23
 
 
  861 0088 FFF7FEFF 		bl	nrf24l01_write_reg
@@ -1378,7 +1378,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  265:Core/Src/nrf24l01.c ****  * @retval      接收完成状态
  266:Core/Src/nrf24l01.c ****  *   @arg       0 : 接收成功
  267:Core/Src/nrf24l01.c ****  *   @arg       1 : 失败
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 24
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 24
 
 
  268:Core/Src/nrf24l01.c ****  */
@@ -1438,7 +1438,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  281:Core/Src/nrf24l01.c ****         rval = 0;       /* 标记接收成功 */
  282:Core/Src/nrf24l01.c ****     }
  283:Core/Src/nrf24l01.c **** 
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 25
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 25
 
 
  284:Core/Src/nrf24l01.c ****     return rval;        /* 返回结果 */
@@ -1498,7 +1498,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  985              		.cfi_offset 14, -4
  296:Core/Src/nrf24l01.c ****     NRF24L01_CE(0);
  986              		.loc 1 296 5 view .LVU245
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 26
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 26
 
 
  987              		.loc 1 296 5 view .LVU246
@@ -1558,7 +1558,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1032              		.loc 1 305 5 view .LVU256
  1033 004a 0122     		movs	r2, #1
  1034 004c 4FF40041 		mov	r1, #32768
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 27
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 27
 
 
  1035 0050 2046     		mov	r0, r4
@@ -1618,7 +1618,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1077 0010 0522     		movs	r2, #5
  1078 0012 1549     		ldr	r1, .L66+4
  1079 0014 3020     		movs	r0, #48
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 28
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 28
 
 
  1080 0016 FFF7FEFF 		bl	nrf24l01_write_buf
@@ -1678,7 +1678,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1125              		.loc 1 328 5 discriminator 1 view .LVU273
  329:Core/Src/nrf24l01.c **** }
  1126              		.loc 1 329 1 is_stmt 0 view .LVU274
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 29
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 29
 
 
  1127 0060 10BD     		pop	{r4, pc}
@@ -1738,7 +1738,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  343:Core/Src/nrf24l01.c ****     // 2. 库函数默认设置，保持不变，仅修改频道和地址
  344:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_AA, 0x01);        // 使能通道0自动应答(对A回复
  1170              		.loc 1 344 5 view .LVU280
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 30
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 30
 
 
  1171 001a 0121     		movs	r1, #1
@@ -1798,7 +1798,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1216              	.LFE147:
  1218              		.section	.text.B_nrf24l01_switch_tx_to_C,"ax",%progbits
  1219              		.align	1
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 31
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 31
 
 
  1220              		.global	B_nrf24l01_switch_tx_to_C
@@ -1858,7 +1858,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1259 0026 2120     		movs	r0, #33
  1260 0028 FFF7FEFF 		bl	nrf24l01_write_reg
  1261              	.LVL135:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 32
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 32
 
 
  370:Core/Src/nrf24l01.c ****     nrf24l01_write_reg(NRF_WRITE_REG + EN_RXADDR, 0x01);    // 使能通道0接收地址
@@ -1918,7 +1918,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1307              		.cfi_startproc
  1308              		@ args = 0, pretend = 0, frame = 0
  1309              		@ frame_needed = 0, uses_anonymous_args = 0
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 33
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 33
 
 
  1310 0000 08B5     		push	{r3, lr}
@@ -1978,7 +1978,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1355              		.global	B_receive_from_host
  1356              		.syntax unified
  1357              		.thumb
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 34
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 34
 
 
  1358              		.thumb_func
@@ -2038,7 +2038,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  416:Core/Src/nrf24l01.c ****     }
  417:Core/Src/nrf24l01.c **** 
  418:Core/Src/nrf24l01.c ****     return 1;           /* 无新数据 */
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 35
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 35
 
 
  1386              		.loc 1 418 12 view .LVU321
@@ -2098,7 +2098,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1429              		.loc 1 425 1 is_stmt 1 view -0
  1430              		.cfi_startproc
  1431              		@ args = 0, pretend = 0, frame = 0
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 36
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 36
 
 
  1432              		@ frame_needed = 0, uses_anonymous_args = 0
@@ -2158,7 +2158,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1481 0048 FFF7FEFF 		bl	__aeabi_d2iz
  1482              	.LVL162:
  430:Core/Src/nrf24l01.c **** 
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 37
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 37
 
 
  431:Core/Src/nrf24l01.c ****     *high_byte = (scaled >> 8) & 0xFF;
@@ -2218,7 +2218,7 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1528              		.loc 1 441 12 is_stmt 0 view .LVU355
  1529 0006 07EE900A 		vmov	s15, r0	@ int
  1530 000a B8EEE70A 		vcvt.f32.s32	s0, s15
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 38
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 38
 
 
  442:Core/Src/nrf24l01.c **** }
@@ -2232,347 +2232,382 @@ ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 1
  1538 0018 0000C842 		.word	1120403456
  1539              		.cfi_endproc
  1540              	.LFE152:
- 1542              		.section	.text.nrf_receive_task,"ax",%progbits
+ 1542              		.section	.text.twoUint8ToUint16,"ax",%progbits
  1543              		.align	1
- 1544              		.global	nrf_receive_task
+ 1544              		.global	twoUint8ToUint16
  1545              		.syntax unified
  1546              		.thumb
  1547              		.thumb_func
- 1549              	nrf_receive_task:
- 1550              	.LFB153:
+ 1549              	twoUint8ToUint16:
+ 1550              	.LVL167:
+ 1551              	.LFB153:
  443:Core/Src/nrf24l01.c **** 
- 444:Core/Src/nrf24l01.c **** uint8_t key_mode = 0;
- 445:Core/Src/nrf24l01.c **** uint8_t encoderl_value = 0, encoderr_value = 0;
- 446:Core/Src/nrf24l01.c **** float rocker_lx, rocker_ly, rocker_rx, rocker_ry;
- 447:Core/Src/nrf24l01.c **** 
- 448:Core/Src/nrf24l01.c **** /**
- 449:Core/Src/nrf24l01.c ****  * @brief  B模块：NRF 数据接收任务（主循环轮询调用）
- 450:Core/Src/nrf24l01.c ****  * @note   一包数据内完成帧头校验 + 数据解析
- 451:Core/Src/nrf24l01.c ****  * @retval 0: 收到有效数据包并解析完成
- 452:Core/Src/nrf24l01.c ****  *         1: 当前无新数据或帧校验失败
- 453:Core/Src/nrf24l01.c ****  */
- 454:Core/Src/nrf24l01.c **** uint8_t nrf_receive_task(void)
- 455:Core/Src/nrf24l01.c **** {
- 1551              		.loc 1 455 1 is_stmt 1 view -0
- 1552              		.cfi_startproc
- 1553              		@ args = 0, pretend = 0, frame = 0
- 1554              		@ frame_needed = 0, uses_anonymous_args = 0
- 1555 0000 38B5     		push	{r3, r4, r5, lr}
- 1556              	.LCFI25:
- 1557              		.cfi_def_cfa_offset 16
- 1558              		.cfi_offset 3, -16
- 1559              		.cfi_offset 4, -12
- 1560              		.cfi_offset 5, -8
- 1561              		.cfi_offset 14, -4
- 456:Core/Src/nrf24l01.c ****     if (B_receive_from_host(nrf_rx_buf) != 0) {
- 1562              		.loc 1 456 5 view .LVU358
- 1563              		.loc 1 456 9 is_stmt 0 view .LVU359
- 1564 0002 1E48     		ldr	r0, .L103
- 1565 0004 FFF7FEFF 		bl	B_receive_from_host
- 1566              	.LVL167:
- 1567              		.loc 1 456 8 discriminator 1 view .LVU360
- 1568 0008 0028     		cmp	r0, #0
- 1569 000a 2FD1     		bne	.L99
- 1570 000c 0446     		mov	r4, r0
- 457:Core/Src/nrf24l01.c ****         return 1;   /* 无新数据 */
- 458:Core/Src/nrf24l01.c ****     }
- 459:Core/Src/nrf24l01.c **** 
- 460:Core/Src/nrf24l01.c ****     /* 帧头尾校验：0x55 开头, 0xFF 结尾(第20字节) */
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 39
+ 444:Core/Src/nrf24l01.c **** /**
+ 445:Core/Src/nrf24l01.c ****  * @brief  两个uint8_t组合为uint16_t (高字节在前，低字节在后)
+ 446:Core/Src/nrf24l01.c ****  * @param  high_byte 高8位
+ 447:Core/Src/nrf24l01.c ****  * @param  low_byte  低8位
+ 448:Core/Src/nrf24l01.c ****  * @return 组合后的16位无符号整数 (范围 0~65535)
+ 449:Core/Src/nrf24l01.c ****  */
+ 450:Core/Src/nrf24l01.c **** uint16_t twoUint8ToUint16(uint8_t high_byte, uint8_t low_byte)
+ 451:Core/Src/nrf24l01.c **** {
+ 1552              		.loc 1 451 1 is_stmt 1 view -0
+ 1553              		.cfi_startproc
+ 1554              		@ args = 0, pretend = 0, frame = 0
+ 1555              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1556              		@ link register save eliminated.
+ 452:Core/Src/nrf24l01.c ****     return ((uint16_t)high_byte << 8) | low_byte;
+ 1557              		.loc 1 452 5 view .LVU358
+ 453:Core/Src/nrf24l01.c **** }
+ 1558              		.loc 1 453 1 is_stmt 0 view .LVU359
+ 1559 0000 41EA0020 		orr	r0, r1, r0, lsl #8
+ 1560              	.LVL168:
+ 1561              		.loc 1 453 1 view .LVU360
+ 1562 0004 7047     		bx	lr
+ 1563              		.cfi_endproc
+ 1564              	.LFE153:
+ 1566              		.section	.text.nrf_receive_task,"ax",%progbits
+ 1567              		.align	1
+ 1568              		.global	nrf_receive_task
+ 1569              		.syntax unified
+ 1570              		.thumb
+ 1571              		.thumb_func
+ 1573              	nrf_receive_task:
+ 1574              	.LFB154:
+ 454:Core/Src/nrf24l01.c **** 
+ 455:Core/Src/nrf24l01.c **** uint8_t key_mode = 0;
+ 456:Core/Src/nrf24l01.c **** uint8_t encoderl_value = 0, encoderr_value = 0;
+ 457:Core/Src/nrf24l01.c **** uint16_t rocker_lx = 2048, rocker_ly = 2048, rocker_rx = 2048, rocker_ry = 2048;
+ 458:Core/Src/nrf24l01.c **** 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 39
 
 
- 461:Core/Src/nrf24l01.c ****     if (nrf_rx_buf[0] != 0x55 || nrf_rx_buf[19] != 0xFF) {
- 1571              		.loc 1 461 5 is_stmt 1 view .LVU361
- 1572              		.loc 1 461 19 is_stmt 0 view .LVU362
- 1573 000e 1B4B     		ldr	r3, .L103
- 1574 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
- 1575              		.loc 1 461 8 view .LVU363
- 1576 0012 552B     		cmp	r3, #85
- 1577 0014 2DD1     		bne	.L100
- 1578              		.loc 1 461 44 discriminator 1 view .LVU364
- 1579 0016 194B     		ldr	r3, .L103
- 1580 0018 DB7C     		ldrb	r3, [r3, #19]	@ zero_extendqisi2
- 1581              		.loc 1 461 31 discriminator 1 view .LVU365
- 1582 001a FF2B     		cmp	r3, #255
- 1583 001c 2BD1     		bne	.L101
- 462:Core/Src/nrf24l01.c ****         return 1;   /* 帧校验失败 */
- 463:Core/Src/nrf24l01.c ****     }
- 464:Core/Src/nrf24l01.c **** 
- 465:Core/Src/nrf24l01.c ****     /* 解析数据 */
- 466:Core/Src/nrf24l01.c ****     key_mode       = nrf_rx_buf[1];
- 1584              		.loc 1 466 5 is_stmt 1 view .LVU366
- 1585              		.loc 1 466 32 is_stmt 0 view .LVU367
- 1586 001e 174D     		ldr	r5, .L103
- 1587 0020 6A78     		ldrb	r2, [r5, #1]	@ zero_extendqisi2
- 1588              		.loc 1 466 20 view .LVU368
- 1589 0022 174B     		ldr	r3, .L103+4
- 1590 0024 1A70     		strb	r2, [r3]
- 467:Core/Src/nrf24l01.c ****     encoderl_value = nrf_rx_buf[2];
- 1591              		.loc 1 467 5 is_stmt 1 view .LVU369
- 1592              		.loc 1 467 32 is_stmt 0 view .LVU370
- 1593 0026 AA78     		ldrb	r2, [r5, #2]	@ zero_extendqisi2
- 1594              		.loc 1 467 20 view .LVU371
- 1595 0028 164B     		ldr	r3, .L103+8
- 1596 002a 1A70     		strb	r2, [r3]
- 468:Core/Src/nrf24l01.c ****     encoderr_value = nrf_rx_buf[3];
- 1597              		.loc 1 468 5 is_stmt 1 view .LVU372
- 1598              		.loc 1 468 32 is_stmt 0 view .LVU373
- 1599 002c EA78     		ldrb	r2, [r5, #3]	@ zero_extendqisi2
- 1600              		.loc 1 468 20 view .LVU374
- 1601 002e 164B     		ldr	r3, .L103+12
- 1602 0030 1A70     		strb	r2, [r3]
- 469:Core/Src/nrf24l01.c ****     rocker_lx      = twoSint8ToFloat(nrf_rx_buf[4],  nrf_rx_buf[5]);
- 1603              		.loc 1 469 5 is_stmt 1 view .LVU375
- 1604              		.loc 1 469 22 is_stmt 0 view .LVU376
- 1605 0032 6979     		ldrb	r1, [r5, #5]	@ zero_extendqisi2
- 1606 0034 2879     		ldrb	r0, [r5, #4]	@ zero_extendqisi2
- 1607 0036 FFF7FEFF 		bl	twoSint8ToFloat
- 1608              	.LVL168:
- 1609              		.loc 1 469 20 discriminator 1 view .LVU377
- 1610 003a 144B     		ldr	r3, .L103+16
- 1611 003c 83ED000A 		vstr.32	s0, [r3]
- 470:Core/Src/nrf24l01.c ****     rocker_ly      = twoSint8ToFloat(nrf_rx_buf[6],  nrf_rx_buf[7]);
- 1612              		.loc 1 470 5 is_stmt 1 view .LVU378
- 1613              		.loc 1 470 22 is_stmt 0 view .LVU379
- 1614 0040 E979     		ldrb	r1, [r5, #7]	@ zero_extendqisi2
- 1615 0042 A879     		ldrb	r0, [r5, #6]	@ zero_extendqisi2
- 1616 0044 FFF7FEFF 		bl	twoSint8ToFloat
- 1617              	.LVL169:
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 40
+ 459:Core/Src/nrf24l01.c **** /**
+ 460:Core/Src/nrf24l01.c ****  * @brief  B模块：NRF 数据接收任务（主循环轮询调用）
+ 461:Core/Src/nrf24l01.c ****  * @note   一包数据内完成帧头校验 + 数据解析
+ 462:Core/Src/nrf24l01.c ****  * @retval 0: 收到有效数据包并解析完成
+ 463:Core/Src/nrf24l01.c ****  *         1: 当前无新数据或帧校验失败
+ 464:Core/Src/nrf24l01.c ****  */
+ 465:Core/Src/nrf24l01.c **** uint8_t nrf_receive_task(void)
+ 466:Core/Src/nrf24l01.c **** {
+ 1575              		.loc 1 466 1 is_stmt 1 view -0
+ 1576              		.cfi_startproc
+ 1577              		@ args = 0, pretend = 0, frame = 0
+ 1578              		@ frame_needed = 0, uses_anonymous_args = 0
+ 1579 0000 38B5     		push	{r3, r4, r5, lr}
+ 1580              	.LCFI25:
+ 1581              		.cfi_def_cfa_offset 16
+ 1582              		.cfi_offset 3, -16
+ 1583              		.cfi_offset 4, -12
+ 1584              		.cfi_offset 5, -8
+ 1585              		.cfi_offset 14, -4
+ 467:Core/Src/nrf24l01.c ****     if (B_receive_from_host(nrf_rx_buf) != 0) {
+ 1586              		.loc 1 467 5 view .LVU362
+ 1587              		.loc 1 467 9 is_stmt 0 view .LVU363
+ 1588 0002 1C48     		ldr	r0, .L104
+ 1589 0004 FFF7FEFF 		bl	B_receive_from_host
+ 1590              	.LVL169:
+ 1591              		.loc 1 467 8 discriminator 1 view .LVU364
+ 1592 0008 0028     		cmp	r0, #0
+ 1593 000a 2BD1     		bne	.L100
+ 1594 000c 0446     		mov	r4, r0
+ 468:Core/Src/nrf24l01.c ****         return 1;   /* 无新数据 */
+ 469:Core/Src/nrf24l01.c ****     }
+ 470:Core/Src/nrf24l01.c **** 
+ 471:Core/Src/nrf24l01.c ****     /* 帧头尾校验：0x55 开头, 0xFF 结尾(第20字节) */
+ 472:Core/Src/nrf24l01.c ****     if (nrf_rx_buf[0] != 0x55 || nrf_rx_buf[19] != 0xFF) {
+ 1595              		.loc 1 472 5 is_stmt 1 view .LVU365
+ 1596              		.loc 1 472 19 is_stmt 0 view .LVU366
+ 1597 000e 194B     		ldr	r3, .L104
+ 1598 0010 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 1599              		.loc 1 472 8 view .LVU367
+ 1600 0012 552B     		cmp	r3, #85
+ 1601 0014 29D1     		bne	.L101
+ 1602              		.loc 1 472 44 discriminator 1 view .LVU368
+ 1603 0016 174B     		ldr	r3, .L104
+ 1604 0018 DB7C     		ldrb	r3, [r3, #19]	@ zero_extendqisi2
+ 1605              		.loc 1 472 31 discriminator 1 view .LVU369
+ 1606 001a FF2B     		cmp	r3, #255
+ 1607 001c 27D1     		bne	.L102
+ 473:Core/Src/nrf24l01.c ****         return 1;   /* 帧校验失败 */
+ 474:Core/Src/nrf24l01.c ****     }
+ 475:Core/Src/nrf24l01.c **** 
+ 476:Core/Src/nrf24l01.c ****     /* 解析数据 */
+ 477:Core/Src/nrf24l01.c ****     key_mode       = nrf_rx_buf[1];
+ 1608              		.loc 1 477 5 is_stmt 1 view .LVU370
+ 1609              		.loc 1 477 32 is_stmt 0 view .LVU371
+ 1610 001e 154D     		ldr	r5, .L104
+ 1611 0020 6A78     		ldrb	r2, [r5, #1]	@ zero_extendqisi2
+ 1612              		.loc 1 477 20 view .LVU372
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 40
 
 
- 1618              		.loc 1 470 20 discriminator 1 view .LVU380
- 1619 0048 114B     		ldr	r3, .L103+20
- 1620 004a 83ED000A 		vstr.32	s0, [r3]
- 471:Core/Src/nrf24l01.c ****     rocker_rx      = twoSint8ToFloat(nrf_rx_buf[8],  nrf_rx_buf[9]);
- 1621              		.loc 1 471 5 is_stmt 1 view .LVU381
- 1622              		.loc 1 471 22 is_stmt 0 view .LVU382
- 1623 004e 697A     		ldrb	r1, [r5, #9]	@ zero_extendqisi2
- 1624 0050 287A     		ldrb	r0, [r5, #8]	@ zero_extendqisi2
- 1625 0052 FFF7FEFF 		bl	twoSint8ToFloat
- 1626              	.LVL170:
- 1627              		.loc 1 471 20 discriminator 1 view .LVU383
- 1628 0056 0F4B     		ldr	r3, .L103+24
- 1629 0058 83ED000A 		vstr.32	s0, [r3]
- 472:Core/Src/nrf24l01.c ****     rocker_ry      = twoSint8ToFloat(nrf_rx_buf[10], nrf_rx_buf[11]);
- 1630              		.loc 1 472 5 is_stmt 1 view .LVU384
- 1631              		.loc 1 472 22 is_stmt 0 view .LVU385
- 1632 005c E97A     		ldrb	r1, [r5, #11]	@ zero_extendqisi2
- 1633 005e A87A     		ldrb	r0, [r5, #10]	@ zero_extendqisi2
- 1634 0060 FFF7FEFF 		bl	twoSint8ToFloat
- 1635              	.LVL171:
- 1636              		.loc 1 472 20 discriminator 1 view .LVU386
- 1637 0064 0C4B     		ldr	r3, .L103+28
- 1638 0066 83ED000A 		vstr.32	s0, [r3]
- 473:Core/Src/nrf24l01.c **** 
- 474:Core/Src/nrf24l01.c ****     return 0;   /* 解析成功 */
- 1639              		.loc 1 474 5 is_stmt 1 view .LVU387
- 1640              		.loc 1 474 12 is_stmt 0 view .LVU388
- 1641 006a 00E0     		b	.L98
- 1642              	.L99:
- 457:Core/Src/nrf24l01.c ****     }
- 1643              		.loc 1 457 16 view .LVU389
- 1644 006c 0124     		movs	r4, #1
- 1645              	.L98:
- 475:Core/Src/nrf24l01.c **** }...
- 1646              		.loc 1 475 1 view .LVU390
- 1647 006e 2046     		mov	r0, r4
- 1648 0070 38BD     		pop	{r3, r4, r5, pc}
- 1649              	.L100:
- 462:Core/Src/nrf24l01.c ****         return 1;   /* 帧校验失败 */
- 1650              		.loc 1 462 16 view .LVU391
- 1651 0072 0124     		movs	r4, #1
- 1652 0074 FBE7     		b	.L98
- 1653              	.L101:
- 1654 0076 0124     		movs	r4, #1
- 1655 0078 F9E7     		b	.L98
- 1656              	.L104:
- 1657 007a 00BF     		.align	2
- 1658              	.L103:
- 1659 007c 00000000 		.word	nrf_rx_buf
- 1660 0080 00000000 		.word	key_mode
- 1661 0084 00000000 		.word	encoderl_value
- 1662 0088 00000000 		.word	encoderr_value
- 1663 008c 00000000 		.word	rocker_lx
- 1664 0090 00000000 		.word	rocker_ly
- 1665 0094 00000000 		.word	rocker_rx
- 1666 0098 00000000 		.word	rocker_ry
- 1667              		.cfi_endproc
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 41
+ 1613 0022 154B     		ldr	r3, .L104+4
+ 1614 0024 1A70     		strb	r2, [r3]
+ 478:Core/Src/nrf24l01.c ****     encoderl_value = nrf_rx_buf[2];
+ 1615              		.loc 1 478 5 is_stmt 1 view .LVU373
+ 1616              		.loc 1 478 32 is_stmt 0 view .LVU374
+ 1617 0026 AA78     		ldrb	r2, [r5, #2]	@ zero_extendqisi2
+ 1618              		.loc 1 478 20 view .LVU375
+ 1619 0028 144B     		ldr	r3, .L104+8
+ 1620 002a 1A70     		strb	r2, [r3]
+ 479:Core/Src/nrf24l01.c ****     encoderr_value = nrf_rx_buf[3];
+ 1621              		.loc 1 479 5 is_stmt 1 view .LVU376
+ 1622              		.loc 1 479 32 is_stmt 0 view .LVU377
+ 1623 002c EA78     		ldrb	r2, [r5, #3]	@ zero_extendqisi2
+ 1624              		.loc 1 479 20 view .LVU378
+ 1625 002e 144B     		ldr	r3, .L104+12
+ 1626 0030 1A70     		strb	r2, [r3]
+ 480:Core/Src/nrf24l01.c ****     rocker_lx      = twoUint8ToUint16(nrf_rx_buf[4],  nrf_rx_buf[5]);
+ 1627              		.loc 1 480 5 is_stmt 1 view .LVU379
+ 1628              		.loc 1 480 22 is_stmt 0 view .LVU380
+ 1629 0032 6979     		ldrb	r1, [r5, #5]	@ zero_extendqisi2
+ 1630 0034 2879     		ldrb	r0, [r5, #4]	@ zero_extendqisi2
+ 1631 0036 FFF7FEFF 		bl	twoUint8ToUint16
+ 1632              	.LVL170:
+ 1633              		.loc 1 480 20 discriminator 1 view .LVU381
+ 1634 003a 124B     		ldr	r3, .L104+16
+ 1635 003c 1880     		strh	r0, [r3]	@ movhi
+ 481:Core/Src/nrf24l01.c ****     rocker_ly      = twoUint8ToUint16(nrf_rx_buf[6],  nrf_rx_buf[7]);
+ 1636              		.loc 1 481 5 is_stmt 1 view .LVU382
+ 1637              		.loc 1 481 22 is_stmt 0 view .LVU383
+ 1638 003e E979     		ldrb	r1, [r5, #7]	@ zero_extendqisi2
+ 1639 0040 A879     		ldrb	r0, [r5, #6]	@ zero_extendqisi2
+ 1640 0042 FFF7FEFF 		bl	twoUint8ToUint16
+ 1641              	.LVL171:
+ 1642              		.loc 1 481 20 discriminator 1 view .LVU384
+ 1643 0046 104B     		ldr	r3, .L104+20
+ 1644 0048 1880     		strh	r0, [r3]	@ movhi
+ 482:Core/Src/nrf24l01.c ****     rocker_rx      = twoUint8ToUint16(nrf_rx_buf[8],  nrf_rx_buf[9]);
+ 1645              		.loc 1 482 5 is_stmt 1 view .LVU385
+ 1646              		.loc 1 482 22 is_stmt 0 view .LVU386
+ 1647 004a 697A     		ldrb	r1, [r5, #9]	@ zero_extendqisi2
+ 1648 004c 287A     		ldrb	r0, [r5, #8]	@ zero_extendqisi2
+ 1649 004e FFF7FEFF 		bl	twoUint8ToUint16
+ 1650              	.LVL172:
+ 1651              		.loc 1 482 20 discriminator 1 view .LVU387
+ 1652 0052 0E4B     		ldr	r3, .L104+24
+ 1653 0054 1880     		strh	r0, [r3]	@ movhi
+ 483:Core/Src/nrf24l01.c ****     rocker_ry      = twoUint8ToUint16(nrf_rx_buf[10], nrf_rx_buf[11]);
+ 1654              		.loc 1 483 5 is_stmt 1 view .LVU388
+ 1655              		.loc 1 483 22 is_stmt 0 view .LVU389
+ 1656 0056 E97A     		ldrb	r1, [r5, #11]	@ zero_extendqisi2
+ 1657 0058 A87A     		ldrb	r0, [r5, #10]	@ zero_extendqisi2
+ 1658 005a FFF7FEFF 		bl	twoUint8ToUint16
+ 1659              	.LVL173:
+ 1660              		.loc 1 483 20 discriminator 1 view .LVU390
+ 1661 005e 0C4B     		ldr	r3, .L104+28
+ 1662 0060 1880     		strh	r0, [r3]	@ movhi
+ 484:Core/Src/nrf24l01.c **** 
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 41
 
 
- 1668              	.LFE153:
- 1670              		.global	rocker_ry
- 1671              		.section	.bss.rocker_ry,"aw",%nobits
- 1672              		.align	2
- 1675              	rocker_ry:
- 1676 0000 00000000 		.space	4
- 1677              		.global	rocker_rx
- 1678              		.section	.bss.rocker_rx,"aw",%nobits
- 1679              		.align	2
- 1682              	rocker_rx:
- 1683 0000 00000000 		.space	4
- 1684              		.global	rocker_ly
- 1685              		.section	.bss.rocker_ly,"aw",%nobits
- 1686              		.align	2
- 1689              	rocker_ly:
- 1690 0000 00000000 		.space	4
- 1691              		.global	rocker_lx
- 1692              		.section	.bss.rocker_lx,"aw",%nobits
- 1693              		.align	2
- 1696              	rocker_lx:
- 1697 0000 00000000 		.space	4
- 1698              		.global	encoderr_value
- 1699              		.section	.bss.encoderr_value,"aw",%nobits
- 1702              	encoderr_value:
- 1703 0000 00       		.space	1
- 1704              		.global	encoderl_value
- 1705              		.section	.bss.encoderl_value,"aw",%nobits
- 1708              	encoderl_value:
- 1709 0000 00       		.space	1
- 1710              		.global	key_mode
- 1711              		.section	.bss.key_mode,"aw",%nobits
- 1714              	key_mode:
- 1715 0000 00       		.space	1
- 1716              		.global	nrf_rx_buf
- 1717              		.section	.bss.nrf_rx_buf,"aw",%nobits
- 1718              		.align	2
- 1721              	nrf_rx_buf:
- 1722 0000 00000000 		.space	32
- 1722      00000000 
- 1722      00000000 
- 1722      00000000 
- 1722      00000000 
- 1723              		.global	RX_ADDRESS
- 1724              		.section	.rodata.RX_ADDRESS,"a"
- 1725              		.align	2
- 1728              	RX_ADDRESS:
- 1729 0000 34431010 		.ascii	"4C\020\020\001"
- 1729      01
- 1730              		.global	TX_ADDRESS
- 1731              		.section	.rodata.TX_ADDRESS,"a"
- 1732              		.align	2
- 1735              	TX_ADDRESS:
- 1736 0000 34431010 		.ascii	"4C\020\020\001"
- 1736      01
- 1737              		.global	ADDR_BC
- 1738              		.section	.data.ADDR_BC,"aw"
- 1739              		.align	2
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 42
+ 485:Core/Src/nrf24l01.c ****     return 0;   /* 解析成功 */
+ 1663              		.loc 1 485 5 is_stmt 1 view .LVU391
+ 1664              		.loc 1 485 12 is_stmt 0 view .LVU392
+ 1665 0062 00E0     		b	.L99
+ 1666              	.L100:
+ 468:Core/Src/nrf24l01.c ****     }
+ 1667              		.loc 1 468 16 view .LVU393
+ 1668 0064 0124     		movs	r4, #1
+ 1669              	.L99:
+ 486:Core/Src/nrf24l01.c **** }...
+ 1670              		.loc 1 486 1 view .LVU394
+ 1671 0066 2046     		mov	r0, r4
+ 1672 0068 38BD     		pop	{r3, r4, r5, pc}
+ 1673              	.L101:
+ 473:Core/Src/nrf24l01.c ****         return 1;   /* 帧校验失败 */
+ 1674              		.loc 1 473 16 view .LVU395
+ 1675 006a 0124     		movs	r4, #1
+ 1676 006c FBE7     		b	.L99
+ 1677              	.L102:
+ 1678 006e 0124     		movs	r4, #1
+ 1679 0070 F9E7     		b	.L99
+ 1680              	.L105:
+ 1681 0072 00BF     		.align	2
+ 1682              	.L104:
+ 1683 0074 00000000 		.word	nrf_rx_buf
+ 1684 0078 00000000 		.word	key_mode
+ 1685 007c 00000000 		.word	encoderl_value
+ 1686 0080 00000000 		.word	encoderr_value
+ 1687 0084 00000000 		.word	rocker_lx
+ 1688 0088 00000000 		.word	rocker_ly
+ 1689 008c 00000000 		.word	rocker_rx
+ 1690 0090 00000000 		.word	rocker_ry
+ 1691              		.cfi_endproc
+ 1692              	.LFE154:
+ 1694              		.global	rocker_ry
+ 1695              		.section	.data.rocker_ry,"aw"
+ 1696              		.align	1
+ 1699              	rocker_ry:
+ 1700 0000 0008     		.short	2048
+ 1701              		.global	rocker_rx
+ 1702              		.section	.data.rocker_rx,"aw"
+ 1703              		.align	1
+ 1706              	rocker_rx:
+ 1707 0000 0008     		.short	2048
+ 1708              		.global	rocker_ly
+ 1709              		.section	.data.rocker_ly,"aw"
+ 1710              		.align	1
+ 1713              	rocker_ly:
+ 1714 0000 0008     		.short	2048
+ 1715              		.global	rocker_lx
+ 1716              		.section	.data.rocker_lx,"aw"
+ 1717              		.align	1
+ 1720              	rocker_lx:
+ 1721 0000 0008     		.short	2048
+ 1722              		.global	encoderr_value
+ 1723              		.section	.bss.encoderr_value,"aw",%nobits
+ 1726              	encoderr_value:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 42
 
 
- 1742              	ADDR_BC:
- 1743 0000 AABBCCDD 		.ascii	"\252\273\314\335\356"
- 1743      EE
- 1744              		.global	ADDR_AB
- 1745              		.section	.data.ADDR_AB,"aw"
- 1746              		.align	2
- 1749              	ADDR_AB:
- 1750 0000 11223344 		.ascii	"\021\"3DU"
- 1750      55
- 1751              		.text
- 1752              	.Letext0:
- 1753              		.file 2 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
- 1754              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/sy
- 1755              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
- 1756              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
- 1757              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
- 1758              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
- 1759              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h"
- 1760              		.file 9 "Core/Inc/nrf24l01.h"
- 1761              		.file 10 "Core/Inc/spi.h"
- 1762              		.file 11 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
- 1763              		.file 12 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/m
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 43
+ 1727 0000 00       		.space	1
+ 1728              		.global	encoderl_value
+ 1729              		.section	.bss.encoderl_value,"aw",%nobits
+ 1732              	encoderl_value:
+ 1733 0000 00       		.space	1
+ 1734              		.global	key_mode
+ 1735              		.section	.bss.key_mode,"aw",%nobits
+ 1738              	key_mode:
+ 1739 0000 00       		.space	1
+ 1740              		.global	nrf_rx_buf
+ 1741              		.section	.bss.nrf_rx_buf,"aw",%nobits
+ 1742              		.align	2
+ 1745              	nrf_rx_buf:
+ 1746 0000 00000000 		.space	32
+ 1746      00000000 
+ 1746      00000000 
+ 1746      00000000 
+ 1746      00000000 
+ 1747              		.global	RX_ADDRESS
+ 1748              		.section	.rodata.RX_ADDRESS,"a"
+ 1749              		.align	2
+ 1752              	RX_ADDRESS:
+ 1753 0000 34431010 		.ascii	"4C\020\020\001"
+ 1753      01
+ 1754              		.global	TX_ADDRESS
+ 1755              		.section	.rodata.TX_ADDRESS,"a"
+ 1756              		.align	2
+ 1759              	TX_ADDRESS:
+ 1760 0000 34431010 		.ascii	"4C\020\020\001"
+ 1760      01
+ 1761              		.global	ADDR_BC
+ 1762              		.section	.data.ADDR_BC,"aw"
+ 1763              		.align	2
+ 1766              	ADDR_BC:
+ 1767 0000 AABBCCDD 		.ascii	"\252\273\314\335\356"
+ 1767      EE
+ 1768              		.global	ADDR_AB
+ 1769              		.section	.data.ADDR_AB,"aw"
+ 1770              		.align	2
+ 1773              	ADDR_AB:
+ 1774 0000 11223344 		.ascii	"\021\"3DU"
+ 1774      55
+ 1775              		.text
+ 1776              	.Letext0:
+ 1777              		.file 2 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ 1778              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/sy
+ 1779              		.file 4 "Drivers/CMSIS/Device/ST/STM32F4xx/Include/stm32f407xx.h"
+ 1780              		.file 5 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h"
+ 1781              		.file 6 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_gpio.h"
+ 1782              		.file 7 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_dma.h"
+ 1783              		.file 8 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_spi.h"
+ 1784              		.file 9 "Core/Inc/nrf24l01.h"
+ 1785              		.file 10 "Core/Inc/spi.h"
+ 1786              		.file 11 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ 1787              		.file 12 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/m
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 43
 
 
 DEFINED SYMBOLS
                             *ABS*:00000000 nrf24l01.c
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:21     .text.spi2_set_speed:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:26     .text.spi2_set_speed:00000000 spi2_set_speed
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:54     .text.spi2_set_speed:00000010 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:59     .text.spi2_read_write_byte:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:64     .text.spi2_read_write_byte:00000000 spi2_read_write_byte
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:103    .text.spi2_read_write_byte:00000028 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:108    .text.nrf24l01_write_buf:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:113    .text.nrf24l01_write_buf:00000000 nrf24l01_write_buf
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:197    .text.nrf24l01_write_buf:00000040 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:202    .text.nrf24l01_read_buf:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:207    .text.nrf24l01_read_buf:00000000 nrf24l01_read_buf
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:291    .text.nrf24l01_read_buf:00000040 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:296    .text.nrf24l01_read_reg:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:301    .text.nrf24l01_read_reg:00000000 nrf24l01_read_reg
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:357    .text.nrf24l01_read_reg:00000030 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:362    .text.nrf24l01_write_reg:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:367    .text.nrf24l01_write_reg:00000000 nrf24l01_write_reg
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:426    .text.nrf24l01_write_reg:00000034 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:431    .text.nrf24l01_spi_init:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:437    .text.nrf24l01_spi_init:00000000 nrf24l01_spi_init
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:458    .text.nrf24l01_init:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:464    .text.nrf24l01_init:00000000 nrf24l01_init
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:620    .text.nrf24l01_init:000000b0 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:627    .rodata.nrf24l01_check.str1.4:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:631    .text.nrf24l01_check:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:637    .text.nrf24l01_check:00000000 nrf24l01_check
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:723    .text.nrf24l01_check:00000054 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:728    .text.nrf24l01_tx_packet:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:734    .text.nrf24l01_tx_packet:00000000 nrf24l01_tx_packet
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:891    .text.nrf24l01_tx_packet:000000ac $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:896    .text.nrf24l01_rx_packet:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:902    .text.nrf24l01_rx_packet:00000000 nrf24l01_rx_packet
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:969    .text.nrf24l01_rx_mode:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:975    .text.nrf24l01_rx_mode:00000000 nrf24l01_rx_mode
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1044   .text.nrf24l01_rx_mode:00000058 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1728   .rodata.RX_ADDRESS:00000000 RX_ADDRESS
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1050   .text.nrf24l01_tx_mode:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1056   .text.nrf24l01_tx_mode:00000000 nrf24l01_tx_mode
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1131   .text.nrf24l01_tx_mode:00000064 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1735   .rodata.TX_ADDRESS:00000000 TX_ADDRESS
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1138   .text.B_nrf24l01_switch_rx_from_A:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1144   .text.B_nrf24l01_switch_rx_from_A:00000000 B_nrf24l01_switch_rx_from_A
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1213   .text.B_nrf24l01_switch_rx_from_A:00000058 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1749   .data.ADDR_AB:00000000 ADDR_AB
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1219   .text.B_nrf24l01_switch_tx_to_C:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1225   .text.B_nrf24l01_switch_tx_to_C:00000000 B_nrf24l01_switch_tx_to_C
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1292   .text.B_nrf24l01_switch_tx_to_C:00000058 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1742   .data.ADDR_BC:00000000 ADDR_BC
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1298   .text.NRF_check:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1304   .text.NRF_check:00000000 NRF_check
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1349   .text.NRF_check:0000002c $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1354   .text.B_receive_from_host:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1360   .text.B_receive_from_host:00000000 B_receive_from_host
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1420   .text.floatToTwoSint8:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1426   .text.floatToTwoSint8:00000000 floatToTwoSint8
-ARM GAS  C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s 			page 44
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:21     .text.spi2_set_speed:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:26     .text.spi2_set_speed:00000000 spi2_set_speed
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:54     .text.spi2_set_speed:00000010 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:59     .text.spi2_read_write_byte:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:64     .text.spi2_read_write_byte:00000000 spi2_read_write_byte
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:103    .text.spi2_read_write_byte:00000028 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:108    .text.nrf24l01_write_buf:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:113    .text.nrf24l01_write_buf:00000000 nrf24l01_write_buf
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:197    .text.nrf24l01_write_buf:00000040 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:202    .text.nrf24l01_read_buf:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:207    .text.nrf24l01_read_buf:00000000 nrf24l01_read_buf
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:291    .text.nrf24l01_read_buf:00000040 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:296    .text.nrf24l01_read_reg:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:301    .text.nrf24l01_read_reg:00000000 nrf24l01_read_reg
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:357    .text.nrf24l01_read_reg:00000030 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:362    .text.nrf24l01_write_reg:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:367    .text.nrf24l01_write_reg:00000000 nrf24l01_write_reg
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:426    .text.nrf24l01_write_reg:00000034 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:431    .text.nrf24l01_spi_init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:437    .text.nrf24l01_spi_init:00000000 nrf24l01_spi_init
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:458    .text.nrf24l01_init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:464    .text.nrf24l01_init:00000000 nrf24l01_init
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:620    .text.nrf24l01_init:000000b0 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:627    .rodata.nrf24l01_check.str1.4:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:631    .text.nrf24l01_check:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:637    .text.nrf24l01_check:00000000 nrf24l01_check
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:723    .text.nrf24l01_check:00000054 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:728    .text.nrf24l01_tx_packet:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:734    .text.nrf24l01_tx_packet:00000000 nrf24l01_tx_packet
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:891    .text.nrf24l01_tx_packet:000000ac $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:896    .text.nrf24l01_rx_packet:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:902    .text.nrf24l01_rx_packet:00000000 nrf24l01_rx_packet
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:969    .text.nrf24l01_rx_mode:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:975    .text.nrf24l01_rx_mode:00000000 nrf24l01_rx_mode
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1044   .text.nrf24l01_rx_mode:00000058 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1752   .rodata.RX_ADDRESS:00000000 RX_ADDRESS
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1050   .text.nrf24l01_tx_mode:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1056   .text.nrf24l01_tx_mode:00000000 nrf24l01_tx_mode
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1131   .text.nrf24l01_tx_mode:00000064 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1759   .rodata.TX_ADDRESS:00000000 TX_ADDRESS
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1138   .text.B_nrf24l01_switch_rx_from_A:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1144   .text.B_nrf24l01_switch_rx_from_A:00000000 B_nrf24l01_switch_rx_from_A
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1213   .text.B_nrf24l01_switch_rx_from_A:00000058 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1773   .data.ADDR_AB:00000000 ADDR_AB
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1219   .text.B_nrf24l01_switch_tx_to_C:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1225   .text.B_nrf24l01_switch_tx_to_C:00000000 B_nrf24l01_switch_tx_to_C
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1292   .text.B_nrf24l01_switch_tx_to_C:00000058 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1766   .data.ADDR_BC:00000000 ADDR_BC
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1298   .text.NRF_check:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1304   .text.NRF_check:00000000 NRF_check
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1349   .text.NRF_check:0000002c $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1354   .text.B_receive_from_host:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1360   .text.B_receive_from_host:00000000 B_receive_from_host
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1420   .text.floatToTwoSint8:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1426   .text.floatToTwoSint8:00000000 floatToTwoSint8
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc48Is1I.s 			page 44
 
 
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1497   .text.floatToTwoSint8:00000058 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1504   .text.twoSint8ToFloat:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1510   .text.twoSint8ToFloat:00000000 twoSint8ToFloat
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1538   .text.twoSint8ToFloat:00000018 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1543   .text.nrf_receive_task:00000000 $t
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1549   .text.nrf_receive_task:00000000 nrf_receive_task
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1659   .text.nrf_receive_task:0000007c $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1721   .bss.nrf_rx_buf:00000000 nrf_rx_buf
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1714   .bss.key_mode:00000000 key_mode
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1708   .bss.encoderl_value:00000000 encoderl_value
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1702   .bss.encoderr_value:00000000 encoderr_value
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1696   .bss.rocker_lx:00000000 rocker_lx
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1689   .bss.rocker_ly:00000000 rocker_ly
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1682   .bss.rocker_rx:00000000 rocker_rx
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1675   .bss.rocker_ry:00000000 rocker_ry
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1672   .bss.rocker_ry:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1679   .bss.rocker_rx:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1686   .bss.rocker_ly:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1693   .bss.rocker_lx:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1703   .bss.encoderr_value:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1709   .bss.encoderl_value:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1715   .bss.key_mode:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1718   .bss.nrf_rx_buf:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1725   .rodata.RX_ADDRESS:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1732   .rodata.TX_ADDRESS:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1739   .data.ADDR_BC:00000000 $d
-C:\Users\10369\AppData\Local\Temp\ccXOKF2c.s:1746   .data.ADDR_AB:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1497   .text.floatToTwoSint8:00000058 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1504   .text.twoSint8ToFloat:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1510   .text.twoSint8ToFloat:00000000 twoSint8ToFloat
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1538   .text.twoSint8ToFloat:00000018 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1543   .text.twoUint8ToUint16:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1549   .text.twoUint8ToUint16:00000000 twoUint8ToUint16
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1567   .text.nrf_receive_task:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1573   .text.nrf_receive_task:00000000 nrf_receive_task
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1683   .text.nrf_receive_task:00000074 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1745   .bss.nrf_rx_buf:00000000 nrf_rx_buf
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1738   .bss.key_mode:00000000 key_mode
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1732   .bss.encoderl_value:00000000 encoderl_value
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1726   .bss.encoderr_value:00000000 encoderr_value
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1720   .data.rocker_lx:00000000 rocker_lx
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1713   .data.rocker_ly:00000000 rocker_ly
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1706   .data.rocker_rx:00000000 rocker_rx
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1699   .data.rocker_ry:00000000 rocker_ry
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1696   .data.rocker_ry:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1703   .data.rocker_rx:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1710   .data.rocker_ly:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1717   .data.rocker_lx:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1727   .bss.encoderr_value:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1733   .bss.encoderl_value:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1739   .bss.key_mode:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1742   .bss.nrf_rx_buf:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1749   .rodata.RX_ADDRESS:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1756   .rodata.TX_ADDRESS:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1763   .data.ADDR_BC:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cc48Is1I.s:1770   .data.ADDR_AB:00000000 $d
 
 UNDEFINED SYMBOLS
 HAL_SPI_Init

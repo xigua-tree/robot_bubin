@@ -12,33 +12,33 @@ void Motor_InitAll(void)
 {
     /* 电机1 */
     g_motors[0].in1_port = GPIOE;
-    g_motors[0].in1_pin  = GPIO_PIN_14;
+    g_motors[0].in1_pin  = GPIO_PIN_12;
     g_motors[0].in2_port = GPIOE;
-    g_motors[0].in2_pin  = GPIO_PIN_15;
+    g_motors[0].in2_pin  = GPIO_PIN_13;
     g_motors[0].htim     = &htim8;
     g_motors[0].channel  = TIM_CHANNEL_1;
 
     /* 电机2 */
     g_motors[1].in1_port = GPIOE;
-    g_motors[1].in1_pin  = GPIO_PIN_0;
+    g_motors[1].in1_pin  = GPIO_PIN_14;
     g_motors[1].in2_port = GPIOE;
-    g_motors[1].in2_pin  = GPIO_PIN_1;
+    g_motors[1].in2_pin  = GPIO_PIN_15;
     g_motors[1].htim     = &htim8;
     g_motors[1].channel  = TIM_CHANNEL_3;
 
     /* 电机3 */
     g_motors[2].in1_port = GPIOE;
-    g_motors[2].in1_pin  = GPIO_PIN_12;
+    g_motors[2].in1_pin  = GPIO_PIN_0;
     g_motors[2].in2_port = GPIOE;
-    g_motors[2].in2_pin  = GPIO_PIN_13;
+    g_motors[2].in2_pin  = GPIO_PIN_1;
     g_motors[2].htim     = &htim8;
     g_motors[2].channel  = TIM_CHANNEL_2;
 
     /* 电机4 */
     g_motors[3].in1_port = GPIOB;
-    g_motors[3].in1_pin  = GPIO_PIN_8;
+    g_motors[3].in1_pin  = GPIO_PIN_9;
     g_motors[3].in2_port = GPIOB;
-    g_motors[3].in2_pin  = GPIO_PIN_9;
+    g_motors[3].in2_pin  = GPIO_PIN_8;
     g_motors[3].htim     = &htim8;
     g_motors[3].channel  = TIM_CHANNEL_4;
 

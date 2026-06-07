@@ -130,7 +130,7 @@ void MahonyAHRSupdate(float q[4], float gx, float gy, float gz, float ax, float 
 	}
 	
 	// Integrate rate of change of quaternion
-	gx *= (0.5f * (1.0f / sampleFreq));		// pre-multiply common factors
+	gx *= (0.5f * (1.0f / sampleFreq));		
 	gy *= (0.5f * (1.0f / sampleFreq));
 	gz *= (0.5f * (1.0f / sampleFreq));
 	qa = q[0];

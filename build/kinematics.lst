@@ -1,0 +1,290 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"kinematics.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/kinematics.c"
+  20              		.section	.text.OmniKinematics,"ax",%progbits
+  21              		.align	1
+  22              		.global	OmniKinematics
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	OmniKinematics:
+  28              	.LVL0:
+  29              	.LFB0:
+   1:Core/Src/kinematics.c **** #include "kinematics.h"
+   2:Core/Src/kinematics.c **** #include <math.h>
+   3:Core/Src/kinematics.c **** 
+   4:Core/Src/kinematics.c **** /**
+   5:Core/Src/kinematics.c ****  * @brief  全向轮运动学解算
+   6:Core/Src/kinematics.c ****  * @note   轮子编号与底盘布局对应关系（俯视，x前 y左）：
+   7:Core/Src/kinematics.c ****  *         轮1: 右前, 轮2: 左前, 轮3: 左后, 轮4: 右后
+   8:Core/Src/kinematics.c ****  * @param  Vx   X 方向速度（正值=前进）
+   9:Core/Src/kinematics.c ****  * @param  Vy   Y 方向速度（正值=左移）
+  10:Core/Src/kinematics.c ****  * @param  omega 旋转角速度（正值=逆时针）
+  11:Core/Src/kinematics.c ****  * @param  wheel_rpm[4]  输出的 4 轮目标转速 (RPM)
+  12:Core/Src/kinematics.c ****  */
+  13:Core/Src/kinematics.c **** void OmniKinematics(int Vx, int Vy, int omega, float wheel_rpm[4])
+  14:Core/Src/kinematics.c **** {
+  30              		.loc 1 14 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 0
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		@ link register save eliminated.
+  35              		.loc 1 14 1 is_stmt 0 view .LVU1
+  36 0000 07EE102A 		vmov	s14, r2	@ int
+  15:Core/Src/kinematics.c ****     /* 全向轮速度分解公式 */
+  16:Core/Src/kinematics.c ****     wheel_rpm[0] = (float)( -Vx + Vy - omega * (LX + LY));  /* 轮1: 右前 */
+  37              		.loc 1 16 5 is_stmt 1 view .LVU2
+  38              		.loc 1 16 33 is_stmt 0 view .LVU3
+  39 0004 0A1A     		subs	r2, r1, r0
+  40              	.LVL1:
+  41              		.loc 1 16 33 view .LVU4
+  42 0006 07EE902A 		vmov	s15, r2	@ int
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s 			page 2
+
+
+  43              		.loc 1 16 46 view .LVU5
+  44 000a B8EEC77A 		vcvt.f32.s32	s14, s14
+  45              	.LVL2:
+  46              		.loc 1 16 46 view .LVU6
+  47 000e DFED216A 		vldr.32	s13, .L12
+  48 0012 27EE267A 		vmul.f32	s14, s14, s13
+  49              		.loc 1 16 20 view .LVU7
+  50 0016 F8EEE77A 		vcvt.f32.s32	s15, s15
+  51 001a 77EEC77A 		vsub.f32	s15, s15, s14
+  52              		.loc 1 16 18 view .LVU8
+  53 001e C3ED007A 		vstr.32	s15, [r3]
+  17:Core/Src/kinematics.c ****     wheel_rpm[1] = (float)(  Vx + Vy - omega * (LX + LY));  /* 轮2: 左前 */
+  54              		.loc 1 17 5 is_stmt 1 view .LVU9
+  55              		.loc 1 17 33 is_stmt 0 view .LVU10
+  56 0022 0A18     		adds	r2, r1, r0
+  57 0024 07EE902A 		vmov	s15, r2	@ int
+  58              		.loc 1 17 20 view .LVU11
+  59 0028 F8EEE77A 		vcvt.f32.s32	s15, s15
+  60 002c 77EEC77A 		vsub.f32	s15, s15, s14
+  61              		.loc 1 17 18 view .LVU12
+  62 0030 C3ED017A 		vstr.32	s15, [r3, #4]
+  18:Core/Src/kinematics.c ****     wheel_rpm[2] = (float)(  Vx - Vy - omega * (LX + LY));  /* 轮3: 左后 */
+  63              		.loc 1 18 5 is_stmt 1 view .LVU13
+  64              		.loc 1 18 33 is_stmt 0 view .LVU14
+  65 0034 421A     		subs	r2, r0, r1
+  66 0036 07EE902A 		vmov	s15, r2	@ int
+  67              		.loc 1 18 20 view .LVU15
+  68 003a F8EEE77A 		vcvt.f32.s32	s15, s15
+  69 003e 77EEC77A 		vsub.f32	s15, s15, s14
+  70              		.loc 1 18 18 view .LVU16
+  71 0042 C3ED027A 		vstr.32	s15, [r3, #8]
+  19:Core/Src/kinematics.c ****     wheel_rpm[3] = (float)( -Vx - Vy - omega * (LX + LY));  /* 轮4: 右后 */
+  72              		.loc 1 19 5 is_stmt 1 view .LVU17
+  73              		.loc 1 19 29 is_stmt 0 view .LVU18
+  74 0046 4042     		rsbs	r0, r0, #0
+  75              	.LVL3:
+  76              		.loc 1 19 33 view .LVU19
+  77 0048 401A     		subs	r0, r0, r1
+  78              	.LVL4:
+  79              		.loc 1 19 20 view .LVU20
+  80 004a 07EE900A 		vmov	s15, r0	@ int
+  81 004e F8EEE77A 		vcvt.f32.s32	s15, s15
+  82 0052 77EEC77A 		vsub.f32	s15, s15, s14
+  83              		.loc 1 19 18 view .LVU21
+  84 0056 C3ED037A 		vstr.32	s15, [r3, #12]
+  20:Core/Src/kinematics.c **** 
+  21:Core/Src/kinematics.c ****     /* 限幅 */
+  22:Core/Src/kinematics.c ****     for (int i = 0; i < 4; i++) {
+  85              		.loc 1 22 5 is_stmt 1 view .LVU22
+  86              	.LBB2:
+  87              		.loc 1 22 10 view .LVU23
+  88              	.LVL5:
+  89              		.loc 1 22 14 is_stmt 0 view .LVU24
+  90 005a 0022     		movs	r2, #0
+  91              		.loc 1 22 5 view .LVU25
+  92 005c 09E0     		b	.L2
+  93              	.LVL6:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s 			page 3
+
+
+  94              	.L10:
+  23:Core/Src/kinematics.c ****         if (wheel_rpm[i] > MAX_SPEED) {
+  24:Core/Src/kinematics.c ****             wheel_rpm[i] = MAX_SPEED;
+  25:Core/Src/kinematics.c ****         } else if (wheel_rpm[i] < -MAX_SPEED) {
+  95              		.loc 1 25 16 is_stmt 1 view .LVU26
+  96              		.loc 1 25 19 is_stmt 0 view .LVU27
+  97 005e 9FED0E7A 		vldr.32	s14, .L12+4
+  98 0062 F4EEC77A 		vcmpe.f32	s15, s14
+  99 0066 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 100 006a 01D5     		bpl	.L5
+  26:Core/Src/kinematics.c ****             wheel_rpm[i] = -MAX_SPEED;
+ 101              		.loc 1 26 13 is_stmt 1 view .LVU28
+ 102              		.loc 1 26 26 is_stmt 0 view .LVU29
+ 103 006c 81ED007A 		vstr.32	s14, [r1]
+ 104              	.L5:
+  22:Core/Src/kinematics.c ****         if (wheel_rpm[i] > MAX_SPEED) {
+ 105              		.loc 1 22 29 is_stmt 1 discriminator 2 view .LVU30
+ 106 0070 0132     		adds	r2, r2, #1
+ 107              	.LVL7:
+ 108              	.L2:
+  22:Core/Src/kinematics.c ****         if (wheel_rpm[i] > MAX_SPEED) {
+ 109              		.loc 1 22 23 discriminator 1 view .LVU31
+ 110 0072 032A     		cmp	r2, #3
+ 111 0074 0DDC     		bgt	.L11
+  23:Core/Src/kinematics.c ****         if (wheel_rpm[i] > MAX_SPEED) {
+ 112              		.loc 1 23 9 view .LVU32
+  23:Core/Src/kinematics.c ****         if (wheel_rpm[i] > MAX_SPEED) {
+ 113              		.loc 1 23 22 is_stmt 0 view .LVU33
+ 114 0076 03EB8201 		add	r1, r3, r2, lsl #2
+ 115 007a D1ED007A 		vldr.32	s15, [r1]
+  23:Core/Src/kinematics.c ****         if (wheel_rpm[i] > MAX_SPEED) {
+ 116              		.loc 1 23 12 view .LVU34
+ 117 007e 9FED077A 		vldr.32	s14, .L12+8
+ 118 0082 F4EEC77A 		vcmpe.f32	s15, s14
+ 119 0086 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 120 008a E8DD     		ble	.L10
+  24:Core/Src/kinematics.c ****         } else if (wheel_rpm[i] < -MAX_SPEED) {
+ 121              		.loc 1 24 13 is_stmt 1 view .LVU35
+  24:Core/Src/kinematics.c ****         } else if (wheel_rpm[i] < -MAX_SPEED) {
+ 122              		.loc 1 24 26 is_stmt 0 view .LVU36
+ 123 008c 81ED007A 		vstr.32	s14, [r1]
+ 124 0090 EEE7     		b	.L5
+ 125              	.L11:
+  24:Core/Src/kinematics.c ****         } else if (wheel_rpm[i] < -MAX_SPEED) {
+ 126              		.loc 1 24 26 view .LVU37
+ 127              	.LBE2:
+  27:Core/Src/kinematics.c ****         }
+  28:Core/Src/kinematics.c ****     }
+  29:Core/Src/kinematics.c **** }
+ 128              		.loc 1 29 1 view .LVU38
+ 129 0092 7047     		bx	lr
+ 130              	.L13:
+ 131              		.align	2
+ 132              	.L12:
+ 133 0094 9A99993E 		.word	1050253722
+ 134 0098 000096C3 		.word	-1013579776
+ 135 009c 00009643 		.word	1133903872
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s 			page 4
+
+
+ 136              		.cfi_endproc
+ 137              	.LFE0:
+ 139              		.section	.text.normalizeAngleRad,"ax",%progbits
+ 140              		.align	1
+ 141              		.global	normalizeAngleRad
+ 142              		.syntax unified
+ 143              		.thumb
+ 144              		.thumb_func
+ 146              	normalizeAngleRad:
+ 147              	.LVL8:
+ 148              	.LFB1:
+  30:Core/Src/kinematics.c **** 
+  31:Core/Src/kinematics.c **** /**
+  32:Core/Src/kinematics.c ****  * @brief  角度归一化到 [-PI, PI] 范围
+  33:Core/Src/kinematics.c ****  */
+  34:Core/Src/kinematics.c **** float normalizeAngleRad(float angle)
+  35:Core/Src/kinematics.c **** {
+ 149              		.loc 1 35 1 is_stmt 1 view -0
+ 150              		.cfi_startproc
+ 151              		@ args = 0, pretend = 0, frame = 0
+ 152              		@ frame_needed = 0, uses_anonymous_args = 0
+ 153              		.loc 1 35 1 is_stmt 0 view .LVU40
+ 154 0000 08B5     		push	{r3, lr}
+ 155              	.LCFI0:
+ 156              		.cfi_def_cfa_offset 8
+ 157              		.cfi_offset 3, -8
+ 158              		.cfi_offset 14, -4
+  36:Core/Src/kinematics.c ****     float two_pi = PI_2;
+ 159              		.loc 1 36 5 is_stmt 1 view .LVU41
+ 160              	.LVL9:
+  37:Core/Src/kinematics.c **** 
+  38:Core/Src/kinematics.c ****     angle = fmodf(angle, two_pi);
+ 161              		.loc 1 38 5 view .LVU42
+ 162              		.loc 1 38 13 is_stmt 0 view .LVU43
+ 163 0002 DFED0E0A 		vldr.32	s1, .L23
+ 164 0006 FFF7FEFF 		bl	fmodf
+ 165              	.LVL10:
+  39:Core/Src/kinematics.c ****     if (angle > PI)
+ 166              		.loc 1 39 5 is_stmt 1 view .LVU44
+ 167              		.loc 1 39 8 is_stmt 0 view .LVU45
+ 168 000a DFED0D7A 		vldr.32	s15, .L23+4
+ 169 000e B4EEE70A 		vcmpe.f32	s0, s15
+ 170 0012 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 171 0016 04DD     		ble	.L21
+  40:Core/Src/kinematics.c ****         angle -= two_pi;
+ 172              		.loc 1 40 9 is_stmt 1 view .LVU46
+ 173              		.loc 1 40 15 is_stmt 0 view .LVU47
+ 174 0018 DFED087A 		vldr.32	s15, .L23
+ 175 001c 30EE670A 		vsub.f32	s0, s0, s15
+ 176              	.LVL11:
+ 177              	.L14:
+  41:Core/Src/kinematics.c ****     else if (angle < -PI)
+  42:Core/Src/kinematics.c ****         angle += two_pi;
+  43:Core/Src/kinematics.c **** 
+  44:Core/Src/kinematics.c ****     return angle;
+  45:Core/Src/kinematics.c **** }
+ 178              		.loc 1 45 1 view .LVU48
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s 			page 5
+
+
+ 179 0020 08BD     		pop	{r3, pc}
+ 180              	.L21:
+  41:Core/Src/kinematics.c ****     else if (angle < -PI)
+ 181              		.loc 1 41 10 is_stmt 1 view .LVU49
+  41:Core/Src/kinematics.c ****     else if (angle < -PI)
+ 182              		.loc 1 41 13 is_stmt 0 view .LVU50
+ 183 0022 DFED087A 		vldr.32	s15, .L23+8
+ 184 0026 B4EEE70A 		vcmpe.f32	s0, s15
+ 185 002a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 186 002e F7D5     		bpl	.L14
+  42:Core/Src/kinematics.c **** 
+ 187              		.loc 1 42 9 is_stmt 1 view .LVU51
+  42:Core/Src/kinematics.c **** 
+ 188              		.loc 1 42 15 is_stmt 0 view .LVU52
+ 189 0030 DFED027A 		vldr.32	s15, .L23
+ 190 0034 30EE270A 		vadd.f32	s0, s0, s15
+ 191              	.LVL12:
+  44:Core/Src/kinematics.c **** }
+ 192              		.loc 1 44 5 is_stmt 1 view .LVU53
+  44:Core/Src/kinematics.c **** }
+ 193              		.loc 1 44 12 is_stmt 0 view .LVU54
+ 194 0038 F2E7     		b	.L14
+ 195              	.L24:
+ 196 003a 00BF     		.align	2
+ 197              	.L23:
+ 198 003c DA0FC940 		.word	1086918618
+ 199 0040 DA0F4940 		.word	1078530010
+ 200 0044 DA0F49C0 		.word	-1068953638
+ 201              		.cfi_endproc
+ 202              	.LFE1:
+ 204              		.text
+ 205              	.Letext0:
+ 206              		.file 2 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s 			page 6
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 kinematics.c
+C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s:21     .text.OmniKinematics:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s:27     .text.OmniKinematics:00000000 OmniKinematics
+C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s:133    .text.OmniKinematics:00000094 $d
+C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s:140    .text.normalizeAngleRad:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s:146    .text.normalizeAngleRad:00000000 normalizeAngleRad
+C:\Users\10369\AppData\Local\Temp\cc8ExSNS.s:198    .text.normalizeAngleRad:0000003c $d
+
+UNDEFINED SYMBOLS
+fmodf

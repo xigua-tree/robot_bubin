@@ -441,9 +441,20 @@ float twoSint8ToFloat(uint8_t high_byte, uint8_t low_byte)
     return (float)scaled / 100.0f;
 }
 
+/**
+ * @brief  两个uint8_t组合为uint16_t (高字节在前，低字节在后)
+ * @param  high_byte 高8位
+ * @param  low_byte  低8位
+ * @return 组合后的16位无符号整数 (范围 0~65535)
+ */
+uint16_t twoUint8ToUint16(uint8_t high_byte, uint8_t low_byte)
+{
+    return ((uint16_t)high_byte << 8) | low_byte;
+}
+
 uint8_t key_mode = 0;
 uint8_t encoderl_value = 0, encoderr_value = 0;
-float rocker_lx, rocker_ly, rocker_rx, rocker_ry;
+uint16_t rocker_lx = 2048, rocker_ly = 2048, rocker_rx = 2048, rocker_ry = 2048;
 
 /**
  * @brief  B模块：NRF 数据接收任务（主循环轮询调用）
@@ -466,10 +477,10 @@ uint8_t nrf_receive_task(void)
     key_mode       = nrf_rx_buf[1];
     encoderl_value = nrf_rx_buf[2];
     encoderr_value = nrf_rx_buf[3];
-    rocker_lx      = twoSint8ToFloat(nrf_rx_buf[4],  nrf_rx_buf[5]);
-    rocker_ly      = twoSint8ToFloat(nrf_rx_buf[6],  nrf_rx_buf[7]);
-    rocker_rx      = twoSint8ToFloat(nrf_rx_buf[8],  nrf_rx_buf[9]);
-    rocker_ry      = twoSint8ToFloat(nrf_rx_buf[10], nrf_rx_buf[11]);
+    rocker_lx      = twoUint8ToUint16(nrf_rx_buf[4],  nrf_rx_buf[5]);
+    rocker_ly      = twoUint8ToUint16(nrf_rx_buf[6],  nrf_rx_buf[7]);
+    rocker_rx      = twoUint8ToUint16(nrf_rx_buf[8],  nrf_rx_buf[9]);
+    rocker_ry      = twoUint8ToUint16(nrf_rx_buf[10], nrf_rx_buf[11]);
 
     return 0;   /* 解析成功 */
 }

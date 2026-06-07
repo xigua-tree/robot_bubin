@@ -111,10 +111,10 @@ extern uint8_t nrf_rx_buf[32];
 extern uint8_t key_mode;
 extern uint8_t encoderl_value;
 extern uint8_t encoderr_value;
-extern float rocker_lx;
-extern float rocker_ly;
-extern float rocker_rx;
-extern float rocker_ry;
+extern uint16_t rocker_lx;
+extern uint16_t rocker_ly;
+extern uint16_t rocker_rx;
+extern uint16_t rocker_ry;
 
 
 #endif

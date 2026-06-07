@@ -16,8 +16,8 @@
 #define SPEED_CTRL_DT          0.05f    /* 1ms */
 
 /* 默认 PID 参数 */
-#define DEFAULT_KP  0.0f
-#define DEFAULT_KI  0.0f
+#define DEFAULT_KP  16.0f
+#define DEFAULT_KI  6.0f
 #define DEFAULT_KD  0.00f
 
 /* 控制标志位（TIM8 ISR 置1，主循环清零） */

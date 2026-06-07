@@ -1,0 +1,217 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"yaw_ctrl.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/yaw_ctrl.c"
+  20              		.section	.text.YawCtrl_Init,"ax",%progbits
+  21              		.align	1
+  22              		.global	YawCtrl_Init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	YawCtrl_Init:
+  28              	.LFB0:
+   1:Core/Src/yaw_ctrl.c **** #include "yaw_ctrl.h"
+   2:Core/Src/yaw_ctrl.c **** 
+   3:Core/Src/yaw_ctrl.c **** float g_target_yaw_angle = 0.0f;        /* 目标 yaw 角度 (度) */
+   4:Core/Src/yaw_ctrl.c **** 
+   5:Core/Src/yaw_ctrl.c **** static PID_t s_yaw_pid;                 /* yaw 角度环 PID 实例 */
+   6:Core/Src/yaw_ctrl.c **** 
+   7:Core/Src/yaw_ctrl.c **** /**
+   8:Core/Src/yaw_ctrl.c ****  * @brief  初始化 yaw 角度环 PID
+   9:Core/Src/yaw_ctrl.c ****  * @note   所有 PID 参数初始化为 0，用户后续调整
+  10:Core/Src/yaw_ctrl.c ****  */
+  11:Core/Src/yaw_ctrl.c **** void YawCtrl_Init(void)
+  12:Core/Src/yaw_ctrl.c **** {
+  29              		.loc 1 12 1 view -0
+  30              		.cfi_startproc
+  31              		@ args = 0, pretend = 0, frame = 0
+  32              		@ frame_needed = 0, uses_anonymous_args = 0
+  33 0000 08B5     		push	{r3, lr}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 3, -8
+  37              		.cfi_offset 14, -4
+  13:Core/Src/yaw_ctrl.c ****     PID_Init(&s_yaw_pid, 0.0f, 0.0f, 0.0f, YAW_OUT_MAX);
+  38              		.loc 1 13 5 view .LVU1
+  39 0002 9FED060A 		vldr.32	s0, .L3
+  40 0006 DFED061A 		vldr.32	s3, .L3+4
+  41 000a B0EE401A 		vmov.f32	s2, s0
+  42 000e F0EE400A 		vmov.f32	s1, s0
+  43 0012 0448     		ldr	r0, .L3+8
+  44 0014 FFF7FEFF 		bl	PID_Init
+  45              	.LVL0:
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s 			page 2
+
+
+  14:Core/Src/yaw_ctrl.c **** }
+  46              		.loc 1 14 1 is_stmt 0 view .LVU2
+  47 0018 08BD     		pop	{r3, pc}
+  48              	.L4:
+  49 001a 00BF     		.align	2
+  50              	.L3:
+  51 001c 00000000 		.word	0
+  52 0020 00004843 		.word	1128792064
+  53 0024 00000000 		.word	s_yaw_pid
+  54              		.cfi_endproc
+  55              	.LFE0:
+  57              		.section	.text.YawCtrl_Update,"ax",%progbits
+  58              		.align	1
+  59              		.global	YawCtrl_Update
+  60              		.syntax unified
+  61              		.thumb
+  62              		.thumb_func
+  64              	YawCtrl_Update:
+  65              	.LVL1:
+  66              	.LFB1:
+  15:Core/Src/yaw_ctrl.c **** 
+  16:Core/Src/yaw_ctrl.c **** /**
+  17:Core/Src/yaw_ctrl.c ****  * @brief  执行一次 yaw 角度环 PID 计算
+  18:Core/Src/yaw_ctrl.c ****  * @param  measured_yaw  当前 yaw 角度 (度)
+  19:Core/Src/yaw_ctrl.c ****  * @param  dt            控制周期 (秒)，暂未使用（保留接口）
+  20:Core/Src/yaw_ctrl.c ****  * @return omega         旋转角速度输出 (RPM 等效值)
+  21:Core/Src/yaw_ctrl.c ****  */
+  22:Core/Src/yaw_ctrl.c **** float YawCtrl_Update(float measured_yaw, float dt)
+  23:Core/Src/yaw_ctrl.c **** {
+  67              		.loc 1 23 1 is_stmt 1 view -0
+  68              		.cfi_startproc
+  69              		@ args = 0, pretend = 0, frame = 0
+  70              		@ frame_needed = 0, uses_anonymous_args = 0
+  71              		.loc 1 23 1 is_stmt 0 view .LVU4
+  72 0000 08B5     		push	{r3, lr}
+  73              	.LCFI1:
+  74              		.cfi_def_cfa_offset 8
+  75              		.cfi_offset 3, -8
+  76              		.cfi_offset 14, -4
+  24:Core/Src/yaw_ctrl.c ****     (void)dt;  /* 增量式 PID 自身管理时序，dt 保留备用 */
+  77              		.loc 1 24 5 is_stmt 1 view .LVU5
+  25:Core/Src/yaw_ctrl.c **** 
+  26:Core/Src/yaw_ctrl.c ****     /* 计算最短角度误差，归一化到 [-180, 180] 度 */
+  27:Core/Src/yaw_ctrl.c ****     float err = g_target_yaw_angle - measured_yaw;
+  78              		.loc 1 27 5 view .LVU6
+  79              		.loc 1 27 36 is_stmt 0 view .LVU7
+  80 0002 124B     		ldr	r3, .L11
+  81 0004 D3ED007A 		vldr.32	s15, [r3]
+  82              		.loc 1 27 11 view .LVU8
+  83 0008 37EEC00A 		vsub.f32	s0, s15, s0
+  84              	.LVL2:
+  28:Core/Src/yaw_ctrl.c ****     while (err > 180.0f)  err -= 360.0f;
+  85              		.loc 1 28 5 is_stmt 1 view .LVU9
+  86              		.loc 1 28 11 is_stmt 0 view .LVU10
+  87 000c 03E0     		b	.L6
+  88              	.L7:
+  89              		.loc 1 28 27 is_stmt 1 discriminator 2 view .LVU11
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s 			page 3
+
+
+  90              		.loc 1 28 31 is_stmt 0 discriminator 2 view .LVU12
+  91 000e DFED107A 		vldr.32	s15, .L11+4
+  92 0012 30EE670A 		vsub.f32	s0, s0, s15
+  93              	.LVL3:
+  94              	.L6:
+  95              		.loc 1 28 16 is_stmt 1 discriminator 1 view .LVU13
+  96 0016 DFED0F7A 		vldr.32	s15, .L11+8
+  97 001a B4EEE70A 		vcmpe.f32	s0, s15
+  98 001e F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+  99 0022 F4DC     		bgt	.L7
+ 100 0024 03E0     		b	.L8
+ 101              	.L9:
+  29:Core/Src/yaw_ctrl.c ****     while (err < -180.0f) err += 360.0f;
+ 102              		.loc 1 29 27 discriminator 2 view .LVU14
+ 103              		.loc 1 29 31 is_stmt 0 discriminator 2 view .LVU15
+ 104 0026 DFED0A7A 		vldr.32	s15, .L11+4
+ 105 002a 30EE270A 		vadd.f32	s0, s0, s15
+ 106              	.LVL4:
+ 107              	.L8:
+ 108              		.loc 1 29 16 is_stmt 1 discriminator 1 view .LVU16
+ 109 002e DFED0A7A 		vldr.32	s15, .L11+12
+ 110 0032 B4EEE70A 		vcmpe.f32	s0, s15
+ 111 0036 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 112 003a F4D4     		bmi	.L9
+  30:Core/Src/yaw_ctrl.c **** 
+  31:Core/Src/yaw_ctrl.c ****     /* 复用现有增量式 PID：
+  32:Core/Src/yaw_ctrl.c ****      * PID_Update 内部计算 error = target - measured
+  33:Core/Src/yaw_ctrl.c ****      * 设 target=0, measured=-err → error = 0-(-err) = err */
+  34:Core/Src/yaw_ctrl.c ****     s_yaw_pid.target = 0.0f;
+ 113              		.loc 1 34 5 view .LVU17
+ 114              		.loc 1 34 22 is_stmt 0 view .LVU18
+ 115 003c 0748     		ldr	r0, .L11+16
+ 116 003e 0023     		movs	r3, #0
+ 117 0040 C360     		str	r3, [r0, #12]	@ float
+  35:Core/Src/yaw_ctrl.c ****     return PID_Update(&s_yaw_pid, -err);
+ 118              		.loc 1 35 5 is_stmt 1 view .LVU19
+ 119              		.loc 1 35 12 is_stmt 0 view .LVU20
+ 120 0042 B1EE400A 		vneg.f32	s0, s0
+ 121              	.LVL5:
+ 122              		.loc 1 35 12 view .LVU21
+ 123 0046 FFF7FEFF 		bl	PID_Update
+ 124              	.LVL6:
+  36:Core/Src/yaw_ctrl.c **** }
+ 125              		.loc 1 36 1 view .LVU22
+ 126 004a 08BD     		pop	{r3, pc}
+ 127              	.L12:
+ 128              		.align	2
+ 129              	.L11:
+ 130 004c 00000000 		.word	g_target_yaw_angle
+ 131 0050 0000B443 		.word	1135869952
+ 132 0054 00003443 		.word	1127481344
+ 133 0058 000034C3 		.word	-1020002304
+ 134 005c 00000000 		.word	s_yaw_pid
+ 135              		.cfi_endproc
+ 136              	.LFE1:
+ 138              		.section	.bss.s_yaw_pid,"aw",%nobits
+ 139              		.align	2
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s 			page 4
+
+
+ 142              	s_yaw_pid:
+ 143 0000 00000000 		.space	48
+ 143      00000000 
+ 143      00000000 
+ 143      00000000 
+ 143      00000000 
+ 144              		.global	g_target_yaw_angle
+ 145              		.section	.bss.g_target_yaw_angle,"aw",%nobits
+ 146              		.align	2
+ 149              	g_target_yaw_angle:
+ 150 0000 00000000 		.space	4
+ 151              		.text
+ 152              	.Letext0:
+ 153              		.file 2 "Core/Inc/pid.h"
+ 154              		.file 3 "Core/Inc/yaw_ctrl.h"
+ARM GAS  C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s 			page 5
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 yaw_ctrl.c
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:21     .text.YawCtrl_Init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:27     .text.YawCtrl_Init:00000000 YawCtrl_Init
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:51     .text.YawCtrl_Init:0000001c $d
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:142    .bss.s_yaw_pid:00000000 s_yaw_pid
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:58     .text.YawCtrl_Update:00000000 $t
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:64     .text.YawCtrl_Update:00000000 YawCtrl_Update
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:130    .text.YawCtrl_Update:0000004c $d
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:149    .bss.g_target_yaw_angle:00000000 g_target_yaw_angle
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:139    .bss.s_yaw_pid:00000000 $d
+C:\Users\10369\AppData\Local\Temp\ccOoYAP3.s:146    .bss.g_target_yaw_angle:00000000 $d
+
+UNDEFINED SYMBOLS
+PID_Init
+PID_Update

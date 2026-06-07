@@ -1,0 +1,739 @@
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.arch armv7e-m
+   3              		.fpu fpv4-sp-d16
+   4              		.eabi_attribute 27, 1
+   5              		.eabi_attribute 28, 1
+   6              		.eabi_attribute 20, 1
+   7              		.eabi_attribute 21, 1
+   8              		.eabi_attribute 23, 3
+   9              		.eabi_attribute 24, 1
+  10              		.eabi_attribute 25, 1
+  11              		.eabi_attribute 26, 1
+  12              		.eabi_attribute 30, 1
+  13              		.eabi_attribute 34, 1
+  14              		.eabi_attribute 18, 4
+  15              		.file	"gyro_calib.c"
+  16              		.text
+  17              	.Ltext0:
+  18              		.cfi_sections	.debug_frame
+  19              		.file 1 "Core/Src/gyro_calib.c"
+  20              		.section	.text.GyroCalib_Init,"ax",%progbits
+  21              		.align	1
+  22              		.global	GyroCalib_Init
+  23              		.syntax unified
+  24              		.thumb
+  25              		.thumb_func
+  27              	GyroCalib_Init:
+  28              	.LVL0:
+  29              	.LFB134:
+   1:Core/Src/gyro_calib.c **** /**
+   2:Core/Src/gyro_calib.c ****  * @file    gyro_calib.c
+   3:Core/Src/gyro_calib.c ****  * @brief   陀螺仪零偏在线校准模块实现
+   4:Core/Src/gyro_calib.c ****  * @note    通过静止检测 + EMA 在线估计陀螺仪三轴零偏，动态补偿后传给 AHRS
+   5:Core/Src/gyro_calib.c ****  *          解决 6-DOF IMU（无磁力计）中 yaw 轴不可观测导致的漂移问题。
+   6:Core/Src/gyro_calib.c ****  */
+   7:Core/Src/gyro_calib.c **** 
+   8:Core/Src/gyro_calib.c **** #include "gyro_calib.h"
+   9:Core/Src/gyro_calib.c **** #include "main.h"       /* HAL_Delay, MPU6050 类型 */
+  10:Core/Src/gyro_calib.c **** #include "MPU6050.h"    /* MPU6050_GetData */
+  11:Core/Src/gyro_calib.c **** #include "i2c.h"        /* I2C 句柄 */
+  12:Core/Src/gyro_calib.c **** #include <math.h>       /* fabsf, sqrtf */
+  13:Core/Src/gyro_calib.c **** 
+  14:Core/Src/gyro_calib.c **** /* ==========================================================================
+  15:Core/Src/gyro_calib.c ****    参数配置
+  16:Core/Src/gyro_calib.c ****    ========================================================================== */
+  17:Core/Src/gyro_calib.c **** 
+  18:Core/Src/gyro_calib.c **** /* 静止检测阈值 */
+  19:Core/Src/gyro_calib.c **** #define GYRO_STATIC_THRESH     0.05f   /* 陀螺仪静止阈值 (rad/s, ≈ 2.9°/s) */
+  20:Core/Src/gyro_calib.c **** #define ACCEL_STATIC_THRESH    0.15f   /* 加速度计静止阈值 (g)              */
+  21:Core/Src/gyro_calib.c **** #define STATIONARY_CONFIRM     20      /* 连续静止帧数确认（20帧 @200Hz = 100ms） */
+  22:Core/Src/gyro_calib.c **** 
+  23:Core/Src/gyro_calib.c **** /* EMA 偏置更新系数 */
+  24:Core/Src/gyro_calib.c **** #define BIAS_EMA_ALPHA         0.0005f /* 偏置 EMA 系数，极慢更新确保只跟踪温漂 */
+  25:Core/Src/gyro_calib.c **** 
+  26:Core/Src/gyro_calib.c **** /* 陀螺仪刻度因子（与 MPU6050 配置一致：±2000°/s） */
+  27:Core/Src/gyro_calib.c **** #define GYRO_SCALE  ((2000.0f / 32768.0f) * (3.14159265359f / 180.0f))
+  28:Core/Src/gyro_calib.c **** 
+  29:Core/Src/gyro_calib.c **** /* ==========================================================================
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 2
+
+
+  30:Core/Src/gyro_calib.c ****    内部变量
+  31:Core/Src/gyro_calib.c ****    ========================================================================== */
+  32:Core/Src/gyro_calib.c **** 
+  33:Core/Src/gyro_calib.c **** static float g_bias_x = 0.0f;  /* X 轴陀螺仪零偏 (rad/s) */
+  34:Core/Src/gyro_calib.c **** static float g_bias_y = 0.0f;  /* Y 轴陀螺仪零偏 (rad/s) */
+  35:Core/Src/gyro_calib.c **** static float g_bias_z = 0.0f;  /* Z 轴陀螺仪零偏 (rad/s) */
+  36:Core/Src/gyro_calib.c **** 
+  37:Core/Src/gyro_calib.c **** static uint32_t g_stationary_cnt = 0;  /* 连续静止帧计数器 */
+  38:Core/Src/gyro_calib.c **** 
+  39:Core/Src/gyro_calib.c **** /* ==========================================================================
+  40:Core/Src/gyro_calib.c ****    初始化校准
+  41:Core/Src/gyro_calib.c ****    ========================================================================== */
+  42:Core/Src/gyro_calib.c **** 
+  43:Core/Src/gyro_calib.c **** /**
+  44:Core/Src/gyro_calib.c ****  * @brief  初始化零偏校准
+  45:Core/Src/gyro_calib.c ****  * @note   假设设备初始静止，采集 samples 个样本，取均值作为初始零偏。
+  46:Core/Src/gyro_calib.c ****  *         调用此函数前需确保 I2C 和 MPU6050 已初始化完毕。
+  47:Core/Src/gyro_calib.c ****  */
+  48:Core/Src/gyro_calib.c **** void GyroCalib_Init(int samples)
+  49:Core/Src/gyro_calib.c **** {
+  30              		.loc 1 49 1 view -0
+  31              		.cfi_startproc
+  32              		@ args = 0, pretend = 0, frame = 8
+  33              		@ frame_needed = 0, uses_anonymous_args = 0
+  34              		.loc 1 49 1 is_stmt 0 view .LVU1
+  35 0000 2DE9F04F 		push	{r4, r5, r6, r7, r8, r9, r10, fp, lr}
+  36              	.LCFI0:
+  37              		.cfi_def_cfa_offset 36
+  38              		.cfi_offset 4, -36
+  39              		.cfi_offset 5, -32
+  40              		.cfi_offset 6, -28
+  41              		.cfi_offset 7, -24
+  42              		.cfi_offset 8, -20
+  43              		.cfi_offset 9, -16
+  44              		.cfi_offset 10, -12
+  45              		.cfi_offset 11, -8
+  46              		.cfi_offset 14, -4
+  47 0004 2DED028B 		vpush.64	{d8}
+  48              	.LCFI1:
+  49              		.cfi_def_cfa_offset 44
+  50              		.cfi_offset 80, -44
+  51              		.cfi_offset 81, -40
+  52 0008 85B0     		sub	sp, sp, #20
+  53              	.LCFI2:
+  54              		.cfi_def_cfa_offset 64
+  50:Core/Src/gyro_calib.c ****     if (samples <= 0) return;
+  55              		.loc 1 50 5 is_stmt 1 view .LVU2
+  56              		.loc 1 50 8 is_stmt 0 view .LVU3
+  57 000a B0F1000B 		subs	fp, r0, #0
+  58 000e 76DD     		ble	.L1
+  59              	.LBB2:
+  51:Core/Src/gyro_calib.c **** 
+  52:Core/Src/gyro_calib.c ****     double sum_x = 0.0, sum_y = 0.0, sum_z = 0.0;
+  53:Core/Src/gyro_calib.c ****     int16_t acc_raw, gyro_raw;
+  54:Core/Src/gyro_calib.c **** 
+  55:Core/Src/gyro_calib.c ****     for (int i = 0; i < samples; i++)
+  60              		.loc 1 55 14 view .LVU4
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 3
+
+
+  61 0010 4FF0000A 		mov	r10, #0
+  62              	.LBE2:
+  52:Core/Src/gyro_calib.c ****     int16_t acc_raw, gyro_raw;
+  63              		.loc 1 52 38 view .LVU5
+  64 0014 0024     		movs	r4, #0
+  65 0016 0025     		movs	r5, #0
+  52:Core/Src/gyro_calib.c ****     int16_t acc_raw, gyro_raw;
+  66              		.loc 1 52 25 view .LVU6
+  67 0018 2646     		mov	r6, r4
+  68 001a 2F46     		mov	r7, r5
+  52:Core/Src/gyro_calib.c ****     int16_t acc_raw, gyro_raw;
+  69              		.loc 1 52 12 view .LVU7
+  70 001c A046     		mov	r8, r4
+  71 001e A946     		mov	r9, r5
+  72 0020 34E0     		b	.L2
+  73              	.LVL1:
+  74              	.L4:
+  75              	.LBB4:
+  76              	.LBB3:
+  56:Core/Src/gyro_calib.c ****     {
+  57:Core/Src/gyro_calib.c ****         int16_t gx_r, gy_r, gz_r;
+  77              		.loc 1 57 9 is_stmt 1 view .LVU8
+  58:Core/Src/gyro_calib.c ****         MPU6050_GetData(&acc_raw, &acc_raw, &acc_raw,
+  78              		.loc 1 58 9 view .LVU9
+  79 0022 0DF10E00 		add	r0, sp, #14
+  80 0026 03AB     		add	r3, sp, #12
+  81 0028 0193     		str	r3, [sp, #4]
+  82 002a 0DF10A03 		add	r3, sp, #10
+  83 002e 0093     		str	r3, [sp]
+  84 0030 02AB     		add	r3, sp, #8
+  85 0032 0246     		mov	r2, r0
+  86 0034 0146     		mov	r1, r0
+  87 0036 FFF7FEFF 		bl	MPU6050_GetData
+  88              	.LVL2:
+  59:Core/Src/gyro_calib.c ****                         &gx_r, &gy_r, &gz_r);
+  60:Core/Src/gyro_calib.c **** 
+  61:Core/Src/gyro_calib.c ****         sum_x += (double)gx_r;
+  89              		.loc 1 61 9 view .LVU10
+  90              		.loc 1 61 18 is_stmt 0 view .LVU11
+  91 003a BDF90800 		ldrsh	r0, [sp, #8]
+  92 003e FFF7FEFF 		bl	__aeabi_i2d
+  93              	.LVL3:
+  94 0042 0246     		mov	r2, r0
+  95 0044 0B46     		mov	r3, r1
+  96              		.loc 1 61 15 view .LVU12
+  97 0046 4046     		mov	r0, r8
+  98 0048 4946     		mov	r1, r9
+  99 004a FFF7FEFF 		bl	__aeabi_dadd
+ 100              	.LVL4:
+ 101 004e 8046     		mov	r8, r0
+ 102              	.LVL5:
+ 103              		.loc 1 61 15 view .LVU13
+ 104 0050 8946     		mov	r9, r1
+ 105              	.LVL6:
+  62:Core/Src/gyro_calib.c ****         sum_y += (double)gy_r;
+ 106              		.loc 1 62 9 is_stmt 1 view .LVU14
+ 107              		.loc 1 62 18 is_stmt 0 view .LVU15
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 4
+
+
+ 108 0052 BDF90A00 		ldrsh	r0, [sp, #10]
+ 109 0056 FFF7FEFF 		bl	__aeabi_i2d
+ 110              	.LVL7:
+ 111 005a 0246     		mov	r2, r0
+ 112 005c 0B46     		mov	r3, r1
+ 113              		.loc 1 62 15 view .LVU16
+ 114 005e 3046     		mov	r0, r6
+ 115 0060 3946     		mov	r1, r7
+ 116 0062 FFF7FEFF 		bl	__aeabi_dadd
+ 117              	.LVL8:
+ 118 0066 0646     		mov	r6, r0
+ 119              	.LVL9:
+ 120              		.loc 1 62 15 view .LVU17
+ 121 0068 0F46     		mov	r7, r1
+ 122              	.LVL10:
+  63:Core/Src/gyro_calib.c ****         sum_z += (double)gz_r;
+ 123              		.loc 1 63 9 is_stmt 1 view .LVU18
+ 124              		.loc 1 63 18 is_stmt 0 view .LVU19
+ 125 006a BDF90C00 		ldrsh	r0, [sp, #12]
+ 126 006e FFF7FEFF 		bl	__aeabi_i2d
+ 127              	.LVL11:
+ 128 0072 0246     		mov	r2, r0
+ 129 0074 0B46     		mov	r3, r1
+ 130              		.loc 1 63 15 view .LVU20
+ 131 0076 2046     		mov	r0, r4
+ 132 0078 2946     		mov	r1, r5
+ 133 007a FFF7FEFF 		bl	__aeabi_dadd
+ 134              	.LVL12:
+ 135 007e 0446     		mov	r4, r0
+ 136              	.LVL13:
+ 137              		.loc 1 63 15 view .LVU21
+ 138 0080 0D46     		mov	r5, r1
+ 139              	.LVL14:
+  64:Core/Src/gyro_calib.c **** 
+  65:Core/Src/gyro_calib.c ****         HAL_Delay(5);  /* 匹配 200Hz 采样间隔 */
+ 140              		.loc 1 65 9 is_stmt 1 view .LVU22
+ 141 0082 0520     		movs	r0, #5
+ 142 0084 FFF7FEFF 		bl	HAL_Delay
+ 143              	.LVL15:
+ 144              	.LBE3:
+  55:Core/Src/gyro_calib.c ****     {
+ 145              		.loc 1 55 35 discriminator 3 view .LVU23
+ 146 0088 0AF1010A 		add	r10, r10, #1
+ 147              	.LVL16:
+ 148              	.L2:
+  55:Core/Src/gyro_calib.c ****     {
+ 149              		.loc 1 55 23 discriminator 1 view .LVU24
+ 150 008c DA45     		cmp	r10, fp
+ 151 008e C8DB     		blt	.L4
+ 152              	.LBE4:
+  66:Core/Src/gyro_calib.c ****     }
+  67:Core/Src/gyro_calib.c **** 
+  68:Core/Src/gyro_calib.c ****     /* 原始值均值 × 刻度因子 = 物理零偏 (rad/s) */
+  69:Core/Src/gyro_calib.c ****     g_bias_x = (float)(sum_x / samples) * GYRO_SCALE;
+ 153              		.loc 1 69 5 view .LVU25
+ 154              		.loc 1 69 30 is_stmt 0 view .LVU26
+ 155 0090 5846     		mov	r0, fp
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 5
+
+
+ 156 0092 FFF7FEFF 		bl	__aeabi_i2d
+ 157              	.LVL17:
+ 158 0096 8246     		mov	r10, r0
+ 159              	.LVL18:
+ 160              		.loc 1 69 30 view .LVU27
+ 161 0098 8B46     		mov	fp, r1
+ 162              	.LVL19:
+ 163              		.loc 1 69 30 view .LVU28
+ 164 009a 0246     		mov	r2, r0
+ 165 009c 0B46     		mov	r3, r1
+ 166 009e 4046     		mov	r0, r8
+ 167 00a0 4946     		mov	r1, r9
+ 168 00a2 FFF7FEFF 		bl	__aeabi_ddiv
+ 169              	.LVL20:
+ 170              		.loc 1 69 16 view .LVU29
+ 171 00a6 FFF7FEFF 		bl	__aeabi_d2f
+ 172              	.LVL21:
+ 173 00aa 07EE900A 		vmov	s15, r0
+ 174              		.loc 1 69 41 view .LVU30
+ 175 00ae 9FED168A 		vldr.32	s16, .L7
+ 176 00b2 67EE887A 		vmul.f32	s15, s15, s16
+ 177              		.loc 1 69 14 view .LVU31
+ 178 00b6 154B     		ldr	r3, .L7+4
+ 179 00b8 C3ED007A 		vstr.32	s15, [r3]
+  70:Core/Src/gyro_calib.c ****     g_bias_y = (float)(sum_y / samples) * GYRO_SCALE;
+ 180              		.loc 1 70 5 is_stmt 1 view .LVU32
+ 181              		.loc 1 70 30 is_stmt 0 view .LVU33
+ 182 00bc 5246     		mov	r2, r10
+ 183 00be 5B46     		mov	r3, fp
+ 184 00c0 3046     		mov	r0, r6
+ 185 00c2 3946     		mov	r1, r7
+ 186 00c4 FFF7FEFF 		bl	__aeabi_ddiv
+ 187              	.LVL22:
+ 188              		.loc 1 70 16 view .LVU34
+ 189 00c8 FFF7FEFF 		bl	__aeabi_d2f
+ 190              	.LVL23:
+ 191 00cc 07EE900A 		vmov	s15, r0
+ 192              		.loc 1 70 41 view .LVU35
+ 193 00d0 67EE887A 		vmul.f32	s15, s15, s16
+ 194              		.loc 1 70 14 view .LVU36
+ 195 00d4 0E4B     		ldr	r3, .L7+8
+ 196 00d6 C3ED007A 		vstr.32	s15, [r3]
+  71:Core/Src/gyro_calib.c ****     g_bias_z = (float)(sum_z / samples) * GYRO_SCALE;
+ 197              		.loc 1 71 5 is_stmt 1 view .LVU37
+ 198              		.loc 1 71 30 is_stmt 0 view .LVU38
+ 199 00da 5246     		mov	r2, r10
+ 200 00dc 5B46     		mov	r3, fp
+ 201 00de 2046     		mov	r0, r4
+ 202 00e0 2946     		mov	r1, r5
+ 203 00e2 FFF7FEFF 		bl	__aeabi_ddiv
+ 204              	.LVL24:
+ 205              		.loc 1 71 16 view .LVU39
+ 206 00e6 FFF7FEFF 		bl	__aeabi_d2f
+ 207              	.LVL25:
+ 208 00ea 07EE900A 		vmov	s15, r0
+ 209              		.loc 1 71 41 view .LVU40
+ 210 00ee 67EE887A 		vmul.f32	s15, s15, s16
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 6
+
+
+ 211              		.loc 1 71 14 view .LVU41
+ 212 00f2 084B     		ldr	r3, .L7+12
+ 213 00f4 C3ED007A 		vstr.32	s15, [r3]
+  72:Core/Src/gyro_calib.c **** 
+  73:Core/Src/gyro_calib.c ****     g_stationary_cnt = 0;
+ 214              		.loc 1 73 5 is_stmt 1 view .LVU42
+ 215              		.loc 1 73 22 is_stmt 0 view .LVU43
+ 216 00f8 074B     		ldr	r3, .L7+16
+ 217 00fa 0022     		movs	r2, #0
+ 218 00fc 1A60     		str	r2, [r3]
+ 219              	.LVL26:
+ 220              	.L1:
+  74:Core/Src/gyro_calib.c **** }
+ 221              		.loc 1 74 1 view .LVU44
+ 222 00fe 05B0     		add	sp, sp, #20
+ 223              	.LCFI3:
+ 224              		.cfi_def_cfa_offset 44
+ 225              		@ sp needed
+ 226 0100 BDEC028B 		vldm	sp!, {d8}
+ 227              	.LCFI4:
+ 228              		.cfi_restore 80
+ 229              		.cfi_restore 81
+ 230              		.cfi_def_cfa_offset 36
+ 231 0104 BDE8F08F 		pop	{r4, r5, r6, r7, r8, r9, r10, fp, pc}
+ 232              	.L8:
+ 233              		.align	2
+ 234              	.L7:
+ 235 0108 58A08B3A 		.word	982229080
+ 236 010c 00000000 		.word	g_bias_x
+ 237 0110 00000000 		.word	g_bias_y
+ 238 0114 00000000 		.word	g_bias_z
+ 239 0118 00000000 		.word	g_stationary_cnt
+ 240              		.cfi_endproc
+ 241              	.LFE134:
+ 243              		.section	.text.GyroCalib_Update,"ax",%progbits
+ 244              		.align	1
+ 245              		.global	GyroCalib_Update
+ 246              		.syntax unified
+ 247              		.thumb
+ 248              		.thumb_func
+ 250              	GyroCalib_Update:
+ 251              	.LVL27:
+ 252              	.LFB135:
+  75:Core/Src/gyro_calib.c **** 
+  76:Core/Src/gyro_calib.c **** /* ==========================================================================
+  77:Core/Src/gyro_calib.c ****    在线偏置更新与补偿
+  78:Core/Src/gyro_calib.c ****    ========================================================================== */
+  79:Core/Src/gyro_calib.c **** 
+  80:Core/Src/gyro_calib.c **** /**
+  81:Core/Src/gyro_calib.c ****  * @brief  在线偏置更新与补偿
+  82:Core/Src/gyro_calib.c ****  * @note   核心逻辑：
+  83:Core/Src/gyro_calib.c ****  *           1. 静止检测：陀螺仪三轴 < 阈值 且 加速度模长 ≈ 1g
+  84:Core/Src/gyro_calib.c ****  *           2. 连续 stationary 帧后，用 EMA 更新偏置估计
+  85:Core/Src/gyro_calib.c ****  *           3. 无论是否静止，都从 gyro 读数中减去当前偏置
+  86:Core/Src/gyro_calib.c ****  */
+  87:Core/Src/gyro_calib.c **** void GyroCalib_Update(float *gx, float *gy, float *gz,
+  88:Core/Src/gyro_calib.c ****                       float ax, float ay, float az)
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 7
+
+
+  89:Core/Src/gyro_calib.c **** {
+ 253              		.loc 1 89 1 is_stmt 1 view -0
+ 254              		.cfi_startproc
+ 255              		@ args = 0, pretend = 0, frame = 0
+ 256              		@ frame_needed = 0, uses_anonymous_args = 0
+ 257              		.loc 1 89 1 is_stmt 0 view .LVU46
+ 258 0000 70B5     		push	{r4, r5, r6, lr}
+ 259              	.LCFI5:
+ 260              		.cfi_def_cfa_offset 16
+ 261              		.cfi_offset 4, -16
+ 262              		.cfi_offset 5, -12
+ 263              		.cfi_offset 6, -8
+ 264              		.cfi_offset 14, -4
+ 265 0002 2DED028B 		vpush.64	{d8}
+ 266              	.LCFI6:
+ 267              		.cfi_def_cfa_offset 24
+ 268              		.cfi_offset 80, -24
+ 269              		.cfi_offset 81, -20
+ 270 0006 0646     		mov	r6, r0
+ 271 0008 0C46     		mov	r4, r1
+ 272 000a 1546     		mov	r5, r2
+  90:Core/Src/gyro_calib.c ****     /* ---- 静止检测 ---- */
+  91:Core/Src/gyro_calib.c ****     int is_stationary = 0;
+ 273              		.loc 1 91 5 is_stmt 1 view .LVU47
+ 274              	.LVL28:
+  92:Core/Src/gyro_calib.c **** 
+  93:Core/Src/gyro_calib.c ****     /* 条件 1：陀螺仪三轴角速度均低于阈值（无旋转） */
+  94:Core/Src/gyro_calib.c ****     if (fabsf(*gx) < GYRO_STATIC_THRESH &&
+ 275              		.loc 1 94 5 view .LVU48
+ 276              		.loc 1 94 15 is_stmt 0 view .LVU49
+ 277 000c 90ED008A 		vldr.32	s16, [r0]
+ 278              		.loc 1 94 9 view .LVU50
+ 279 0010 B0EEC87A 		vabs.f32	s14, s16
+ 280              		.loc 1 94 8 view .LVU51
+ 281 0014 DFED427A 		vldr.32	s15, .L23
+ 282 0018 B4EEE77A 		vcmpe.f32	s14, s15
+ 283 001c F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 284 0020 13D5     		bpl	.L10
+  95:Core/Src/gyro_calib.c ****         fabsf(*gy) < GYRO_STATIC_THRESH &&
+ 285              		.loc 1 95 15 view .LVU52
+ 286 0022 D1ED007A 		vldr.32	s15, [r1]
+ 287              		.loc 1 95 9 view .LVU53
+ 288 0026 F0EEE77A 		vabs.f32	s15, s15
+  94:Core/Src/gyro_calib.c ****         fabsf(*gy) < GYRO_STATIC_THRESH &&
+ 289              		.loc 1 94 41 discriminator 1 view .LVU54
+ 290 002a 9FED3D7A 		vldr.32	s14, .L23
+ 291 002e F4EEC77A 		vcmpe.f32	s15, s14
+ 292 0032 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 293 0036 08D5     		bpl	.L10
+  96:Core/Src/gyro_calib.c ****         fabsf(*gz) < GYRO_STATIC_THRESH)
+ 294              		.loc 1 96 15 view .LVU55
+ 295 0038 D2ED007A 		vldr.32	s15, [r2]
+ 296              		.loc 1 96 9 view .LVU56
+ 297 003c F0EEE77A 		vabs.f32	s15, s15
+  95:Core/Src/gyro_calib.c ****         fabsf(*gy) < GYRO_STATIC_THRESH &&
+ 298              		.loc 1 95 41 view .LVU57
+ 299 0040 F4EEC77A 		vcmpe.f32	s15, s14
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 8
+
+
+ 300 0044 F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 301 0048 49D4     		bmi	.L22
+ 302              	.LVL29:
+ 303              	.L10:
+  97:Core/Src/gyro_calib.c ****     {
+  98:Core/Src/gyro_calib.c ****         /* 条件 2：加速度计模长接近 1g（无线性加速度） */
+  99:Core/Src/gyro_calib.c ****         float acc_norm = sqrtf(ax * ax + ay * ay + az * az);
+ 100:Core/Src/gyro_calib.c ****         if (fabsf(acc_norm - 1.0f) < ACCEL_STATIC_THRESH)
+ 101:Core/Src/gyro_calib.c ****         {
+ 102:Core/Src/gyro_calib.c ****             is_stationary = 1;
+ 103:Core/Src/gyro_calib.c ****         }
+ 104:Core/Src/gyro_calib.c ****     }
+ 105:Core/Src/gyro_calib.c **** 
+ 106:Core/Src/gyro_calib.c ****     /* ---- 连续静止帧计数器 ---- */
+ 107:Core/Src/gyro_calib.c ****     if (is_stationary)
+ 108:Core/Src/gyro_calib.c ****     {
+ 109:Core/Src/gyro_calib.c ****         if (g_stationary_cnt < STATIONARY_CONFIRM)
+ 110:Core/Src/gyro_calib.c ****         {
+ 111:Core/Src/gyro_calib.c ****             g_stationary_cnt++;
+ 112:Core/Src/gyro_calib.c ****         }
+ 113:Core/Src/gyro_calib.c ****     }
+ 114:Core/Src/gyro_calib.c ****     else
+ 115:Core/Src/gyro_calib.c ****     {
+ 116:Core/Src/gyro_calib.c ****         g_stationary_cnt = 0;
+ 304              		.loc 1 116 9 is_stmt 1 view .LVU58
+ 305              		.loc 1 116 26 is_stmt 0 view .LVU59
+ 306 004a 364B     		ldr	r3, .L23+4
+ 307 004c 0022     		movs	r2, #0
+ 308 004e 1A60     		str	r2, [r3]
+ 309              	.L15:
+ 117:Core/Src/gyro_calib.c ****     }
+ 118:Core/Src/gyro_calib.c **** 
+ 119:Core/Src/gyro_calib.c ****     /* ---- 静止确认后，EMA 更新偏置 ---- */
+ 120:Core/Src/gyro_calib.c ****     if (g_stationary_cnt >= STATIONARY_CONFIRM)
+ 310              		.loc 1 120 5 is_stmt 1 view .LVU60
+ 311              		.loc 1 120 26 is_stmt 0 view .LVU61
+ 312 0050 344B     		ldr	r3, .L23+4
+ 313 0052 1B68     		ldr	r3, [r3]
+ 314              		.loc 1 120 8 view .LVU62
+ 315 0054 132B     		cmp	r3, #19
+ 316 0056 26D9     		bls	.L16
+ 121:Core/Src/gyro_calib.c ****     {
+ 122:Core/Src/gyro_calib.c ****         g_bias_x += BIAS_EMA_ALPHA * (*gx - g_bias_x);
+ 317              		.loc 1 122 9 is_stmt 1 view .LVU63
+ 318              		.loc 1 122 43 is_stmt 0 view .LVU64
+ 319 0058 334B     		ldr	r3, .L23+8
+ 320 005a D3ED007A 		vldr.32	s15, [r3]
+ 321 005e 38EE677A 		vsub.f32	s14, s16, s15
+ 322              		.loc 1 122 36 view .LVU65
+ 323 0062 DFED326A 		vldr.32	s13, .L23+12
+ 324 0066 27EE267A 		vmul.f32	s14, s14, s13
+ 325              		.loc 1 122 18 view .LVU66
+ 326 006a 77EE877A 		vadd.f32	s15, s15, s14
+ 327 006e C3ED007A 		vstr.32	s15, [r3]
+ 123:Core/Src/gyro_calib.c ****         g_bias_y += BIAS_EMA_ALPHA * (*gy - g_bias_y);
+ 328              		.loc 1 123 9 is_stmt 1 view .LVU67
+ 329              		.loc 1 123 39 is_stmt 0 view .LVU68
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 9
+
+
+ 330 0072 D4ED007A 		vldr.32	s15, [r4]
+ 331              		.loc 1 123 43 view .LVU69
+ 332 0076 2E4B     		ldr	r3, .L23+16
+ 333 0078 93ED007A 		vldr.32	s14, [r3]
+ 334 007c 77EEC77A 		vsub.f32	s15, s15, s14
+ 335              		.loc 1 123 36 view .LVU70
+ 336 0080 67EEA67A 		vmul.f32	s15, s15, s13
+ 337              		.loc 1 123 18 view .LVU71
+ 338 0084 37EE277A 		vadd.f32	s14, s14, s15
+ 339 0088 83ED007A 		vstr.32	s14, [r3]
+ 124:Core/Src/gyro_calib.c ****         g_bias_z += BIAS_EMA_ALPHA * (*gz - g_bias_z);
+ 340              		.loc 1 124 9 is_stmt 1 view .LVU72
+ 341              		.loc 1 124 39 is_stmt 0 view .LVU73
+ 342 008c D5ED007A 		vldr.32	s15, [r5]
+ 343              		.loc 1 124 43 view .LVU74
+ 344 0090 284B     		ldr	r3, .L23+20
+ 345 0092 93ED007A 		vldr.32	s14, [r3]
+ 346 0096 77EEC77A 		vsub.f32	s15, s15, s14
+ 347              		.loc 1 124 36 view .LVU75
+ 348 009a 67EEA67A 		vmul.f32	s15, s15, s13
+ 349              		.loc 1 124 18 view .LVU76
+ 350 009e 37EE277A 		vadd.f32	s14, s14, s15
+ 351 00a2 83ED007A 		vstr.32	s14, [r3]
+ 352              	.L16:
+ 125:Core/Src/gyro_calib.c ****     }
+ 126:Core/Src/gyro_calib.c **** 
+ 127:Core/Src/gyro_calib.c ****     /* ---- 补偿：始终从读数中减去当前偏置估计 ---- */
+ 128:Core/Src/gyro_calib.c ****     *gx -= g_bias_x;
+ 353              		.loc 1 128 5 is_stmt 1 view .LVU77
+ 354              		.loc 1 128 9 is_stmt 0 view .LVU78
+ 355 00a6 204B     		ldr	r3, .L23+8
+ 356 00a8 D3ED007A 		vldr.32	s15, [r3]
+ 357 00ac 38EE678A 		vsub.f32	s16, s16, s15
+ 358 00b0 86ED008A 		vstr.32	s16, [r6]
+ 129:Core/Src/gyro_calib.c ****     *gy -= g_bias_y;
+ 359              		.loc 1 129 5 is_stmt 1 view .LVU79
+ 360 00b4 D4ED007A 		vldr.32	s15, [r4]
+ 361              		.loc 1 129 9 is_stmt 0 view .LVU80
+ 362 00b8 1D4B     		ldr	r3, .L23+16
+ 363 00ba 93ED007A 		vldr.32	s14, [r3]
+ 364 00be 77EEC77A 		vsub.f32	s15, s15, s14
+ 365 00c2 C4ED007A 		vstr.32	s15, [r4]
+ 130:Core/Src/gyro_calib.c ****     *gz -= g_bias_z;
+ 366              		.loc 1 130 5 is_stmt 1 view .LVU81
+ 367 00c6 D5ED007A 		vldr.32	s15, [r5]
+ 368              		.loc 1 130 9 is_stmt 0 view .LVU82
+ 369 00ca 1A4B     		ldr	r3, .L23+20
+ 370 00cc 93ED007A 		vldr.32	s14, [r3]
+ 371 00d0 77EEC77A 		vsub.f32	s15, s15, s14
+ 372 00d4 C5ED007A 		vstr.32	s15, [r5]
+ 131:Core/Src/gyro_calib.c **** }
+ 373              		.loc 1 131 1 view .LVU83
+ 374 00d8 BDEC028B 		vldm	sp!, {d8}
+ 375              	.LCFI7:
+ 376              		.cfi_remember_state
+ 377              		.cfi_restore 80
+ 378              		.cfi_restore 81
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 10
+
+
+ 379              		.cfi_def_cfa_offset 16
+ 380 00dc 70BD     		pop	{r4, r5, r6, pc}
+ 381              	.LVL30:
+ 382              	.L22:
+ 383              	.LCFI8:
+ 384              		.cfi_restore_state
+ 385              	.LBB5:
+  99:Core/Src/gyro_calib.c ****         if (fabsf(acc_norm - 1.0f) < ACCEL_STATIC_THRESH)
+ 386              		.loc 1 99 9 is_stmt 1 view .LVU84
+  99:Core/Src/gyro_calib.c ****         if (fabsf(acc_norm - 1.0f) < ACCEL_STATIC_THRESH)
+ 387              		.loc 1 99 35 is_stmt 0 view .LVU85
+ 388 00de 20EE000A 		vmul.f32	s0, s0, s0
+ 389              	.LVL31:
+  99:Core/Src/gyro_calib.c ****         if (fabsf(acc_norm - 1.0f) < ACCEL_STATIC_THRESH)
+ 390              		.loc 1 99 45 view .LVU86
+ 391 00e2 60EEA00A 		vmul.f32	s1, s1, s1
+ 392              	.LVL32:
+  99:Core/Src/gyro_calib.c ****         if (fabsf(acc_norm - 1.0f) < ACCEL_STATIC_THRESH)
+ 393              		.loc 1 99 40 view .LVU87
+ 394 00e6 30EE200A 		vadd.f32	s0, s0, s1
+  99:Core/Src/gyro_calib.c ****         if (fabsf(acc_norm - 1.0f) < ACCEL_STATIC_THRESH)
+ 395              		.loc 1 99 55 view .LVU88
+ 396 00ea 21EE011A 		vmul.f32	s2, s2, s2
+ 397              	.LVL33:
+  99:Core/Src/gyro_calib.c ****         if (fabsf(acc_norm - 1.0f) < ACCEL_STATIC_THRESH)
+ 398              		.loc 1 99 26 view .LVU89
+ 399 00ee 30EE010A 		vadd.f32	s0, s0, s2
+ 400 00f2 FFF7FEFF 		bl	sqrtf
+ 401              	.LVL34:
+ 100:Core/Src/gyro_calib.c ****         {
+ 402              		.loc 1 100 9 is_stmt 1 view .LVU90
+ 100:Core/Src/gyro_calib.c ****         {
+ 403              		.loc 1 100 28 is_stmt 0 view .LVU91
+ 404 00f6 F7EE007A 		vmov.f32	s15, #1.0e+0
+ 405 00fa 30EE670A 		vsub.f32	s0, s0, s15
+ 406              	.LVL35:
+ 100:Core/Src/gyro_calib.c ****         {
+ 407              		.loc 1 100 13 view .LVU92
+ 408 00fe B0EEC00A 		vabs.f32	s0, s0
+ 100:Core/Src/gyro_calib.c ****         {
+ 409              		.loc 1 100 12 view .LVU93
+ 410 0102 DFED0D7A 		vldr.32	s15, .L23+24
+ 411 0106 B4EEE70A 		vcmpe.f32	s0, s15
+ 412 010a F1EE10FA 		vmrs	APSR_nzcv, FPSCR
+ 413 010e 9CD5     		bpl	.L10
+ 102:Core/Src/gyro_calib.c ****         }
+ 414              		.loc 1 102 13 is_stmt 1 view .LVU94
+ 415              	.LVL36:
+ 102:Core/Src/gyro_calib.c ****         }
+ 416              		.loc 1 102 13 is_stmt 0 view .LVU95
+ 417              	.LBE5:
+ 107:Core/Src/gyro_calib.c ****     {
+ 418              		.loc 1 107 5 is_stmt 1 view .LVU96
+ 109:Core/Src/gyro_calib.c ****         {
+ 419              		.loc 1 109 9 view .LVU97
+ 109:Core/Src/gyro_calib.c ****         {
+ 420              		.loc 1 109 30 is_stmt 0 view .LVU98
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 11
+
+
+ 421 0110 044B     		ldr	r3, .L23+4
+ 422 0112 1B68     		ldr	r3, [r3]
+ 109:Core/Src/gyro_calib.c ****         {
+ 423              		.loc 1 109 12 view .LVU99
+ 424 0114 132B     		cmp	r3, #19
+ 425 0116 9BD8     		bhi	.L15
+ 111:Core/Src/gyro_calib.c ****         }
+ 426              		.loc 1 111 13 is_stmt 1 view .LVU100
+ 111:Core/Src/gyro_calib.c ****         }
+ 427              		.loc 1 111 29 is_stmt 0 view .LVU101
+ 428 0118 0133     		adds	r3, r3, #1
+ 429 011a 024A     		ldr	r2, .L23+4
+ 430 011c 1360     		str	r3, [r2]
+ 431 011e 97E7     		b	.L15
+ 432              	.L24:
+ 433              		.align	2
+ 434              	.L23:
+ 435 0120 CDCC4C3D 		.word	1028443341
+ 436 0124 00000000 		.word	g_stationary_cnt
+ 437 0128 00000000 		.word	g_bias_x
+ 438 012c 6F12033A 		.word	973279855
+ 439 0130 00000000 		.word	g_bias_y
+ 440 0134 00000000 		.word	g_bias_z
+ 441 0138 9A99193E 		.word	1041865114
+ 442              		.cfi_endproc
+ 443              	.LFE135:
+ 445              		.section	.text.GyroCalib_GetBias,"ax",%progbits
+ 446              		.align	1
+ 447              		.global	GyroCalib_GetBias
+ 448              		.syntax unified
+ 449              		.thumb
+ 450              		.thumb_func
+ 452              	GyroCalib_GetBias:
+ 453              	.LVL37:
+ 454              	.LFB136:
+ 132:Core/Src/gyro_calib.c **** 
+ 133:Core/Src/gyro_calib.c **** /* ==========================================================================
+ 134:Core/Src/gyro_calib.c ****    获取当前偏置
+ 135:Core/Src/gyro_calib.c ****    ========================================================================== */
+ 136:Core/Src/gyro_calib.c **** 
+ 137:Core/Src/gyro_calib.c **** /**
+ 138:Core/Src/gyro_calib.c ****  * @brief  获取当前零偏估计值
+ 139:Core/Src/gyro_calib.c ****  */
+ 140:Core/Src/gyro_calib.c **** void GyroCalib_GetBias(float *bx, float *by, float *bz)
+ 141:Core/Src/gyro_calib.c **** {
+ 455              		.loc 1 141 1 is_stmt 1 view -0
+ 456              		.cfi_startproc
+ 457              		@ args = 0, pretend = 0, frame = 0
+ 458              		@ frame_needed = 0, uses_anonymous_args = 0
+ 459              		@ link register save eliminated.
+ 142:Core/Src/gyro_calib.c ****     *bx = g_bias_x;
+ 460              		.loc 1 142 5 view .LVU103
+ 461              		.loc 1 142 9 is_stmt 0 view .LVU104
+ 462 0000 044B     		ldr	r3, .L26
+ 463 0002 1B68     		ldr	r3, [r3]	@ float
+ 464 0004 0360     		str	r3, [r0]	@ float
+ 143:Core/Src/gyro_calib.c ****     *by = g_bias_y;
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 12
+
+
+ 465              		.loc 1 143 5 is_stmt 1 view .LVU105
+ 466              		.loc 1 143 9 is_stmt 0 view .LVU106
+ 467 0006 044B     		ldr	r3, .L26+4
+ 468 0008 1B68     		ldr	r3, [r3]	@ float
+ 469 000a 0B60     		str	r3, [r1]	@ float
+ 144:Core/Src/gyro_calib.c ****     *bz = g_bias_z;
+ 470              		.loc 1 144 5 is_stmt 1 view .LVU107
+ 471              		.loc 1 144 9 is_stmt 0 view .LVU108
+ 472 000c 034B     		ldr	r3, .L26+8
+ 473 000e 1B68     		ldr	r3, [r3]	@ float
+ 474 0010 1360     		str	r3, [r2]	@ float
+ 145:Core/Src/gyro_calib.c **** }
+ 475              		.loc 1 145 1 view .LVU109
+ 476 0012 7047     		bx	lr
+ 477              	.L27:
+ 478              		.align	2
+ 479              	.L26:
+ 480 0014 00000000 		.word	g_bias_x
+ 481 0018 00000000 		.word	g_bias_y
+ 482 001c 00000000 		.word	g_bias_z
+ 483              		.cfi_endproc
+ 484              	.LFE136:
+ 486              		.section	.bss.g_stationary_cnt,"aw",%nobits
+ 487              		.align	2
+ 490              	g_stationary_cnt:
+ 491 0000 00000000 		.space	4
+ 492              		.section	.bss.g_bias_z,"aw",%nobits
+ 493              		.align	2
+ 496              	g_bias_z:
+ 497 0000 00000000 		.space	4
+ 498              		.section	.bss.g_bias_y,"aw",%nobits
+ 499              		.align	2
+ 502              	g_bias_y:
+ 503 0000 00000000 		.space	4
+ 504              		.section	.bss.g_bias_x,"aw",%nobits
+ 505              		.align	2
+ 508              	g_bias_x:
+ 509 0000 00000000 		.space	4
+ 510              		.text
+ 511              	.Letext0:
+ 512              		.file 2 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ 513              		.file 3 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/sy
+ 514              		.file 4 "Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h"
+ 515              		.file 5 "Core/Inc/MPU6050.h"
+ 516              		.file 6 "C:/Program Files (x86)/Arm GNU Toolchain arm-none-eabi/14.2 rel1/arm-none-eabi/include/ma
+ARM GAS  C:\Users\10369\AppData\Local\Temp\cczZYiyx.s 			page 13
+
+
+DEFINED SYMBOLS
+                            *ABS*:00000000 gyro_calib.c
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:21     .text.GyroCalib_Init:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:27     .text.GyroCalib_Init:00000000 GyroCalib_Init
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:235    .text.GyroCalib_Init:00000108 $d
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:508    .bss.g_bias_x:00000000 g_bias_x
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:502    .bss.g_bias_y:00000000 g_bias_y
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:496    .bss.g_bias_z:00000000 g_bias_z
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:490    .bss.g_stationary_cnt:00000000 g_stationary_cnt
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:244    .text.GyroCalib_Update:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:250    .text.GyroCalib_Update:00000000 GyroCalib_Update
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:435    .text.GyroCalib_Update:00000120 $d
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:446    .text.GyroCalib_GetBias:00000000 $t
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:452    .text.GyroCalib_GetBias:00000000 GyroCalib_GetBias
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:480    .text.GyroCalib_GetBias:00000014 $d
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:487    .bss.g_stationary_cnt:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:493    .bss.g_bias_z:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:499    .bss.g_bias_y:00000000 $d
+C:\Users\10369\AppData\Local\Temp\cczZYiyx.s:505    .bss.g_bias_x:00000000 $d
+
+UNDEFINED SYMBOLS
+MPU6050_GetData
+__aeabi_i2d
+__aeabi_dadd
+HAL_Delay
+__aeabi_ddiv
+__aeabi_d2f
+sqrtf

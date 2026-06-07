@@ -1,5 +1,5 @@
-build/main.o: Core/Src/main.c Core/Inc/main.h \
- Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
+build/gyro_calib.o: Core/Src/gyro_calib.c Core/Inc/gyro_calib.h \
+ Core/Inc/main.h Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h \
  Core/Inc/stm32f4xx_hal_conf.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_rcc.h \
  Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_def.h \
@@ -32,11 +32,8 @@ build/main.o: Core/Src/main.c Core/Inc/main.h \
  Core/Inc/gpio.h Core/Inc/ringbuf.h Core/Inc/bt_proto.h \
  Core/Inc/speed_ctrl.h Core/Inc/encoder.h Core/Inc/motor.h Core/Inc/pid.h \
  Core/Inc/oled.h Core/Inc/stm32f4xx_it.h Core/Inc/nrf24l01.h \
- Core/Inc/i2c.h Core/Inc/spi.h Core/Inc/tim.h Core/Inc/usart.h \
- Core/Inc/gpio.h Core/Inc/ringbuf.h Core/Inc/bt_proto.h \
- Core/Inc/speed_ctrl.h Core/Inc/motor.h Core/Inc/oled.h \
- Core/Inc/stm32f4xx_it.h Core/Inc/MPU6050.h Core/Inc/MahonyAHRS.h \
- Core/Inc/gyro_calib.h Core/Inc/kinematics.h Core/Inc/yaw_ctrl.h
+ Core/Inc/MPU6050.h Core/Inc/i2c.h
+Core/Inc/gyro_calib.h:
 Core/Inc/main.h:
 Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h:
 Core/Inc/stm32f4xx_hal_conf.h:
@@ -84,19 +81,5 @@ Core/Inc/pid.h:
 Core/Inc/oled.h:
 Core/Inc/stm32f4xx_it.h:
 Core/Inc/nrf24l01.h:
-Core/Inc/i2c.h:
-Core/Inc/spi.h:
-Core/Inc/tim.h:
-Core/Inc/usart.h:
-Core/Inc/gpio.h:
-Core/Inc/ringbuf.h:
-Core/Inc/bt_proto.h:
-Core/Inc/speed_ctrl.h:
-Core/Inc/motor.h:
-Core/Inc/oled.h:
-Core/Inc/stm32f4xx_it.h:
 Core/Inc/MPU6050.h:
-Core/Inc/MahonyAHRS.h:
-Core/Inc/gyro_calib.h:
-Core/Inc/kinematics.h:
-Core/Inc/yaw_ctrl.h:
+Core/Inc/i2c.h:

@@ -55,6 +55,10 @@ extern BT_TxPacket_t s_tx_pkt;
 extern uint8_t s_tx_buf[BT_TX_PACKET_LEN];
 extern uint8_t s_tx_len;
 extern uint32_t s_led_off_tick;  /* LED 闪烁计时 */
+extern int Vx;
+extern int Vy;
+extern float wheel_rpm[4];
+
 /* USER CODE END ET */
 
 /* Exported constants --------------------------------------------------------*/
