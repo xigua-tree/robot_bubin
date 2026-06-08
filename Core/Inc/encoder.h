@@ -12,6 +12,7 @@ typedef struct {
     int32_t  accum;       /* 32位累计值，处理16位溢出 */
     int16_t  last_raw;    /* 上一次原始值 */
     float    speed_rpm;   /* 当前速度 RPM */
+    int8_t   invert;      /* 编码器方向: 1=正常, -1=反向 */
 } Encoder_t;
 
 void Encoder_Init(Encoder_t *enc, TIM_HandleTypeDef *htim);

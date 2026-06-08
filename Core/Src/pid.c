@@ -22,16 +22,15 @@ float PID_Update(PID_t *pid, float measured)
     pid->error[0] = error;           /* e(k)   = error   */
 
     /* 死区：误差 < 10 RPM 时冻结积分 */
-    if (fabsf(error) < 6.0f) {
+    if (fabsf(error) < 1.0f) {
         pid->integral = 0.0f;
         /* 目标=0 且速度≈0 → 强制停转；目标≠0 → 保持当前输出 */
-        if (fabsf(pid->target) < 10.0f) {
-            pid->output = 0.0f;
-            return 0.0f;
-        }
         return pid->output;
     }
-
+    if (fabsf(pid->target) < 10.0f) {
+        pid->output = 0.0f;
+        return 0.0f;
+    }
     /* 积分分离：误差较大时不累加积分，防止饱和 */
     if (fabsf(error) < pid->out_max * 0.5f) {
         pid->integral += error;
@@ -40,6 +39,45 @@ float PID_Update(PID_t *pid, float measured)
     } else {
         pid->integral = 0.0f;
     }
+
+    /* 增量式 PID */
+    /* Δu = Kp*(e(k)-e(k-1)) + Ki*e(k) + Kd*(e(k)-2e(k-1)+e(k-2)) */
+    float delta = pid->Kp * (pid->error[0] - pid->error[1])
+                + pid->Ki * pid->error[0]
+                + pid->Kd * (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);
+
+    pid->output += delta;
+
+    /* 输出限幅 */
+    if (pid->output > pid->out_max)  pid->output = pid->out_max;
+    if (pid->output < pid->out_min)  pid->output = pid->out_min;
+
+    return pid->output;
+}
+
+float PID_Update_Angle(PID_t *pid, float err)
+{
+    /* 计算误差 */
+    float error = -err;
+    pid->error[2] = pid->error[1];   /* e(k-2) = e(k-1) */
+    pid->error[1] = pid->error[0];   /* e(k-1) = e(k)   */
+    pid->error[0] = error;           /* e(k)   = error   */
+
+    /* 死区：误差 < 10 RPM 时冻结积分 */
+    if (fabsf(error) < 5.0f) {
+        pid->integral = 0.0f;
+        /* 目标=0 且速度≈0 → 强制停转；目标≠0 → 保持当前输出 */
+        return 0;
+    }
+
+    // /* 积分分离：误差较大时不累加积分，防止饱和 */
+    // if (fabsf(error) < pid->out_max * 0.5f) {
+    //     pid->integral += error;
+    //     if (pid->integral > pid->integral_max)  pid->integral = pid->integral_max;
+    //     if (pid->integral < -pid->integral_max) pid->integral = -pid->integral_max;
+    // } else {
+    //     pid->integral = 0.0f;
+    // }
 
     /* 增量式 PID */
     /* Δu = Kp*(e(k)-e(k-1)) + Ki*e(k) + Kd*(e(k)-2e(k-1)+e(k-2)) */

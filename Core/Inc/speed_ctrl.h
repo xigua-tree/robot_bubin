@@ -16,14 +16,13 @@
 #define SPEED_CTRL_DT          0.05f    /* 1ms */
 
 /* 默认 PID 参数 */
-#define DEFAULT_KP  16.0f
-#define DEFAULT_KI  6.0f
+#define DEFAULT_KP  10.0f
+#define DEFAULT_KI  3.5f
 #define DEFAULT_KD  0.00f
 
 /* 控制标志位（TIM8 ISR 置1，主循环清零） */
 extern volatile uint8_t g_speed_ctrl_flag;
 extern Encoder_t g_encoders[SPEED_CTRL_MOTOR_COUNT];
-
 void SpeedCtrl_Init(void);
 void SpeedCtrl_UpdateEncoders(void);     /* 只读编码器+算速度，不动电机 */
 void SpeedCtrl_1kHz_Tick(void);          /* 编码器+PID+PWM 完整闭环 */

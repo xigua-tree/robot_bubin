@@ -45,7 +45,7 @@ extern "C" {
 #include "oled.h"
 #include "stm32f4xx_it.h"
 #include "nrf24l01.h"
-
+#include "yaw_ctrl.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -58,6 +58,9 @@ extern uint32_t s_led_off_tick;  /* LED 闪烁计时 */
 extern int Vx;
 extern int Vy;
 extern float wheel_rpm[4];
+extern float omega;
+void chassis_control_task(void);
+void imu_update_task(void);
 
 /* USER CODE END ET */
 

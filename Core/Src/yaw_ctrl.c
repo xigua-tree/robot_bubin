@@ -1,8 +1,8 @@
 #include "yaw_ctrl.h"
 
 float g_target_yaw_angle = 0.0f;        /* 目标 yaw 角度 (度) */
-
-static PID_t s_yaw_pid;                 /* yaw 角度环 PID 实例 */
+float yaw_err;
+static PID_t s_yaw_pid;                 
 
 /**
  * @brief  初始化 yaw 角度环 PID
@@ -24,13 +24,15 @@ float YawCtrl_Update(float measured_yaw, float dt)
     (void)dt;  /* 增量式 PID 自身管理时序，dt 保留备用 */
 
     /* 计算最短角度误差，归一化到 [-180, 180] 度 */
-    float err = g_target_yaw_angle - measured_yaw;
-    while (err > 180.0f)  err -= 360.0f;
-    while (err < -180.0f) err += 360.0f;
+    yaw_err = g_target_yaw_angle - measured_yaw;
+    while (yaw_err > 180.0f)  yaw_err -= 360.0f;
+    while (yaw_err < -180.0f) yaw_err += 360.0f;
 
-    /* 复用现有增量式 PID：
-     * PID_Update 内部计算 error = target - measured
-     * 设 target=0, measured=-err → error = 0-(-err) = err */
-    s_yaw_pid.target = 0.0f;
-    return PID_Update(&s_yaw_pid, -err);
+    // s_yaw_pid.target = g_target_yaw_angle;
+    return PID_Update_Angle(&s_yaw_pid, yaw_err);
+}
+
+void YawCtrl_SetPID(float Kp, float Ki, float Kd)
+{
+        PID_SetTunings(&s_yaw_pid, Kp, Ki, Kd);
 }

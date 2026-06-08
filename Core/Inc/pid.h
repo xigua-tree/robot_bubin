@@ -19,5 +19,6 @@ float PID_Update(PID_t *pid, float measured);             /* 返回控制输出 
 void PID_SetTarget(PID_t *pid, float target);
 void PID_SetTunings(PID_t *pid, float Kp, float Ki, float Kd);
 void PID_Reset(PID_t *pid);
+float PID_Update_Angle(PID_t *pid, float measured);
 
 #endif

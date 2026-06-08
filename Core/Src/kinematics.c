@@ -13,9 +13,9 @@
 void OmniKinematics(int Vx, int Vy, int omega, float wheel_rpm[4])
 {
     /* 全向轮速度分解公式 */
-    wheel_rpm[2] = (float)( -Vx + Vy - omega * (LX + LY));  /* 轮1: 右前 */
     wheel_rpm[0] = (float)(  Vx + Vy - omega * (LX + LY));  /* 轮2: 左前 */
     wheel_rpm[1] = (float)(  Vx - Vy - omega * (LX + LY));  /* 轮3: 左后 */
+    wheel_rpm[2] = (float)( -Vx + Vy - omega * (LX + LY));  /* 轮1: 右前 */
     wheel_rpm[3] = (float)( -Vx - Vy - omega * (LX + LY));  /* 轮4: 右后 */
 
     /* 限幅 */

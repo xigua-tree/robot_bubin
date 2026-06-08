@@ -8,12 +8,12 @@
 #define BT_FRAME_TAIL  0x5A
 
 /* RX 包: A5 + speed(float) + Kp(float) + Ki(float) + Kd(float) + checksum + 5A */
-#define BT_RX_DATA_LEN  16   /* 4个float */
-#define BT_RX_PACKET_LEN 19  /* 1 + 16 + 1 + 1 */
+#define BT_RX_DATA_LEN  28   /* 4个float */
+#define BT_RX_PACKET_LEN 31  /* 1 + 16 + 1 + 1 */
 
 /* TX 包: A5 + count(i32) + encL(i32) + encR(i32) + speed(f32) + error(f32) + roll(f32) + pitch(f32) + yaw(f32) + checksum + 5A */
-#define BT_TX_DATA_LEN  32   /* 4+4+4+4+4 + 4+4+4 = 32 */
-#define BT_TX_PACKET_LEN 35  /* 1 + 32 + 1 + 1 = 35 */
+#define BT_TX_DATA_LEN  44   /* 4+4+4+4+4 + 4+4+4 = 32 */
+#define BT_TX_PACKET_LEN 47  /* 1 + 32 + 1 + 1 = 35 */
 
 /* 接收解析结果 */
 typedef struct {
@@ -21,6 +21,9 @@ typedef struct {
     float Kp;
     float Ki;
     float Kd;
+    int Vx;
+    int Vy;
+    float yaw;
 } BT_RxPacket_t;
 
 /* 发送数据 */
@@ -33,6 +36,9 @@ typedef struct {
     float   roll;       /* 横滚角 (度) */
     float   pitch;      /* 俯仰角 (度) */
     float   yaw;        /* 偏航角 (度) */
+    int Vx;
+    int Vy;
+    float wheel_rpm[4];
 } BT_TxPacket_t;
 
 /* 帧解析状态机 */

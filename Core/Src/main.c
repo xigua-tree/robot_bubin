@@ -116,37 +116,37 @@ static void imu_update_task(void)
     QuaternionToEuler(q, &g_roll, &g_pitch, &g_yaw);
 }
 
-int Vx = 10;
+int Vx = 0;
 int Vy = 0;
 float wheel_rpm[4];
+float omega;
 /**
   * 函    数：底盘运动学控制任务
   * 说    明：以 200Hz 频率执行：摇杆映射 → yaw角度环PID → 全向轮运动学 → 下发4轮目标转速
   */
 static void chassis_control_task(void)
 {
-    static uint32_t last_tick = 0;
-    uint32_t now = HAL_GetTick();
+    // static uint32_t last_tick = 0;
+    // uint32_t now = HAL_GetTick();
 
-    /* 200Hz = 每5ms执行一次，与 IMU 同步 */
-    if (now - last_tick < 5) return;
-    last_tick = now;
+    // /* 200Hz = 每5ms执行一次，与 IMU 同步 */
+    // if (now - last_tick < 5) return;
+    // last_tick = now;
 
     /* 1. 摇杆映射：(0~4095, 中心2048) → Vx, Vy 目标速度 */
     // Vx = (int)(((int)rocker_lx - 2048) * ROCKER_SCALE);
     // Vy = (int)(((int)rocker_ly - 2048) * ROCKER_SCALE);
 
     /* 2. Yaw 角度环 PID → omega */
-    // float omega = YawCtrl_Update(g_yaw, 0.005f);
-    float omega = 0;
+    omega = YawCtrl_Update(g_yaw, 0.005f);
+
     /* 3. 全向轮运动学解算 → 4轮目标转速 RPM */
-    wheel_rpm[4];
     OmniKinematics(Vx, Vy, (int)omega, wheel_rpm);
 
     /* 4. 下发给速度环 (SpeedCtrl_1kHz_Tick 自动完成闭环) */
-    // for (int i = 0; i < 4; i++) {
-    //     SpeedCtrl_SetTarget(i, wheel_rpm[i]);
-    // }
+    for (int i = 0; i < 4; i++) {
+        SpeedCtrl_SetTarget(i, wheel_rpm[i]);
+    }
 
 }
 
@@ -192,10 +192,10 @@ int main(void)
   /* USER CODE BEGIN 2 */
   Motor_InitAll();
   SpeedCtrl_Init();
-  oled_init();
-  // MPU6050_Init();
-  // GyroCalib_Init(500);  /* 采集500个样本估计陀螺仪初始零偏（约2.5秒） */
-  // YawCtrl_Init();        /* 初始化 yaw 角度环 PID（Kp/Ki/Kd=0，用户自行调试） */
+  // oled_init();
+  MPU6050_Init();
+  GyroCalib_Init(500);  /* 采集500个样本估计陀螺仪初始零偏（约2.5秒） */
+  YawCtrl_Init();        /* 初始化 yaw 角度环 PID（Kp/Ki/Kd=0，用户自行调试） */
   /* 启用 TIM8 更新中断（PWM 已在 Motor_InitAll 中启动） */
   __HAL_TIM_ENABLE_IT(&htim8, TIM_IT_UPDATE);
 
@@ -215,11 +215,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-    // imu_update_task();
-    nrf_receive_task();
+    imu_update_task();
+    // nrf_receive_task();
     chassis_control_task();
     blue_setparam_task();
-    oled_task();
+    // oled_task();
 
   }  /* USER CODE END 3 */
 }

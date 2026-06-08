@@ -21,6 +21,7 @@ typedef struct {
     /* PWM（TIM8 各通道） */
     TIM_HandleTypeDef *htim;
     uint32_t           channel;
+    int8_t             invert;   /* 方向反转: 1=正常, -1=反向 */
 } Motor_t;
 
 extern Motor_t g_motors[4];

@@ -135,11 +135,11 @@ void oled_task()
     snprintf(buf, sizeof(buf), "counts:%d",tim8_counter);
     oled_show_string(48,0,buf,12);
 
-    snprintf(buf, sizeof(buf), "r1:%d  r2:%d",wheel_rpm[1],wheel_rpm[0]);
+    snprintf(buf, sizeof(buf), "r1:%.2f",s_rx_pkt.target_speed);
     oled_show_string(0,2,buf,12);
-    
-    snprintf(buf, sizeof(buf), "r3:%d  r4:%d",wheel_rpm[2],wheel_rpm[3]);
-    oled_show_string(0,4,buf,12);
+     
+    // snprintf(buf, sizeof(buf), "r3:%d  r4:%d",wheel_rpm[2],wheel_rpm[3]);
+    // oled_show_string(0,4,buf,12);
 
     snprintf(buf, sizeof(buf), "ry:%d  rx:%d",Vx,Vy);
     oled_show_string(0,6,buf,12);
