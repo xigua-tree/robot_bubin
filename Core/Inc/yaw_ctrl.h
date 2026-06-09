@@ -9,6 +9,7 @@
 /* 目标 yaw 角度 (度)，由外部设置 */
 extern float g_target_yaw_angle;
 extern float yaw_err;
+extern int tuoluo_flag;
 /**
  * @brief  初始化 yaw 角度环 PID（Kp/Ki/Kd = 0，用户自行调试）
  */

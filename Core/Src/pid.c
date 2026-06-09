@@ -10,7 +10,7 @@ void PID_Init(PID_t *pid, float Kp, float Ki, float Kd, float out_max)
     pid->Kd = Kd;
     pid->out_max = out_max;
     pid->out_min = -out_max;
-    pid->integral_max = out_max * 0.3f;  /* 积分限幅为输出的30% */
+    pid->integral_max = out_max;   /* 积分限幅默认等于输出限幅 */
 }
 
 float PID_Update(PID_t *pid, float measured)
@@ -21,23 +21,10 @@ float PID_Update(PID_t *pid, float measured)
     pid->error[1] = pid->error[0];   /* e(k-1) = e(k)   */
     pid->error[0] = error;           /* e(k)   = error   */
 
-    /* 死区：误差 < 10 RPM 时冻结积分 */
-    if (fabsf(error) < 1.0f) {
-        pid->integral = 0.0f;
-        /* 目标=0 且速度≈0 → 强制停转；目标≠0 → 保持当前输出 */
-        return pid->output;
-    }
-    if (fabsf(pid->target) < 10.0f) {
-        pid->output = 0.0f;
+    /* 死区：误差 < 10 RPM  */
+    if (fabsf(pid->target) < 5.0f) {
+        pid->output = 0.0f;  // 清空内部输出缓存
         return 0.0f;
-    }
-    /* 积分分离：误差较大时不累加积分，防止饱和 */
-    if (fabsf(error) < pid->out_max * 0.5f) {
-        pid->integral += error;
-        if (pid->integral > pid->integral_max)  pid->integral = pid->integral_max;
-        if (pid->integral < -pid->integral_max) pid->integral = -pid->integral_max;
-    } else {
-        pid->integral = 0.0f;
     }
 
     /* 增量式 PID */
@@ -48,9 +35,14 @@ float PID_Update(PID_t *pid, float measured)
 
     pid->output += delta;
 
+    if (fabsf(pid->target) < 30.0f) { 
+        if (delta > 1000)  delta = 1000;
+        if (delta < -1000) delta = -1000;
+    }
     /* 输出限幅 */
     if (pid->output > pid->out_max)  pid->output = pid->out_max;
     if (pid->output < pid->out_min)  pid->output = pid->out_min;
+
 
     return pid->output;
 }
@@ -63,29 +55,23 @@ float PID_Update_Angle(PID_t *pid, float err)
     pid->error[1] = pid->error[0];   /* e(k-1) = e(k)   */
     pid->error[0] = error;           /* e(k)   = error   */
 
-    /* 死区：误差 < 10 RPM 时冻结积分 */
+    /* 死区：误差很小时冻结积分，避免积分饱和 */
     if (fabsf(error) < 5.0f) {
-        pid->integral = 0.0f;
-        /* 目标=0 且速度≈0 → 强制停转；目标≠0 → 保持当前输出 */
         return 0;
     }
 
-    // /* 积分分离：误差较大时不累加积分，防止饱和 */
-    // if (fabsf(error) < pid->out_max * 0.5f) {
-    //     pid->integral += error;
-    //     if (pid->integral > pid->integral_max)  pid->integral = pid->integral_max;
-    //     if (pid->integral < -pid->integral_max) pid->integral = -pid->integral_max;
-    // } else {
-    //     pid->integral = 0.0f;
-    // }
+    /* 积分累加 */
+    pid->integral += error;
 
-    /* 增量式 PID */
-    /* Δu = Kp*(e(k)-e(k-1)) + Ki*e(k) + Kd*(e(k)-2e(k-1)+e(k-2)) */
-    float delta = pid->Kp * (pid->error[0] - pid->error[1])
-                + pid->Ki * pid->error[0]
-                + pid->Kd * (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);
+    /* 积分限幅（抗饱和） */
+    if (pid->integral > pid->integral_max)  pid->integral = pid->integral_max;
+    if (pid->integral < -pid->integral_max) pid->integral = -pid->integral_max;
 
-    pid->output += delta;
+    /* 位置式 PID */
+    /* u(k) = Kp*e(k) + Ki*∫e(k) + Kd*(e(k)-e(k-1)) */
+    pid->output = pid->Kp * error
+                + pid->Ki * pid->integral
+                + pid->Kd * (pid->error[0] - pid->error[1]);
 
     /* 输出限幅 */
     if (pid->output > pid->out_max)  pid->output = pid->out_max;

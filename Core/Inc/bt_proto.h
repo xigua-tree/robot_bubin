@@ -7,13 +7,13 @@
 #define BT_FRAME_HEAD  0xA5
 #define BT_FRAME_TAIL  0x5A
 
-/* RX 包: A5 + speed(float) + Kp(float) + Ki(float) + Kd(float) + checksum + 5A */
-#define BT_RX_DATA_LEN  28   /* 4个float */
-#define BT_RX_PACKET_LEN 31  /* 1 + 16 + 1 + 1 */
+/* RX 包*/
+#define BT_RX_DATA_LEN  24   
+#define BT_RX_PACKET_LEN 27  
 
-/* TX 包: A5 + count(i32) + encL(i32) + encR(i32) + speed(f32) + error(f32) + roll(f32) + pitch(f32) + yaw(f32) + checksum + 5A */
-#define BT_TX_DATA_LEN  44   /* 4+4+4+4+4 + 4+4+4 = 32 */
-#define BT_TX_PACKET_LEN 47  /* 1 + 32 + 1 + 1 = 35 */
+/* TX 包*/
+#define BT_TX_DATA_LEN  20   
+#define BT_TX_PACKET_LEN 23  
 
 /* 接收解析结果 */
 typedef struct {
@@ -24,6 +24,9 @@ typedef struct {
     int Vx;
     int Vy;
     float yaw;
+    float rpm_xishu;
+    int tuoluo_flag;
+    float tuoluo_speed;
 } BT_RxPacket_t;
 
 /* 发送数据 */

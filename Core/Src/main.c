@@ -80,7 +80,7 @@ extern volatile int tim8_counter;
   * 说    明：以 200Hz 频率读取 MPU6050 数据，运行 Mahony AHRS 算法，
   *           将四元数转换为欧拉角并存入全局变量 g_roll/g_pitch/g_yaw
   */
-static void imu_update_task(void)
+void imu_update_task(void)
 {
     static uint32_t last_tick = 0;
     uint32_t now = HAL_GetTick();
@@ -124,30 +124,43 @@ float omega;
   * 函    数：底盘运动学控制任务
   * 说    明：以 200Hz 频率执行：摇杆映射 → yaw角度环PID → 全向轮运动学 → 下发4轮目标转速
   */
-static void chassis_control_task(void)
+void chassis_control_task(void)
 {
-    // static uint32_t last_tick = 0;
-    // uint32_t now = HAL_GetTick();
+    static uint32_t last_tick = 0;
+    uint32_t now = HAL_GetTick();
 
-    // /* 200Hz = 每5ms执行一次，与 IMU 同步 */
-    // if (now - last_tick < 5) return;
-    // last_tick = now;
+    /* 200Hz = 每5ms执行一次，与 IMU 同步 */
+    if (now - last_tick < 5) return;
+    last_tick = now;
 
-    /* 1. 摇杆映射：(0~4095, 中心2048) → Vx, Vy 目标速度 */
-    // Vx = (int)(((int)rocker_lx - 2048) * ROCKER_SCALE);
-    // Vy = (int)(((int)rocker_ly - 2048) * ROCKER_SCALE);
+    /* 1. 陀螺转自增逻辑 */
+    if (tuoluo_flag == 1) {
+        // 每 5ms 递增一次目标角度。1.5f 对应每秒 300 度，你可以根据实际需要调整这个步长
+        // 如果想反向转，改成 -= 1.5f 即可
+        float yaw_v = s_rx_pkt.rpm_xishu*0.009f;
+        g_target_yaw_angle += yaw_v; 
+        
+        // 保持目标角度在 [0, 360] 范围内，防止 float 变量长时间运行精度溢出
+        if (g_target_yaw_angle >= 360.0f) {
+            g_target_yaw_angle -= 360.0f;
+        }
+        if (g_target_yaw_angle < 0.0f) {
+            g_target_yaw_angle += 360.0f;
+        }
+    }
 
-    /* 2. Yaw 角度环 PID → omega */
+    /* 2. 执行 PID 计算 */
     omega = YawCtrl_Update(g_yaw, 0.005f);
-
+    // if(fbs(g_yaw - g_target_yaw_angle)>0.1)
+    //   tuoluo_ok_flag = 1;
     /* 3. 全向轮运动学解算 → 4轮目标转速 RPM */
+    // 注意：这里的乘数 motor_rpm 如果是你刚才映射出来的系数，记得加入解算
     OmniKinematics(Vx, Vy, (int)omega, wheel_rpm);
 
-    /* 4. 下发给速度环 (SpeedCtrl_1kHz_Tick 自动完成闭环) */
+    /* 4. 下发给速度环 */
     for (int i = 0; i < 4; i++) {
         SpeedCtrl_SetTarget(i, wheel_rpm[i]);
     }
-
 }
 
 /* USER CODE END 0 */
@@ -216,7 +229,7 @@ int main(void)
 
     /* USER CODE BEGIN 3 */
     imu_update_task();
-    // nrf_receive_task();
+    // // nrf_receive_task();
     chassis_control_task();
     blue_setparam_task();
     // oled_task();

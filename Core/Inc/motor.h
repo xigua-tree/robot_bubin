@@ -10,7 +10,7 @@
 #define MOTOR_STOP 0
 
 /* 最大 PWM 占空比（ARR = 16799） */
-#define MOTOR_PWM_MAX 16799
+#define MOTOR_PWM_MAX 16000
 
 typedef struct {
     /* 方向引脚 */

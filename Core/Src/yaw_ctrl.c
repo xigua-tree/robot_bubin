@@ -4,13 +4,15 @@ float g_target_yaw_angle = 0.0f;        /* 目标 yaw 角度 (度) */
 float yaw_err;
 static PID_t s_yaw_pid;                 
 
+int tuoluo_flag = 0;
+
 /**
  * @brief  初始化 yaw 角度环 PID
  * @note   所有 PID 参数初始化为 0，用户后续调整
  */
 void YawCtrl_Init(void)
 {
-    PID_Init(&s_yaw_pid, 0.0f, 0.0f, 0.0f, YAW_OUT_MAX);
+    PID_Init(&s_yaw_pid, 5.0f, 0.0f, 20.0f, YAW_OUT_MAX);
 }
 
 /**
@@ -28,6 +30,7 @@ float YawCtrl_Update(float measured_yaw, float dt)
     while (yaw_err > 180.0f)  yaw_err -= 360.0f;
     while (yaw_err < -180.0f) yaw_err += 360.0f;
 
+    
     // s_yaw_pid.target = g_target_yaw_angle;
     return PID_Update_Angle(&s_yaw_pid, yaw_err);
 }

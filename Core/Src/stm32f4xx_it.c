@@ -50,6 +50,7 @@ volatile int tim8_counter = 0;
 
 volatile uint16_t nrf_Counter = 0;
 volatile uint8_t nrf_task_flag = 0;
+static volatile uint16_t imu_counter = 0;  /* TIM8 分频计数器 */
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -244,25 +245,19 @@ void TIM8_UP_TIM13_IRQHandler(void)
   if (__HAL_TIM_GET_FLAG(&htim8, TIM_FLAG_UPDATE) != RESET) {
       __HAL_TIM_CLEAR_FLAG(&htim8, TIM_FLAG_UPDATE);  
       s_tim8_divider++;
-      s_tim8_encoder_counter++;
-      nrf_Counter++;
+      imu_counter++;
 
-      if(nrf_Counter >= 500){
-        nrf_task_flag = 1;
-        nrf_Counter = 0;
-      }
-
+      // if(imu_counter > 50){
+      //   imu_update_task();
+      //    chassis_control_task();
+        
+      // }
       if (s_tim8_divider >= 500) {
           tim8_counter++;
           s_tim8_divider = 0;
-          g_speed_ctrl_flag = 1;
-          /* ---- 速度控制（由 TIM8 ISR 标志驱动） ---- */
-        if (g_speed_ctrl_flag) {
-            // Motor_SetDuty(&g_motors[0],8000);
-            // SpeedCtrl_UpdateEncoders();
-            SpeedCtrl_1kHz_Tick();
-            g_speed_ctrl_flag = 0;
-        }
+          SpeedCtrl_UpdateEncoders();
+          // SpeedCtrl_1kHz_Tick();
+          SpeedCtrl_1kHz_uptest();
       }
       return;  /* 已处理，不进入 HAL_TIM_IRQHandler */
   }

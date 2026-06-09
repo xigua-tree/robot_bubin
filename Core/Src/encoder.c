@@ -17,12 +17,12 @@ void Encoder_Init(Encoder_t *enc, TIM_HandleTypeDef *htim)
 
 void Encoder_Update(Encoder_t *enc)
 {
-    /* 读取当前16位计数值 */
-    int16_t raw = (int16_t)__HAL_TIM_GET_COUNTER(enc->htim);
+    uint16_t raw = (uint16_t)__HAL_TIM_GET_COUNTER(enc->htim);
 
-    /* 处理16位溢出（差值法，自动处理周期性回绕） */
-    int16_t delta = raw - enc->last_raw;
+    int16_t delta = (int16_t)(raw - enc->last_raw);
+    
     enc->accum += delta;
+    
     enc->last_raw = raw;
 }
 

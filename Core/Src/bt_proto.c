@@ -47,11 +47,10 @@ bool BT_Parse_Byte(uint8_t byte, BT_RxPacket_t *result)
             /* 完整帧接收成功，解析数据 */
             memcpy(&result->Vx, &s_data_buf[0],  4);
             memcpy(&result->Vy,           &s_data_buf[4],  4);
-            memcpy(&result->target_speed,           &s_data_buf[8],  4);
-            memcpy(&result->Kp,           &s_data_buf[12], 4);
-            memcpy(&result->Ki,           &s_data_buf[16], 4);
-            memcpy(&result->Kd,           &s_data_buf[20], 4);
-            memcpy(&result->yaw,           &s_data_buf[24], 4);
+            memcpy(&result->tuoluo_flag,           &s_data_buf[8],  4);
+            memcpy(&result->rpm_xishu,           &s_data_buf[12], 4);
+            memcpy(&result->yaw,           &s_data_buf[16], 4);
+            memcpy(&result->tuoluo_speed,           &s_data_buf[16], 4);
             s_state = BT_STATE_HEAD;
             return true;
         }
@@ -66,16 +65,10 @@ uint8_t BT_Pack_Tx(const BT_TxPacket_t *pkt, uint8_t *buf)
     buf[0] = BT_FRAME_HEAD;
 
     memcpy(&buf[1],  &pkt->count,      sizeof(pkt->count));
-    memcpy(&buf[5],  &pkt->Encoder_l,  sizeof(pkt->Encoder_l));
-    memcpy(&buf[9],  &pkt->Encoder_r,  sizeof(pkt->Encoder_r));
-    memcpy(&buf[13], &pkt->Vx,      sizeof(pkt->Vx));
-    memcpy(&buf[17], &pkt->Vy,      sizeof(pkt->Vy));
-    memcpy(&buf[21], &pkt->yaw,       sizeof(pkt->yaw));
-    memcpy(&buf[25], &pkt->wheel_rpm[0],      sizeof(pkt->wheel_rpm[0]));
-    memcpy(&buf[29], &pkt->wheel_rpm[1],      sizeof(pkt->wheel_rpm[1]));
-    memcpy(&buf[33], &pkt->wheel_rpm[2],      sizeof(pkt->wheel_rpm[2]));
-    memcpy(&buf[37], &pkt->wheel_rpm[3],      sizeof(pkt->wheel_rpm[3]));
-    memcpy(&buf[41], &pkt->speed,      sizeof(pkt->speed));
+    memcpy(&buf[5], &pkt->Vx,      sizeof(pkt->Vx));
+    memcpy(&buf[9], &pkt->Vy,      sizeof(pkt->Vy));
+    memcpy(&buf[13], &pkt->yaw,       sizeof(pkt->yaw));
+    memcpy(&buf[17], &pkt->speed,      sizeof(pkt->speed));
 
     /* 校验和（数据字节之和的低8位） */
     uint8_t checksum = 0;
@@ -90,23 +83,33 @@ uint8_t BT_Pack_Tx(const BT_TxPacket_t *pkt, uint8_t *buf)
 
 void blue_setparam_task()
 {
-        /* ---- 协议解析 ---- */
+        /* 收包 */
     RingBuf_t *rb = Get_UART_RxRingBuf();
     uint8_t byte;
     while (RingBuf_Get(rb, &byte)) {
         if (BT_Parse_Byte(byte, &s_rx_pkt)) {
-            /* 应用 PID 参数和速度指令（对4个电机统一设置） */
-                // for(int i = 0; i < 4; i++){
-                //     // SpeedCtrl_SetPID(i,s_rx_pkt.Kp,s_rx_pkt.Ki,s_rx_pkt.Kd);
-                //     SpeedCtrl_SetTarget(i, s_rx_pkt.target_speed);
-                // }
-                g_target_yaw_angle = s_rx_pkt.yaw;
+                for(int i = 0; i < 4; i++){
+                    // SpeedCtrl_SetPID(i,s_rx_pkt.Kp,s_rx_pkt.Ki,s_rx_pkt.Kd);
+                    // SpeedCtrl_SetTarget(i, s_rx_pkt.target_speed);
+                }
+                
+                tuoluo_flag = s_rx_pkt.tuoluo_flag; 
+                
+                if (tuoluo_flag == 0) {
+                    // 正常模式：跟随遥控器/APP传过来的绝对角度
+                    g_target_yaw_angle = s_rx_pkt.yaw;
+                } else {
+                    // 陀螺模式：这里什么都不做！不接收外界角度，交给底盘控制任务去自主递增
+                }
+                
                 Vx = s_rx_pkt.Vx;
                 Vy = s_rx_pkt.Vy;
-                YawCtrl_SetPID(s_rx_pkt.Kp,s_rx_pkt.Ki,s_rx_pkt.Kd);
+                motor_rpm = map_0_100_to_20_80(s_rx_pkt.rpm_xishu);
+                // YawCtrl_SetPID(s_rx_pkt.Kp,s_rx_pkt.Ki,s_rx_pkt.Kd);
         }
     }
-        /* ---- 周期上报速度（约 100ms 一次） ---- */
+
+        /* ---- 周期上报速度 ---- */
     {
         static uint32_t last_tx_tick = 0;
         if (HAL_GetTick() - last_tx_tick >= 100) {
@@ -115,20 +118,16 @@ void blue_setparam_task()
             s_tx_pkt.count = tim8_counter;
             // s_tx_pkt.speed = g_encoders[0].speed_rpm;//wheel_rpm
             // s_tx_pkt.error = SpeedCtrl_GetError(0);
-            s_tx_pkt.Encoder_l = encoderl_value;
-            s_tx_pkt.Encoder_r = encoderr_value;
             s_tx_pkt.Vx = Vx;
             s_tx_pkt.Vy = Vy;
             s_tx_pkt.yaw   = g_yaw;
-            // s_tx_pkt.wheel_rpm[0] = g_encoders[0].speed_rpm;
-            // s_tx_pkt.wheel_rpm[1] = g_encoders[1].speed_rpm;
-            s_tx_pkt.wheel_rpm[2] = g_encoders[2].speed_rpm;
-            s_tx_pkt.wheel_rpm[3] = g_encoders[3].speed_rpm;
-            s_tx_pkt.wheel_rpm[0] = omega;
-            s_tx_pkt.wheel_rpm[1] = wheel_rpm[1];
+            // s_tx_pkt.wheel_rpm[2] = g_encoders[1].speed_rpm;
+            // s_tx_pkt.wheel_rpm[3] = *s_pids[2].error;
+            // s_tx_pkt.wheel_rpm[0] = omega;
+            // s_tx_pkt.wheel_rpm[1] = wheel_rpm[1];
             // s_tx_pkt.wheel_rpm[2] = wheel_rpm[2];
             // s_tx_pkt.wheel_rpm[3] = wheel_rpm[3];
-            s_tx_pkt.speed = yaw_err;
+            s_tx_pkt.speed = motor_rpm;
             s_tx_len = BT_Pack_Tx(&s_tx_pkt, s_tx_buf);
             HAL_UART_Transmit(&huart3, s_tx_buf, s_tx_len, 100);
         }

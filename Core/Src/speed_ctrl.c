@@ -3,14 +3,14 @@
 
 /* 编码器 + PID + 电机 实例 */
 Encoder_t g_encoders[SPEED_CTRL_MOTOR_COUNT];
-static PID_t     s_pids[SPEED_CTRL_MOTOR_COUNT];
+PID_t     s_pids[SPEED_CTRL_MOTOR_COUNT];
 
 /* 控制标志位：TIM8 ISR 每10次中断置1 */
 volatile uint8_t g_speed_ctrl_flag = 0;
 
 /* PID 输出低通滤波 */
 static float s_out_filtered[SPEED_CTRL_MOTOR_COUNT];
-#define OUTPUT_FILTER_ALPHA  0.5f
+#define OUTPUT_FILTER_ALPHA  0.8f
 
 /* TIM 句柄来自 tim.h */
 
@@ -34,51 +34,31 @@ void SpeedCtrl_Init(void)
 
 }
 
-#define DELTA_AVG_SIZE  4   /* 编码器 delta 滑动平均窗口 */
+/* 只读取编码器并计算速度*/
+#define RPM_FILTER_ALPHA 0.8f   
 
-/* 只读取编码器并计算速度，不动电机（供开环测试用） */
+/* 只读取编码器并计算速度 */
 void SpeedCtrl_UpdateEncoders(void)
 {
     static int32_t last_count[SPEED_CTRL_MOTOR_COUNT];
     static float   s_filtered[SPEED_CTRL_MOTOR_COUNT];
-    static int32_t delta_buf[SPEED_CTRL_MOTOR_COUNT][DELTA_AVG_SIZE];
-    static int32_t delta_sum[SPEED_CTRL_MOTOR_COUNT];
-    static uint8_t delta_idx[SPEED_CTRL_MOTOR_COUNT];
-    static bool    delta_ready[SPEED_CTRL_MOTOR_COUNT];
-    #define RPM_FILTER_ALPHA 0.3f
 
     for (int i = 0; i < SPEED_CTRL_MOTOR_COUNT; i++) {
         /* 读取硬件编码器，更新累积值 */
         Encoder_Update(&g_encoders[i]);
 
-        /* 差分计算 delta */
+        /* 差分计算当前周期的脉冲增量 delta */
         int32_t count = Encoder_GetCount(&g_encoders[i]);
         int32_t delta = count - last_count[i];
         last_count[i] = count;
 
-        /* 4 点滑动平均：用新 delta 替换最旧的，更新环 */
-        delta_sum[i] -= delta_buf[i][delta_idx[i]];
-        delta_buf[i][delta_idx[i]] = delta;
-        delta_sum[i] += delta;
-        delta_idx[i]++;
-        if (delta_idx[i] >= DELTA_AVG_SIZE) {
-            delta_idx[i]  = 0;
-            delta_ready[i] = true;          /* 窗口填满后才使用平均值 */
-        }
-
-        float delta_avg;
-        if (delta_ready[i]) {
-            delta_avg = (float)delta_sum[i] / DELTA_AVG_SIZE;
-        } else {
-            /* 窗口未满时，用已填充样本的均值 */
-            uint8_t n = delta_idx[i] > 0 ? delta_idx[i] : 1;
-            delta_avg = (float)delta_sum[i] / n;
-        }
-
-        float rpm_raw = delta_avg / (float)(ENCODER_PPR * 4) / SPEED_CTRL_DT * 60.0f;
+        /* 直接将原始 delta 转换为原始转速 rpm_raw */
+        float rpm_raw = (float)delta / (float)(ENCODER_PPR * 4) / SPEED_CTRL_DT * 60.0f;
 
         /* 一阶低通滤波 */
         s_filtered[i] = s_filtered[i] * (1.0f - RPM_FILTER_ALPHA) + rpm_raw * RPM_FILTER_ALPHA;
+        
+        /* 输出滤波后的转速*/
         g_encoders[i].speed_rpm = s_filtered[i] * g_encoders[i].invert;
     }
 }
@@ -87,13 +67,32 @@ void SpeedCtrl_UpdateEncoders(void)
 void SpeedCtrl_1kHz_Tick(void)
 {
     SpeedCtrl_UpdateEncoders();
-
+    chassis_control_task();
     for (int i = 0; i < SPEED_CTRL_MOTOR_COUNT; i++) {
         float output = PID_Update(&s_pids[i], g_encoders[i].speed_rpm);
         /* 一阶低通: y(k) = y(k-1)*(1-α) + x(k)*α */
         s_out_filtered[i] = s_out_filtered[i] * (1.0f - OUTPUT_FILTER_ALPHA)
                           + output * OUTPUT_FILTER_ALPHA;
         Motor_SetDuty(&g_motors[i], (int32_t)s_out_filtered[i]);
+    }
+}
+
+float motor_rpm;
+
+float map_0_100_to_20_80(float x) 
+{
+    // 限制输入范围在 0 到 100 之间（防止限幅外的数据导致输出超限）
+    if (x < 0.0f)   x = 0.0f;
+    if (x > 100.0f) x = 100.0f;
+    
+    // 0~100 缩放到 0~60，再加上 20 的基准偏移
+    return (x * 0.6f) + 21.0f;
+}
+
+void SpeedCtrl_1kHz_uptest(void)//开环测试，转速为0-200，占空比为0-16000，
+{
+    for (int i = 0; i < SPEED_CTRL_MOTOR_COUNT; i++) {
+        Motor_SetDuty(&g_motors[i], wheel_rpm[i]*motor_rpm);
     }
 }
 

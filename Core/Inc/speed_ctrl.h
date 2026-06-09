@@ -19,7 +19,7 @@
 #define DEFAULT_KP  10.0f
 #define DEFAULT_KI  3.5f
 #define DEFAULT_KD  0.00f
-
+extern float motor_rpm;
 /* 控制标志位（TIM8 ISR 置1，主循环清零） */
 extern volatile uint8_t g_speed_ctrl_flag;
 extern Encoder_t g_encoders[SPEED_CTRL_MOTOR_COUNT];
@@ -30,5 +30,9 @@ void SpeedCtrl_SetTarget(uint8_t id, float rpm);
 void SpeedCtrl_SetPID(uint8_t id, float Kp, float Ki, float Kd);
 float SpeedCtrl_GetSpeed(uint8_t id);    /* 获取实际速度（滤波后） */
 float SpeedCtrl_GetError(uint8_t id);    /* 获取速度误差 (target - actual) */
+void SpeedCtrl_1kHz_uptest(void);//开环测试，转速为0-200，占空比为0-16000，
+float map_0_100_to_20_80(float x) ;
+
+extern PID_t s_pids[SPEED_CTRL_MOTOR_COUNT];
 
 #endif
